@@ -8,9 +8,9 @@ function ChevronRightIcon() {
 
 export default function Breadcrumb({ title, trail }) {
   return (
-    <div className="border-b border-gray-100">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-8 sm:px-8">
-        <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+    <div>
+      <div className="flex w-full flex-wrap items-center justify-between gap-4 px-4 py-8 sm:px-8">
+        <h1 className="text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl">
           {title}
         </h1>
         <div className="flex items-center gap-2 text-sm text-gray-500">

@@ -43,7 +43,7 @@ export default function OurPlant() {
     <section id="our-plant">
       <Breadcrumb title="OUR PLANT" trail={['Home', 'Our Plant']} />
 
-      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-8">
+      <div className="w-full px-4 py-14 sm:px-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
           {PLANTS.map((plant) => (
             <PlantCard key={plant.code} plant={plant} />

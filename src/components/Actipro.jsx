@@ -6,7 +6,7 @@ export default function Actipro() {
       <Breadcrumb title="ACTIPRO" trail={['Home', 'Actipro']} />
 
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-8">
-        <img src="/logo/acti-pro-logo.jpg" alt="Actipro" className="mx-auto h-auto w-full max-w-md" />
+        <img src="/logo/actipro.png" alt="Actipro" className="mx-auto h-auto w-full max-w-md" />
       </div>
     </section>
   )

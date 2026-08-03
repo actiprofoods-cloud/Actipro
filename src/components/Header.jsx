@@ -56,33 +56,35 @@ export default function Header() {
         </div>
       )}
 
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-3 sm:px-8">
+      <div className="flex w-full items-center justify-between gap-6 px-4 py-3 sm:px-8">
         <a href="#" className="flex shrink-0 items-center">
-          <img src="/logo/logo.png" alt="Madhuri Cooking Oil" className="h-16 w-auto sm:h-20" />
+          <img src="/logo/actipro.png" alt="Actipro" className="h-16 w-auto sm:h-20" />
         </a>
 
-        <nav className="hidden items-center gap-8 lg:flex">
-          {NAV_LINKS.map((link) => (
-            <a
-              key={link.label}
-              href={link.href}
-              className="flex items-center gap-1 text-[15px] font-medium text-gray-700 transition-colors hover:text-[#c1121f]"
-            >
-              {link.label}
-              {link.hasDropdown && <ChevronDownIcon />}
-            </a>
-          ))}
-        </nav>
+        <div className="flex items-center gap-10">
+          <nav className="hidden items-center gap-8 lg:flex">
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                className="flex items-center gap-1 text-[15px] font-medium text-gray-700 transition-colors hover:text-[#c1121f]"
+              >
+                {link.label}
+                {link.hasDropdown && <ChevronDownIcon />}
+              </a>
+            ))}
+          </nav>
 
-        <button
-          type="button"
-          onClick={() => setMenuOpen((open) => !open)}
-          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-          aria-expanded={menuOpen}
-          className="flex items-center justify-center text-gray-800 transition-colors hover:text-[#c1121f]"
-        >
-          {menuOpen ? <CloseIcon /> : <MenuIcon />}
-        </button>
+          <button
+            type="button"
+            onClick={() => setMenuOpen((open) => !open)}
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={menuOpen}
+            className="flex items-center justify-center text-gray-800 transition-colors hover:text-[#c1121f]"
+          >
+            {menuOpen ? <CloseIcon /> : <MenuIcon />}
+          </button>
+        </div>
       </div>
 
       {menuOpen && (
