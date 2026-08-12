@@ -24,7 +24,7 @@ function App() {
       <Route path="/" element={<ActiproSite />} />
 
       {/* Older pages, kept together under /post-work */}
-      <Route path="/post-work" element={<MadhuriLayout />}>
+      <Route path="/our-plant" element={<MadhuriLayout />}>
         <Route index element={<OurPlant />} />
         <Route path="our-plant" element={<OurPlant />} />
         <Route path="actipro/our-plant" element={<Actipro />} />
