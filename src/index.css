@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @theme {
+  /* Frozen design system — colors */
   --color-acti-orange: #e8442a;
   --color-acti-orange-dark: #c0301b;
   --color-acti-green: #159b49;
@@ -8,6 +9,10 @@
   --color-acti-sun: #f5b301;
   --color-acti-cream: #fff8ee;
   --color-acti-ink: #17110d;
+
+  /* Frozen design system — typography */
+  --font-serif: Georgia, 'Times New Roman', serif;
+  --font-sans: Inter, Arial, Helvetica, sans-serif;
 }
 
 html {
