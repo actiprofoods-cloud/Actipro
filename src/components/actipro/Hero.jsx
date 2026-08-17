@@ -242,21 +242,25 @@ export default function Hero() {
           ref={uiRef}
           className="acti-shell acti-shell--wide flex flex-1 flex-col justify-end pb-14 pt-32 sm:pb-16 max-sm:hero-panel max-sm:pt-0 max-sm:pb-12"
         >
-          {/* max-sm keeps copy and product side by side on phone, as in the
-              reference, instead of the product stacking under the headline. */}
-          <div className="flex flex-col gap-10 sm:flex-row sm:items-end sm:justify-between max-sm:flex-row max-sm:items-end max-sm:gap-4">
-            <div ref={copyRef} className="max-w-2xl max-sm:flex-1 max-sm:min-w-0 max-sm:pb-6">
+          {/* On phone this is a single column: copy first, pack underneath and
+              pushed to the right edge. Side by side at this width squeezed the
+              headline into three-word lines and shrank the pack to a thumbnail,
+              so the two now get the full measure in turn. */}
+          <div className="flex flex-col gap-10 sm:flex-row sm:items-end sm:justify-between max-sm:gap-5">
+            <div ref={copyRef} className="max-w-2xl max-sm:min-w-0">
               <p className="text-[12px] font-semibold uppercase sm:text-[11px] tracking-[0.24em] text-white/60 max-sm:text-[10px] max-sm:leading-[1.5]">
                 Lite hai. Right hai.
               </p>
 
-              <h1 className="mt-5 font-serif text-4xl leading-[1.1] text-white sm:text-6xl lg:text-[4.25rem] max-sm:mt-3 max-sm:text-[2rem]">
+              <h1 className="mt-5 font-serif text-4xl leading-[1.1] text-white sm:text-6xl lg:text-[4.25rem] max-sm:mt-3 max-sm:text-[2.35rem]">
                 The right oil makes everything{' '}
                 {/* The reference accents the last word rather than the whole line. */}
                 <span className="text-acti-sun">lighter.</span>
               </h1>
 
-              <div className="mt-8 flex flex-wrap items-center gap-4 max-sm:mt-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+              {/* Back to one row on phone now the column is full-width — the
+                  stacked variant was only there to survive a 57% column. */}
+              <div className="mt-8 flex flex-wrap items-center gap-4 max-sm:mt-5 max-sm:gap-3">
                 <a
                   href="#range"
                   className="rounded-full bg-acti-sun px-9 py-3.5 text-[12px] font-bold uppercase tracking-[0.18em] text-acti-ink transition-colors hover:bg-acti-orange hover:text-white max-sm:px-7 max-sm:py-3 max-sm:text-[11px]"
@@ -273,10 +277,13 @@ export default function Hero() {
               </div>
             </div>
 
-            {/* self-start on phone: the row is items-end so the copy sits on the
-                bottom edge, and without this the pack's dots are dragged down
-                onto the same baseline as the distributor link beside them. */}
-            <div ref={showcaseRef} className="max-sm:w-[43%] max-sm:shrink-0 max-sm:self-start">
+            {/* Bottom-right on phone: the column is now stacked, so this block
+                sits under the copy and self-end pulls it to the right gutter,
+                where hero-showcase right-aligns its type to match. */}
+            <div
+              ref={showcaseRef}
+              className="max-sm:hero-showcase max-sm:w-[52%] max-sm:shrink-0 max-sm:self-end"
+            >
               <HeroProducts />
             </div>
           </div>

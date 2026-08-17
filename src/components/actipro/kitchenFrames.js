@@ -21,7 +21,22 @@
  *
  *            To re-export after replacing the clip:
  *              ffmpeg -i <clip>.mp4 -start_number 0 -q:v 1 /tmp/raw/r_%03d.png
- *            then save range(45, 176) as WebP q82.
+ *            then save range(45, 176) as WebP q82 into cabinet-orig/.
+ *
+ *            WATERMARK. The clip carries a generator sparkle at x 1128-1192,
+ *            y 569-632 of 1280x720. It is painted OUT of the frames rather than
+ *            cropped at draw time — cropping meant cover-fitting a smaller
+ *            source rect, which zoomed the scene and shifted the section's
+ *            framing. The mark sits on smooth countertop, so solving Laplace
+ *            over it reconstructs the gradient invisibly:
+ *
+ *              X0,X1,Y0,Y1 = 1128,1192,569,632
+ *              patch = frame[Y0:Y1, X0:X1]
+ *              mask  = interior of that patch (2px boundary ring kept)
+ *              repeat 600x: patch[mask] = uniform_filter(patch, 3)[mask]
+ *
+ *            Run it over cabinet-orig/ and write the result to cabinet/, which
+ *            is the set actually served. Keep cabinet-orig/ pristine.
  *
  *   MOBILE   public/4/mobile .mp4                                 1280x2274
  *            A portrait re-shoot of the same cabinet. Frames 105 → 200 are the

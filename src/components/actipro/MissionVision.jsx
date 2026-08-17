@@ -9,6 +9,10 @@ import {
   LeafIcon,
   ShieldIcon,
   HeartIcon,
+  SparkleIcon,
+  PinIcon,
+  FlameIcon,
+  StarIcon,
 } from './icons'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -114,19 +118,29 @@ const CARDS = [
     tone: 'red',
     stops: [
       {
-        at: 0.3,
+        at: 0.22,
         Icon: TargetIcon,
         body: 'To bring pure, healthy and honest cooking oils to every Indian kitchen.',
       },
       {
-        at: 0.5,
+        at: 0.35,
         Icon: DropIcon,
         body: 'Refined six times over, so nothing but the good stuff reaches your kadhai.',
       },
       {
-        at: 0.68,
+        at: 0.48,
         Icon: LeafIcon,
         body: 'Fortified with Vitamin A and D, and 100% vegetarian across the range.',
+      },
+      {
+        at: 0.61,
+        Icon: SparkleIcon,
+        body: 'Light on the pan, neutral in taste — so the food tastes of the food.',
+      },
+      {
+        at: 0.74,
+        Icon: FlameIcon,
+        body: 'A high smoke point, so it holds up to a real Indian tadka.',
       },
     ],
   },
@@ -140,19 +154,29 @@ const CARDS = [
     tone: 'sun',
     stops: [
       {
-        at: 0.3,
+        at: 0.22,
         Icon: EyeIcon,
         body: 'To be India’s most trusted edible oil brand, known for quality, purity and care.',
       },
       {
-        at: 0.5,
+        at: 0.35,
         Icon: ShieldIcon,
         body: 'Crushed and refined on our own lines at Dhannad, Mandsaur and Shinde Gaon.',
       },
       {
-        at: 0.68,
+        at: 0.48,
         Icon: HeartIcon,
         body: 'Three plants, three FSSAI licences, and no third-party packing.',
+      },
+      {
+        at: 0.61,
+        Icon: PinIcon,
+        body: 'Madhya Pradesh and Maharashtra today, one state at a time from here.',
+      },
+      {
+        at: 0.74,
+        Icon: StarIcon,
+        body: 'Every batch logged against its own lab report before it leaves the plant.',
       },
     ],
   },
@@ -498,7 +522,7 @@ export default function MissionVision() {
                       <stop.Icon>: `stop` is itself an SVG element name, and a
                       lowercase member expression in JSX resolves to undefined,
                       which crashed the whole section. */}
-                  <StopIcon className="h-6 w-6" />
+                  <StopIcon className="h-5 w-5" />
                 </span>
               ))}
 

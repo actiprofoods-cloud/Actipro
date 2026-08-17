@@ -34,6 +34,13 @@ const BLACKOUT_IDS = ['range']
    than switching exactly on the boundary. */
 const BLACKOUT_COVERAGE = 0.6
 
+/* While the hero's sticky stage is still under the bar, the phone layout runs
+   the bar fully transparent over the footage — see the max-width:767px block on
+   .acti-header in index.css. This is measured from the stage's box rather than
+   from --acti-tone, because on the reduced-motion path nothing is scrubbing the
+   tone and a threshold flip would leave the bar cream over the video. */
+const HERO_ID = 'top'
+
 /*
  * The one piece of chrome that survives both scenes. It never re-renders on
  * scroll: Hero.jsx writes --acti-tone (0 = over the dark hero, 1 = over the
@@ -64,6 +71,12 @@ export default function ActiproHeader() {
        Looked up by id rather than passed in, so adding a full-bleed scene to
        the blackout list is a one-line change to BLACKOUT_IDS. */
     const blackouts = BLACKOUT_IDS.map((id) => document.getElementById(id)).filter(Boolean)
+    /* The sticky STAGE, not the hero section: the section runs on for the whole
+       of --hero-exit, so its own box is still under the bar long after the
+       footage has dissolved into the cabinet. The stage is the element that
+       actually holds the video, and Hero fades it out (autoAlpha) the moment the
+       dissolve completes — so its opacity is checked too. */
+    const heroStage = document.getElementById(HERO_ID)?.firstElementChild ?? null
     /* Frames left before a freshly revealed bar may hide again. Revealing is
        hair-trigger, so without this the momentum that Lenis is still paying out
        after an upward flick immediately reads as "scrolling down" and the bar
@@ -89,9 +102,22 @@ export default function ActiproHeader() {
       })
     }
 
+    /* True while the hero footage is still the thing behind the bar. Both tests
+       matter: the box test catches the hero scrolling away, and the opacity test
+       catches the dissolve finishing while the stage is still pinned in place. */
+    const overHero = () => {
+      if (!heroStage) return false
+      const r = heroStage.getBoundingClientRect()
+      if (r.bottom <= node.offsetHeight) return false
+      return parseFloat(getComputedStyle(heroStage).opacity) > 0.5
+    }
+
     const tick = () => {
       const y = window.scrollY
       if (hold > 0) hold -= 1
+
+      const hero = String(overHero())
+      if (node.dataset.hero !== hero) node.dataset.hero = hero
 
       /* Frost the bar only once it actually has a cream background to frost.
          Over the hero --acti-tone is 0, so the bar is fully transparent and a
@@ -154,12 +180,16 @@ export default function ActiproHeader() {
   }, [])
 
   return (
+    // data-hero starts true because the page always opens on the hero: on phone
+    // that attribute is what keeps the bar transparent (see index.css), and
+    // starting false would flash a cream bar before the first rAF corrects it.
     <header
       ref={headerRef}
       className="acti-header fixed inset-x-0 top-0 z-50"
       data-solid={open ? 'true' : 'false'}
       data-hidden="false"
       data-frosted="false"
+      data-hero="true"
     >
       <div className="acti-shell acti-shell--wide flex items-center justify-between gap-6 py-4">
         <a href="#top" className="relative flex shrink-0 items-center" aria-label="Actipro home">

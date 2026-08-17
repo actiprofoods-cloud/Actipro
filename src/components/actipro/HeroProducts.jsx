@@ -33,25 +33,26 @@ export default function HeroProducts() {
           className="mt-4 h-52 w-auto rounded-xl object-contain drop-shadow-2xl sm:ml-auto sm:h-72"
         />
 
-        <p className="mt-5 font-serif text-2xl leading-tight text-white sm:text-3xl max-sm:mt-3 max-sm:text-xl">
+        {/* The phone step-downs are gentler than they were: this block used to
+            live in a 43% column beside the copy, and now has the bottom-right
+            corner to itself. */}
+        <p className="mt-5 font-serif text-2xl leading-tight text-white sm:text-3xl max-sm:mt-3">
           {product.brand}
         </p>
-        <p className="mt-1 text-[13px] font-semibold uppercase tracking-[0.14em] text-acti-sun max-sm:text-[10px] max-sm:leading-[1.45] max-sm:tracking-[0.1em]">
+        <p className="mt-1 text-[13px] font-semibold uppercase tracking-[0.14em] text-acti-sun max-sm:text-[11px] max-sm:leading-[1.45]">
           {product.name}
         </p>
-        <p className="mt-1.5 text-sm text-white/60 max-sm:text-[12px] max-sm:leading-snug">
+        <p className="mt-1.5 text-sm text-white/60 max-sm:text-[12.5px] max-sm:leading-snug">
           {product.tagline}
         </p>
       </div>
 
-      {/* On a phone the dots sit directly under the pack, centred in their own
-          column — kept as tappable controls rather than hidden, since the
+      {/* Kept as tappable controls rather than hidden on phone, since the
           auto-rotate alone gives no way to return to a pack you just missed.
-          The 44px hit-box comes from .acti-dot (see the pointer:coarse block),
-          and that tall box is why they need to clear the distributor link on
-          the left: the boxes do not overlap, but sharing a baseline with it
-          reads as one muddled row. */}
-      <div className="mt-5 flex gap-1 sm:gap-2 sm:justify-end max-sm:-mt-1 max-sm:justify-center">
+          The 44px hit-box comes from .acti-dot (see the pointer:coarse block).
+          They follow the pack to the right gutter — .hero-showcase does that,
+          since the row is no longer sharing a baseline with anything. */}
+      <div className="mt-5 flex gap-1 sm:gap-2 sm:justify-end max-sm:mt-2">
         {PRODUCTS.map((p, i) => (
           /* The visible indicator is a 2px rule, which is far too thin to tap.
              The button is a real flex hit-box (44px tall on touch, see

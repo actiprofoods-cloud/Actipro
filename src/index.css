@@ -222,6 +222,25 @@ section[id] {
   -webkit-backdrop-filter: blur(12px);
 }
 
+/* Phone: the bar rides straight on the hero footage, so it keeps no ground of
+   its own while the hero owns the screen — no cream fill, no hairline, no
+   frost. ActiproHeader writes data-hero from a rAF check on the hero's box, so
+   this holds whatever the scrub has left in --acti-tone (including the
+   reduced-motion path, which has no scrub at all).
+
+   Pinning --acti-tone to 0 alongside carries the contents with it: the logo
+   crossfades back to its white print and the icon outlines to white, which is
+   what the bar needs to read as chrome sitting on video. */
+@media (max-width: 767px) {
+  .acti-header[data-hero='true']:not([data-solid='true']) {
+    --acti-tone: 0;
+    background-color: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
 /* The open mobile menu needs a solid bar whatever the scene is doing — and
    because that bar IS opaque, it frosts regardless of where the scene is. */
 .acti-header[data-solid='true'] {
@@ -1242,19 +1261,30 @@ section[id] {
  * --mv-dot-x/y are written by MissionVision.jsx straight from the path's own
  * getPointAtLength(), so it tracks the sweep exactly at any card size.
  */
+/* --mv-dot-a is the curve's tangent where the drop currently is, written every
+   frame by the scroll effect, and it MUST be registered.
+   `transform: rotate(var(--mv-dot-a))` on a plain custom property is invalid at
+   computed-value time: the browser cannot know the token is an <angle> until it
+   substitutes, so it threw the rotation away and kept only the translate. The
+   drop therefore stayed bolt upright while the curve fell away beneath it,
+   which read as the drop sitting BESIDE the line instead of running along it.
+   Typing it as <angle> makes the substitution valid, and animatable too. */
+@property --mv-dot-a {
+  syntax: '<angle>';
+  inherits: true;
+  initial-value: 0deg;
+}
+
 .mv-card {
   --mv-dot-x: 4%;
   --mv-dot-y: 0%;
+  --mv-dot-a: 0deg;
 }
 
 .mv-dot {
   position: absolute;
   left: var(--mv-dot-x);
   top: var(--mv-dot-y);
-  /* --mv-dot-a is the curve's tangent at this point, written by the scroll
-     effect. Without it the teardrop stays upright and reads as a pin stuck on
-     a bend rather than a bead running down the line. */
-  --mv-dot-a: 0deg;
   transform: translate(-50%, -50%) rotate(var(--mv-dot-a));
   z-index: 3;
   width: 19px;
@@ -1307,10 +1337,11 @@ section[id] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  /* Three badges now share the curve, so each is smaller than the single one it
-     replaces or they crowd into each other on a short card. */
-  width: 3.4rem;
-  height: 3.4rem;
+  /* Five badges share the curve now, so they are smaller again — at 3.4rem the
+     gaps between stops (0.13 of the path apart) were narrower than the badges
+     themselves and they overlapped on a short card. */
+  width: 2.7rem;
+  height: 2.7rem;
   border-radius: 999px;
   color: var(--mv-accent);
   background: #fffdf8;
@@ -1664,8 +1695,8 @@ section[id] {
 
   /* The badges stay ON the curve here too, just smaller.
      This used to pin a single badge below the copy with a fixed left/bottom,
-     which is what forced the drop to peel off the path to reach it. With three
-     stops that override would stack all three in the same corner, so only the
+     which is what forced the drop to peel off the path to reach it. With five
+     stops that override would stack them all in the same corner, so only the
      size changes — the inline left/top from the path still positions them. */
   .mv-badge {
     width: 2.5rem;
@@ -2100,19 +2131,20 @@ section[id] {
      already narrowing, the pill has to stay well inside the box, not just fit
      it: hence the cap below plus type small enough that the longest label
      ('Know our promise') still fits on one line at that width. */
+  /* A real pill, not a miniature of one. At 7px the label was below reading
+     size and the padding collapsed with it, so the button read as a smudge —
+     and it was well under the 44px tap target a phone needs. */
   .wt-cta {
-    margin-top: 0.7rem;
-    padding: 0.45rem 0.7rem;
-    /* The base rule's 0.5rem gap is most of the pill's width at this scale. */
-    gap: 0.3rem;
-    font-size: 7px;
-    letter-spacing: 0.03em;
+    margin-top: 0.9rem;
+    padding: 0.6rem 1.1rem;
+    gap: 0.4rem;
+    font-size: 10px;
+    letter-spacing: 0.08em;
     white-space: nowrap;
   }
-  /* The arrow is decorative next to a 7px label and only costs width. */
   .wt-cta svg {
-    width: 0.65rem;
-    height: 0.65rem;
+    width: 0.85rem;
+    height: 0.85rem;
     flex: none;
   }
   /* The kicker rides the photo's rim, so it scales with the oval too —
@@ -2186,6 +2218,12 @@ section[id] {
     position: static;
     height: auto;
     overflow: visible;
+    /* The base rule sizes this for a full-viewport pinned stage, where the
+       padding is what centres the row. Laid out at natural height it is just
+       dead space above and below the ovals, so it comes back to an ordinary
+       section rhythm. */
+    padding-block: 2.25rem;
+    gap: 1.25rem;
   }
 }
 
@@ -2334,7 +2372,9 @@ section[id] {
      6px composites meaningfully cheaper over the full-bleed scene photo. */
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  /* No border. A white hairline read as a hard outline against the
+     photographic scene rather than as a lifted card edge — the shadow alone
+     separates the panel from the background. */
   box-shadow: 0 24px 50px -30px rgba(90, 62, 30, 0.35);
   overflow: hidden;
 }
@@ -2359,14 +2399,6 @@ section[id] {
 }
 .trust-cell:first-child {
   border-left: 0;
-}
-
-/* The sweep bites into this column's right edge, so its copy is inset to stay
-   clear of it. Only while the cut is active — the narrow layouts zero it. */
-@media (min-width: 1024px) {
-  .trust-cell:last-child {
-    padding-right: calc(var(--trust-cell-pad) + 1.75rem);
-  }
 }
 
 .trust-badge {
@@ -2435,11 +2467,17 @@ section[id] {
 .trust-figure[data-fit='cover'] img {
   object-fit: cover;
 }
-/* The marks must never be cropped, so this one is contained. It also fades
-   over a shorter distance — the logos sit high in their own artwork, and a
-   42% dissolve eats into the tops of the FSSAI and ISO rings. */
+/* The marks must never be cropped, so this one is contained rather than
+   covered. Its artwork is keyed to transparency (see certs.webp), so there is no
+   plate to hide and it can take the same dissolve as the other three — the
+   shorter 18% fade was only there to keep the old opaque plate's top edge from
+   being eaten, and it left the plate reading as a hard band. */
+.trust-figure[data-fit='contain'] {
+  /* Contained artwork does not fill the 8.5rem band, so it is padded down to
+     sit on the same baseline as the covered pictures instead of floating. */
+  padding: 0 0.4rem;
+}
 .trust-figure[data-fit='contain'] img {
-  --trust-fade: 18%;
   object-fit: contain;
   object-position: bottom center;
 }
@@ -2509,8 +2547,12 @@ section[id] {
   .trust-head {
     padding-inline: 0.5rem;
   }
+  /* The heading sits on the dark ground now, so all three parts invert from the
+     desktop ink mixes to cream. "every drop." keeps its gold — that already
+     reads on ink. */
   .trust-eyebrow {
     gap: 0.6rem;
+    color: rgba(253, 246, 234, 0.62);
   }
   .trust-rule {
     width: clamp(24px, 7vw, 44px);
@@ -2519,32 +2561,74 @@ section[id] {
     margin-top: 0.35rem;
     font-size: 1.7rem;
     line-height: 1.14;
+    color: #fdf6ea;
   }
   .trust-sub {
     margin-top: 0.35rem;
     font-size: 12.5px;
+    color: rgba(253, 246, 234, 0.62);
   }
 
   /* --- The scene sits ABOVE the panel, not behind it ---------------
      Full-bleed, the portrait crop ran the whole section height and its leaves
      and bottle collided with the heading and showed through the panel. It is
      now a top band that fades out before the pillars begin. */
+  /* --- Dark ground on phone ----------------------------------------
+     The section's own base goes to ink instead of page cream, so the light
+     pillar card and the assurance strip both sit ON something rather than
+     dissolving into a pale field. The seam mix at the section's top/bottom
+     edges reads from this too, so the fade into the neighbouring sections
+     follows automatically. */
+  /* Ink for the body of the section, easing back to page cream over the last
+     stretch so the cream WhyTrust below is met with a gradient rather than a
+     hard edge. The section's own background does that hand-off, because the
+     .acti-seam overlay can only feather to a single colour and that colour is
+     needed dark at the top. */
+  .trust-scene {
+    background: linear-gradient(
+      180deg,
+      #241b11 0%,
+      #241b11 82%,
+      #3a2c1c 90%,
+      var(--color-acti-cream) 100%
+    );
+    /* The seam feathers to this section's own ink, not page cream — see the
+       note on --seam-color in the SEAMS block. Without it the overlay washes a
+       cream band across the top of the dark section. Above is the dark cabinet,
+       so ink is the right thing to blend into there.
+       --seam-bottom stays 0 (set on .trust-scene): the gradient above already
+       owns the hand-off to cream, and a second overlay there would double it. */
+    --seam-color: #241b11;
+  }
+
   .trust-bg {
     height: 42%;
     object-position: center top;
-    /* The crop is a bright, low-contrast plate; knocking it back gives the
-       heading something to sit on and stops the bottle competing with it. */
-    filter: brightness(0.82) contrast(1.06) saturate(1.04);
-    -webkit-mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
+    /* Darker than the light-ground version: the photo is now the brightest
+       thing in a dark section, and at 0.82 it read as a lit panel stuck to the
+       top. Screen-blended into the ink instead of sitting on it. */
+    filter: brightness(0.5) contrast(1.05) saturate(1.02);
+    -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 45%, transparent 100%);
   }
-  /* The bottle and the pour sit right where the heading does, so the veil
-     needs a firm local floor behind the type — a soft wash left "every drop."
-     reading straight over the bottle's neck. */
+  /* The veil now darkens rather than lightens: same job as before (a guaranteed
+     floor behind the heading, so "every drop." never reads over the bottle's
+     neck) but towards ink.
+     It only has to cover the top band where the photo is, so it goes opaque
+     through the middle and then fades out by 100% — that leaves the section's
+     own gradient owning the foot, where the hand-off to the cream section below
+     happens, instead of being painted over by a flat ink layer. */
   .trust-veil {
     background:
-      radial-gradient(78% 20% at 50% 14%, rgba(255, 250, 240, 0.82), rgba(255, 250, 240, 0.34) 64%, transparent 100%),
-      linear-gradient(180deg, rgba(255, 250, 240, 0.24) 0%, rgba(255, 248, 238, 0.86) 34%, var(--color-acti-cream) 50%);
+      radial-gradient(78% 22% at 50% 14%, rgba(36, 27, 17, 0.45), rgba(36, 27, 17, 0.72) 64%, rgba(36, 27, 17, 0.9) 100%),
+      linear-gradient(
+        180deg,
+        rgba(36, 27, 17, 0.3) 0%,
+        rgba(36, 27, 17, 0.82) 30%,
+        #241b11 46%,
+        #241b11 58%,
+        rgba(36, 27, 17, 0) 100%
+      );
   }
 
   /* --- Phone layout ------------------------------------------------
@@ -2561,42 +2645,49 @@ section[id] {
     /* tighter than full-bleed so the scene reads around it */
     margin-inline: 0.25rem;
     border-radius: 16px;
+    /* Light card, as on desktop — the section GROUND is what goes dark on
+       phone (see .trust-scene / .trust-veil below), so this needs to stay pale
+       to read against it. */
   }
+  /* Tighter rows: the four pillars were running ~92px each, which is what
+     pushed the strip below the fold. */
   .trust-cell {
     /* row, not a centred column */
     flex-direction: row;
     align-items: flex-start;
-    gap: 0.65rem;
+    gap: 0.6rem;
     text-align: left;
     border-left: 0;
-    padding: 0.75rem 0.9rem;
+    padding: 0.6rem 0.8rem;
   }
   .trust-cell + .trust-cell {
     border-top: 1px solid rgba(120, 92, 54, 0.14);
   }
   .trust-badge {
     flex: none;
-    width: 1.9rem;
-    height: 1.9rem;
+    width: 1.65rem;
+    height: 1.65rem;
     margin-top: 0.05rem;
   }
   .trust-badge svg {
-    width: 0.9rem;
-    height: 0.9rem;
+    width: 0.8rem;
+    height: 0.8rem;
   }
   /* The copy column sits to the right of the icon, title stacked over body */
   .trust-cell-copy {
     flex: 1;
     min-width: 0;
   }
+  /* Colours are the desktop ink pair — the card stayed light. Only the sizes
+     step down, to match the tighter rows. */
   .trust-cell-title {
     margin-top: 0;
-    font-size: 13px;
+    font-size: 12.5px;
   }
   .trust-cell-body {
-    margin-top: 0.15rem;
-    font-size: 12px;
-    line-height: 1.45;
+    margin-top: 0.1rem;
+    font-size: 11.5px;
+    line-height: 1.42;
   }
   .trust-marks {
     justify-content: flex-start;
@@ -2608,11 +2699,24 @@ section[id] {
   }
 
   /* --- Assurance strip: 4 across, icon over label ------------------ */
+  /* Smaller than it was: this is secondary reassurance sitting under the four
+     pillars, and at 0.9rem padding with 44px icons it was reading as heavy as
+     the panel above it. The icon size is set on the element in
+     TrustSection.jsx (h-11 w-11), so it is overridden here rather than there —
+     desktop still wants the large mark. */
   .trust-strip {
     grid-template-columns: repeat(4, 1fr);
     gap: 0;
-    border-radius: 18px;
-    padding: 0.9rem 0.4rem;
+    border-radius: 14px;
+    padding: 0.6rem 0.3rem;
+  }
+  /* `> li > svg` rather than a bare descendant: the icon carries Tailwind's
+     h-11/w-11/mt-1 utilities, and those live in a later layer than this
+     stylesheet, so a single-class selector would lose to them. */
+  .trust-strip > li > svg {
+    width: 1.6rem;
+    height: 1.6rem;
+    margin-top: 0;
   }
   /* The 1023px block sets border-left:0 on :nth-child(odd) for its 2-up
      layout. That selector is specificity 0,2,1 and beats a plain
@@ -2628,16 +2732,16 @@ section[id] {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 0.4rem;
-    padding: 0 0.25rem;
+    gap: 0.3rem;
+    padding: 0 0.2rem;
     border-left: 1px solid rgba(255, 255, 255, 0.12);
   }
   .trust-strip > li:first-child {
     border-left: 0;
   }
   .trust-strip-title {
-    font-size: 12px;
-    line-height: 1.25;
+    font-size: 10.5px;
+    line-height: 1.2;
     letter-spacing: 0;
   }
   /* Only the label survives at this width — the sentence would wrap to four
@@ -2693,18 +2797,22 @@ section[id] {
      file than the sections themselves and, at equal specificity, would silently
      overwrite any per-section override. Set --seam-top/-bottom to 0 on a
      section to switch that edge off. */
+  /* --seam-color is what the edges feather TO. It defaults to page cream, which
+     is what every section on the page sits against — but a section whose own
+     ground is dark (see .trust-scene on phone) has to feather to that ground
+     instead, or the seam paints a cream band across its top and bottom. */
   background:
     linear-gradient(
       to bottom,
-      var(--color-acti-cream) 0,
-      color-mix(in srgb, var(--color-acti-cream) 55%, transparent)
+      var(--seam-color, var(--color-acti-cream)) 0,
+      color-mix(in srgb, var(--seam-color, var(--color-acti-cream)) 55%, transparent)
         calc(var(--seam-top, var(--seam)) * 0.55),
       transparent var(--seam-top, var(--seam))
     ),
     linear-gradient(
       to top,
-      var(--color-acti-cream) 0,
-      color-mix(in srgb, var(--color-acti-cream) 55%, transparent)
+      var(--seam-color, var(--color-acti-cream)) 0,
+      color-mix(in srgb, var(--seam-color, var(--color-acti-cream)) 55%, transparent)
         calc(var(--seam-bottom, var(--seam)) * 0.55),
       transparent var(--seam-bottom, var(--seam))
     );
@@ -2822,7 +2930,11 @@ section[id] {
     padding: 0.85rem 1.5rem;
     font-size: 12.5px;
   }
-  .trust-cell-body,
+  /* .trust-cell-body deliberately NOT in this group. It used to be lifted to
+     14.5px with the other body copy, but it lives in a compact icon-left row
+     inside the pillar panel rather than in running text, and at 14.5px the four
+     rows grew tall enough to push the assurance strip off the fold. Its size is
+     set once in the phone block above, next to the row padding it has to sit in. */
   .ms-body,
   .mv-text {
     font-size: 14.5px;
@@ -2843,9 +2955,13 @@ section[id] {
 
      A gradient rather than a hard edge: the footage should fade into the
      copy panel, not sit in a box on top of it. */
+  /* 68%, not the 55% this had while copy and pack shared one row: stacking the
+     pack under the copy makes the panel taller, and at 55% the headline was
+     pushed up off the scrim into the footage. The gradient still starts at the
+     panel's own top edge, so the fade into the footage is unchanged. */
   .hero-panel {
     flex: none;
-    height: 55%;
+    height: 68%;
     justify-content: flex-end;
     background: linear-gradient(
       180deg,
@@ -2856,20 +2972,31 @@ section[id] {
     );
   }
 
-  /* The product image is the anchor of the right-hand column, so it gets the
-     room; its supporting type steps down to match the narrower column.
-     The pack art is photographed on white, so it needs a light card behind it
-     to read at all against the dark panel — on desktop the image floats free
-     over the footage, but at this size that leaves it muddy. */
+  /* The pack floats free, as it does on desktop — no white card. The card was
+     needed while the pack shared a row with the copy at 43% of the width, where
+     it was too small to read against the dark panel; in its own bottom-right
+     block it has the height to carry itself, and the card had started to read
+     as a box pasted onto the scene. */
   .hero-panel .acti-fade-up img {
-    height: 8.5rem;
-    width: 100%;
+    height: 11rem;
+    width: auto;
     margin-left: auto;
-    margin-right: auto;
-    padding: 0.6rem;
-    border-radius: 0.6rem;
-    background: #fff;
+    margin-right: 0;
     object-fit: contain;
+  }
+
+  /* The showcase now sits in the bottom-right corner under the copy rather
+     than beside it, so its type follows the pack to the right gutter — the
+     Tailwind sm:text-right on HeroProducts does not reach this breakpoint.
+     The dots come back to the right edge for the same reason. */
+  .hero-showcase {
+    text-align: right;
+  }
+  .hero-showcase .acti-dot {
+    justify-content: flex-end;
+  }
+  .hero-showcase > div:last-child {
+    justify-content: flex-end;
   }
 }
 

@@ -107,6 +107,26 @@ export default function WhyTrust() {
   const railRef = useRef(null)
 
   const [reduced, setReduced] = useState(false)
+  /* Which step the row is currently showing, for the dots below it. Written
+     from the scrub, so it tracks the page scroll rather than being a second
+     source of truth that could drift out of step with the rail. */
+  const [active, setActive] = useState(0)
+  /* The scroll range the pinned scrub occupies, cached by that same effect so
+     goTo() can convert "step i" into a page offset without re-measuring. */
+  const runwayRef = useRef({ start: 0, distance: 0 })
+
+  /*
+   * Scroll the page to where the given step is centred in the row. On phones
+   * the rail is not a scroller — it is translated by the page's own scroll —
+   * so moving between steps means moving the PAGE, not the strip.
+   */
+  const goTo = (i) => {
+    const step = Math.max(0, Math.min(STEPS.length - 1, i))
+    const { start, distance } = runwayRef.current
+    if (!distance) return
+    const p = STEPS.length > 1 ? step / (STEPS.length - 1) : 0
+    window.scrollTo({ top: start + distance * p, behavior: 'smooth' })
+  }
 
   useEffect(() => {
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -176,7 +196,24 @@ export default function WhyTrust() {
         invalidateOnRefresh: true,
       }
 
-      gsap.to(rail, { x: () => -distance(), ease: 'none', scrollTrigger: trigger })
+      gsap.to(rail, {
+        x: () => -distance(),
+        ease: 'none',
+        scrollTrigger: {
+          ...trigger,
+          /* Cache the runway so goTo() can map a step back onto a page offset,
+             and keep the dots in step with the travel. onRefresh as well as
+             onUpdate: the numbers change on resize, and without it the dots
+             would scroll to stale positions after a rotate. */
+          onRefresh: (self) => {
+            runwayRef.current = { start: self.start, distance: self.end - self.start }
+          },
+          onUpdate: (self) => {
+            const i = Math.round(self.progress * (STEPS.length - 1))
+            setActive((prev) => (prev === i ? prev : i))
+          },
+        },
+      })
 
       /*
        * The kicker rings turn as the row travels, so the label reads as riding
@@ -289,6 +326,49 @@ export default function WhyTrust() {
               </li>
             ))}
           </ul>
+        </div>
+
+        {/*
+          Phones drive the row from the PAGE scroll (the stage is sticky and the
+          rail is translated), so these are not swipe buttons — tapping one
+          scrolls the page to the point in the runway where that step is
+          centred. The dots double as a position readout, which is the part the
+          row was missing: nothing on screen said how far through it you were.
+          Hidden on desktop, where the travel is obvious from the pointer.
+        */}
+        <div className="wt-nav" aria-hidden={swipe ? undefined : 'true'}>
+          <button
+            type="button"
+            className="wt-nav-btn"
+            onClick={() => goTo(active - 1)}
+            disabled={active === 0}
+            aria-label="Previous"
+          >
+            <ArrowRightIcon className="h-4 w-4 rotate-180" />
+          </button>
+
+          <span className="wt-dots">
+            {STEPS.map((s, i) => (
+              <button
+                key={s.kicker}
+                type="button"
+                className="wt-dot"
+                data-on={i === active ? 'true' : 'false'}
+                onClick={() => goTo(i)}
+                aria-label={`Go to ${s.kicker}`}
+              />
+            ))}
+          </span>
+
+          <button
+            type="button"
+            className="wt-nav-btn"
+            onClick={() => goTo(active + 1)}
+            disabled={active === STEPS.length - 1}
+            aria-label="Next"
+          >
+            <ArrowRightIcon className="h-4 w-4" />
+          </button>
         </div>
 
         <p className="wt-foot">

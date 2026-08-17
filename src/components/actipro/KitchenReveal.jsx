@@ -65,15 +65,6 @@ function rampedFrame(progress) {
 // Reduced motion gets one representative frame: doors open, all four packs lit.
 const STILL_AT = 0.75
 
-/*
- * How much of each source frame to trim to clear the generator watermark in the
- * bottom-right corner (see draw()). The mark's outer bound is x~1208 of 1280 and
- * y~628 of 720, so these are its distance from each edge plus a small margin.
- * Only the landscape set is affected — the portrait re-shoot has no mark — but
- * trimming both keeps the two framings consistent.
- */
-const WATERMARK_INSET = { right: 0.07, bottom: 0.14 }
-
 export default function KitchenReveal() {
   const sectionRef = useRef(null)
   const canvasRef = useRef(null)
@@ -172,33 +163,21 @@ export default function KitchenReveal() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
       /*
-       * The source frames carry a generator watermark — a small 4-point sparkle
-       * baked into the bottom-right corner of every frame, at roughly
-       * x 1116-1203, y 543-628 of 1280x720.
+       * The whole frame is drawn — no crop.
        *
-       * It is cropped out here rather than painted out of the files. Inpainting
-       * it was tried and abandoned: the mark straddles the countertop's edge, so
-       * a blur fill smeared that edge downward and a wider box left a visible
-       * blob. Cropping is exact, costs nothing, and leaves the frames pristine
-       * (originals are also kept in public/scroll/cabinet-orig).
-       *
-       * WATERMARK_INSET trims that fraction off the right and bottom of the
-       * SOURCE rect. The canvas still cover-fits, so the visible framing barely
-       * shifts — it just scales the kept region up to fill.
+       * The source frames carried a generator watermark (a 4-point sparkle at
+       * x 1128-1192, y 569-632 of 1280x720). It used to be cropped out here,
+       * but trimming the source rect and then cover-fitting scales the kept
+       * region up: the scene zoomed and the section's framing shifted. It is now
+       * painted out of the files themselves by solving Laplace over the mark
+       * with the surrounding pixels as the boundary — the countertop there is a
+       * smooth gradient, so it reconstructs cleanly. Pristine originals are kept
+       * in public/scroll/cabinet-orig; see the inpaint recipe in kitchenFrames.js.
        */
-      const srcW = img.naturalWidth * (1 - WATERMARK_INSET.right)
-      const srcH = img.naturalHeight * (1 - WATERMARK_INSET.bottom)
-
-      // cover-fit the kept region inside the canvas box — matches the hero
-      // plate's object-cover, which is what makes the handoff seamless
-      const scale = Math.max(width / srcW, height / srcH)
-      const w = srcW * scale
-      const h = srcH * scale
-      ctx.drawImage(
-        img,
-        0, 0, srcW, srcH,
-        (width - w) / 2, (height - h) / 2, w, h,
-      )
+      const scale = Math.max(width / img.naturalWidth, height / img.naturalHeight)
+      const w = img.naturalWidth * scale
+      const h = img.naturalHeight * scale
+      ctx.drawImage(img, (width - w) / 2, (height - h) / 2, w, h)
       drawnRef.current = index
     }
 
