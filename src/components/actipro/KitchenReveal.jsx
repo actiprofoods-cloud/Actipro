@@ -1,0 +1,387 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { FIRST_SRC, KITCHEN_MOBILE_QUERY, frameSetFor } from './kitchenFrames'
+import { setSceneTone } from './sceneTone'
+
+gsap.registerPlugin(ScrollTrigger)
+
+/*
+ * SCENE 02 — the cabinet.
+ *
+ * The section is a tall runway (--kitchen height in index.css) with a sticky
+ * 100svh stage inside it, so the kitchen holds still while the scroll drives
+ * the cabinet frames forward. Frame 0 is the exact image Hero.jsx dissolved
+ * into, so the viewer never sees the two components change hands.
+ *
+ * Two frame sets, picked by viewport — the landscape export cover-fitted into a
+ * portrait phone crops away most of the cabinet, so phones scrub a portrait
+ * re-shoot of the same scene instead. See kitchenFrames.js. Both sets run the
+ * same arc (shut → doors part → packs lit → push in), so everything below —
+ * FRAME_RAMP, TEXT, STILL_AT — is expressed as a fraction and applies to either.
+ *
+ * ── TUNING ──────────────────────────────────────────────────────────────────
+ * FRAME_RAMP maps [scroll progress → position in the frame range]. It is not
+ *   linear on purpose. Measured by frame-to-frame difference, the door swing is
+ *   at ABSOLUTE frames 72-110; everything before is the camera settling and
+ *   everything after is it drifting back. With first=40 (kitchenFrames.js) that
+ *   swing sits at range positions 0.06-0.68, so the doors begin moving within
+ *   the first tenth of the scroll instead of after 40% of it, and the swing gets
+ *   the bulk of the travel.
+ *
+ *   The y values are FRACTIONS OF THE FRAME RANGE, so they must be remapped
+ *   whenever first/last change — changing first from 0 to 40 silently pointed
+ *   these at frames past the swing until they were recomputed.
+ * TEXT is [start, duration] as a fraction of the section's scroll.
+ * Want the whole scene slower? Raise .kitchen-scene's height in index.css.
+ */
+const FRAME_RAMP = [
+  [0.0, 0.0], // shut                        (abs 68)
+  [0.08, 0.06], // a short held beat, then it goes (abs 72)
+  [0.45, 0.32], // doors parting               (abs 88)
+  [0.72, 0.52], // packs readable              (abs 101)
+  [0.9, 0.68], // fully open                  (abs 111)
+  [1.0, 1.0], // camera settles               (abs 130)
+]
+
+const TEXT = {
+  secondIn: [0.75, 0.15], // "Open it up" arrives as the packs become readable
+  ctaIn: [0.88, 0.12],
+}
+
+// Piecewise-linear lookup through FRAME_RAMP.
+function rampedFrame(progress) {
+  for (let i = 1; i < FRAME_RAMP.length; i += 1) {
+    const [x1, y1] = FRAME_RAMP[i]
+    if (progress <= x1) {
+      const [x0, y0] = FRAME_RAMP[i - 1]
+      const t = x1 === x0 ? 0 : (progress - x0) / (x1 - x0)
+      return y0 + (y1 - y0) * t
+    }
+  }
+  return 1
+}
+
+// Reduced motion gets one representative frame: doors open, all four packs lit.
+const STILL_AT = 0.75
+
+/*
+ * How much of each source frame to trim to clear the generator watermark in the
+ * bottom-right corner (see draw()). The mark's outer bound is x~1208 of 1280 and
+ * y~628 of 720, so these are its distance from each edge plus a small margin.
+ * Only the landscape set is affected — the portrait re-shoot has no mark — but
+ * trimming both keeps the two framings consistent.
+ */
+const WATERMARK_INSET = { right: 0.07, bottom: 0.14 }
+
+export default function KitchenReveal() {
+  const sectionRef = useRef(null)
+  const canvasRef = useRef(null)
+  const secondRef = useRef(null)
+  const ctaRef = useRef(null)
+
+  const imagesRef = useRef([])
+  const targetRef = useRef(0)
+  const drawnRef = useRef(-1)
+  const rafRef = useRef(0)
+
+  const [ready, setReady] = useState(false)
+  const [reduced, setReduced] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const apply = () => setReduced(media.matches)
+    apply()
+    media.addEventListener('change', apply)
+    return () => media.removeEventListener('change', apply)
+  }, [])
+
+  // Which export to scrub. Crossing the breakpoint (rotating a phone, dragging a
+  // desktop window narrow) swaps the set and reloads — rare enough to be worth
+  // the refetch, and the alternative is a badly cropped cabinet.
+  useEffect(() => {
+    const media = window.matchMedia(KITCHEN_MOBILE_QUERY)
+    const apply = () => setIsMobile(media.matches)
+    apply()
+    media.addEventListener('change', apply)
+    return () => media.removeEventListener('change', apply)
+  }, [])
+
+  // Referentially stable per breakpoint — the effects below key off this object,
+  // so a fresh one each render would refetch the whole sequence on every paint.
+  const frames = useMemo(() => frameSetFor(isMobile), [isMobile])
+
+  // ~2.2 MB of frames (133 of them, see kitchenFrames.js). The hero clip gets
+  // the network to itself first; these only start once the browser is idle (or
+  // after 1.2s, whichever comes first). They are requested in order and at low
+  // priority, so the early frames — the ones the viewer reaches first — land
+  // first and the scene is scrubbable long before the tail has arrived.
+  // Reduced motion never scrubs, so it never pays for the sequence at all.
+  useEffect(() => {
+    if (reduced) return undefined
+    let cancelled = false
+
+    // The set may have just swapped under us; the old images no longer match
+    // frames.count, so stand down until frame 0 of the new one has decoded.
+    setReady(false)
+    imagesRef.current = []
+    drawnRef.current = -1
+
+    const load = () => {
+      if (cancelled) return
+      imagesRef.current = Array.from({ length: frames.count }, (_, i) => {
+        const img = new Image()
+        img.decoding = 'async'
+        img.fetchPriority = 'low'
+        if (i === 0) img.onload = () => !cancelled && setReady(true)
+        img.src = frames.src(i)
+        return img
+      })
+    }
+
+    const idle = window.requestIdleCallback
+      ? window.requestIdleCallback(load, { timeout: 2500 })
+      : window.setTimeout(load, 1200)
+
+    return () => {
+      cancelled = true
+      if (window.cancelIdleCallback) window.cancelIdleCallback(idle)
+      else window.clearTimeout(idle)
+    }
+  }, [reduced, frames])
+
+  useEffect(() => {
+    if (!ready || reduced) return undefined
+
+    const draw = (index) => {
+      const canvas = canvasRef.current
+      const img = imagesRef.current[index]
+      if (!canvas || !img || !img.complete || !img.naturalWidth) return
+
+      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      const width = canvas.clientWidth
+      const height = canvas.clientHeight
+      if (canvas.width !== Math.round(width * dpr)) {
+        canvas.width = Math.round(width * dpr)
+        canvas.height = Math.round(height * dpr)
+        drawnRef.current = -1 // the surface was cleared by the resize
+      }
+
+      const ctx = canvas.getContext('2d')
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+
+      /*
+       * The source frames carry a generator watermark — a small 4-point sparkle
+       * baked into the bottom-right corner of every frame, at roughly
+       * x 1116-1203, y 543-628 of 1280x720.
+       *
+       * It is cropped out here rather than painted out of the files. Inpainting
+       * it was tried and abandoned: the mark straddles the countertop's edge, so
+       * a blur fill smeared that edge downward and a wider box left a visible
+       * blob. Cropping is exact, costs nothing, and leaves the frames pristine
+       * (originals are also kept in public/scroll/cabinet-orig).
+       *
+       * WATERMARK_INSET trims that fraction off the right and bottom of the
+       * SOURCE rect. The canvas still cover-fits, so the visible framing barely
+       * shifts — it just scales the kept region up to fill.
+       */
+      const srcW = img.naturalWidth * (1 - WATERMARK_INSET.right)
+      const srcH = img.naturalHeight * (1 - WATERMARK_INSET.bottom)
+
+      // cover-fit the kept region inside the canvas box — matches the hero
+      // plate's object-cover, which is what makes the handoff seamless
+      const scale = Math.max(width / srcW, height / srcH)
+      const w = srcW * scale
+      const h = srcH * scale
+      ctx.drawImage(
+        img,
+        0, 0, srcW, srcH,
+        (width - w) / 2, (height - h) / 2, w, h,
+      )
+      drawnRef.current = index
+    }
+
+    /*
+     * The nearest frame that has actually decoded, searching outward from the
+     * one we want. Frames arrive over the network in order, so scrubbing ahead
+     * of the download used to hit a frame that was not there yet — draw() bailed
+     * and the canvas simply held its last image, which reads as the cabinet
+     * freezing and then jumping. Falling back to the closest available frame
+     * keeps the sequence moving; it just moves in slightly coarser steps until
+     * the rest lands.
+     */
+    const nearestLoaded = (want) => {
+      const imgs = imagesRef.current
+      const isReady = (i) => imgs[i] && imgs[i].complete && imgs[i].naturalWidth
+      if (isReady(want)) return want
+      for (let d = 1; d < imgs.length; d += 1) {
+        if (want - d >= 0 && isReady(want - d)) return want - d
+        if (want + d < imgs.length && isReady(want + d)) return want + d
+      }
+      return -1
+    }
+
+    const render = () => {
+      rafRef.current = 0
+      const want = Math.round(rampedFrame(targetRef.current) * (frames.count - 1))
+      const index = nearestLoaded(want)
+      if (index >= 0 && index !== drawnRef.current) draw(index)
+    }
+
+    const schedule = () => {
+      if (!rafRef.current) rafRef.current = requestAnimationFrame(render)
+    }
+
+    const section = sectionRef.current
+    const ctx = gsap.context(() => {
+      const common = {
+        trigger: section,
+        start: 'top top',
+        end: 'bottom bottom',
+        invalidateOnRefresh: true,
+      }
+
+      // Frame scrub. GSAP eases the proxy value; we only ever repaint the
+      // canvas when the rounded frame index actually changes.
+      const state = { p: 0 }
+      gsap.to(state, {
+        p: 1,
+        ease: 'none',
+        scrollTrigger: {
+          ...common,
+          /* A touch longer than the text timeline below. With 133 frames the
+             sequence no longer steps, so the remaining roughness is the wheel
+             itself — a notch arrives as one jump, not a ramp. This lets GSAP
+             glide the proxy value across those jumps instead of snapping to
+             each one. Much beyond ~0.8 and the cabinet starts trailing the
+             scroll noticeably. */
+          scrub: 0.75,
+          onEnter: () => setSceneTone(1),
+          onEnterBack: () => setSceneTone(1),
+          onRefresh: () => schedule(),
+        },
+        onUpdate: () => {
+          targetRef.current = state.p
+          schedule()
+        },
+      })
+
+      // Text timeline. Total duration is exactly 1, so every position below
+      // reads directly as a percentage of the section's scroll.
+      gsap
+        .timeline({
+          defaults: { ease: 'power2.out' },
+          scrollTrigger: { ...common, scrub: 0.4 },
+        })
+        .fromTo(
+          secondRef.current,
+          { autoAlpha: 0, y: 15 },
+          { autoAlpha: 1, y: 0, duration: TEXT.secondIn[1] },
+          TEXT.secondIn[0],
+        )
+        .fromTo(
+          ctaRef.current,
+          { autoAlpha: 0, y: 12 },
+          { autoAlpha: 1, y: 0, duration: TEXT.ctaIn[1] },
+          TEXT.ctaIn[0],
+        )
+    }, section)
+
+    const onResize = () => {
+      drawnRef.current = -1
+      schedule()
+    }
+    window.addEventListener('resize', onResize)
+
+    schedule()
+
+    return () => {
+      window.removeEventListener('resize', onResize)
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = 0
+      ctx.revert()
+    }
+  }, [ready, reduced, frames])
+
+  return (
+    <section
+      id="range"
+      ref={sectionRef}
+      className={`relative z-0 bg-acti-cream ${reduced ? 'h-svh' : 'kitchen-scene'}`}
+    >
+      <div className="sticky top-0 h-svh overflow-hidden">
+        {reduced ? (
+          // No scrub to drive, so one representative frame stands in for the
+          // whole sequence: doors open, all four packs on the shelf.
+          <img
+            src={frames.src(Math.round((frames.count - 1) * STILL_AT))}
+            alt="An Actipro cabinet standing open with four bottles of oil on the shelf"
+            className="kitchen-frame absolute inset-0 h-full w-full object-cover"
+          />
+        ) : (
+          <>
+            <canvas ref={canvasRef} className="kitchen-frame absolute inset-0 h-full w-full" />
+
+            {/* Stands in until the frames arrive, so the scene is never blank.
+                On desktop this is FIRST_SRC, the exact image the hero dissolved
+                into; on a phone it is the portrait set's own shut-cabinet frame,
+                since flashing the landscape crop first would undo the point of
+                having a second export. */}
+            {!ready && (
+              <img
+                src={isMobile ? frames.src(0) : FIRST_SRC}
+                alt=""
+                aria-hidden="true"
+                className="kitchen-frame absolute inset-0 h-full w-full object-cover"
+              />
+            )}
+          </>
+        )}
+
+        {/* Warm scrim — weighted to the counter, so the cabinet stays untouched */}
+        <div className="kitchen-scrim pointer-events-none absolute inset-0" />
+
+        {/* The tail of the scene dissolves into page cream so it hands off to
+            the section below instead of ending on a hard dark line. It has to
+            live in here: the stage is overflow:hidden, so a veil placed outside
+            it (on the next section) gets clipped away and never shows. */}
+        <div className="kitchen-tail pointer-events-none absolute inset-x-0 bottom-0" />
+
+        {/* Sits in the counter band under the cabinet. On a portrait phone that
+            band is only ~200px tall, so the type steps down to keep the packs clear. */}
+        {/* No horizontal padding here — .acti-shell owns the gutter. Keeping the
+            old px-[4vw] as well double-padded it, so the kitchen copy sat ~58px
+            inboard of the hero's and the two scenes did not line up. */}
+        <div className="absolute inset-x-0 bottom-0 pb-[5vh] sm:pb-[9vh]">
+          <div className="acti-shell acti-shell--wide relative">
+            {/* The opening "In every kitchen / The oil you reach for shapes the
+                meal." block was removed — the cabinet now plays clean until the
+                payoff line arrives. Nothing sits on top of it any more, so this
+                one is in normal flow rather than absolutely positioned. */}
+            <div ref={secondRef} className="max-w-xl">
+              <p className="text-[12px] font-semibold uppercase sm:text-[11px] tracking-[0.24em] text-acti-sun">
+                Open it up
+              </p>
+              <p className="mt-3 font-serif text-[1.6rem] leading-tight text-white sm:mt-4 sm:text-[2.75rem]">
+                Behind every door,
+                <br />
+                a choice you can trust.
+              </p>
+
+              <a
+                ref={ctaRef}
+                href="#products"
+                className={`mt-6 inline-flex rounded-full bg-acti-red px-7 py-3 sm:mt-8 sm:px-8 sm:py-3.5 text-[12px] font-bold uppercase tracking-[0.18em] text-white transition-colors hover:bg-acti-orange-dark ${
+                  reduced ? '' : 'invisible'
+                }`}
+              >
+                Explore the range →
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}

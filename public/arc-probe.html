@@ -1,0 +1,76 @@
+<!doctype html>
+<!--
+  Throwaway diagnostic for the WhyTrust kicker arc. Open /arc-probe.html on the
+  dev server, and it prints where the glyphs ACTUALLY land versus where the
+  oval's rim actually is — measured from the live rendering rather than modelled.
+
+  Delete this file once the arc is settled.
+-->
+<meta charset="utf-8">
+<title>arc probe</title>
+<style>
+  body { font: 13px/1.5 ui-monospace, monospace; padding: 24px; background:#fff8ee; }
+  .wt-photo {
+    position: relative; width: 23rem; aspect-ratio: 1/1.32;
+    border-radius: 999px; overflow: hidden; background:#6b4a2a;
+  }
+  .wt-arc { position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+  .wt-arc-text {
+    font-size: 4.4px; font-weight: 600; letter-spacing: .22em;
+    text-transform: uppercase; fill: #fff;
+  }
+  table { border-collapse: collapse; margin-top: 18px; }
+  td, th { border: 1px solid #caa; padding: 3px 9px; text-align: right; }
+  .bad { background: #ffd9d9; }
+</style>
+
+<div class="wt-photo">
+  <svg class="wt-arc" viewBox="0 0 100 132">
+    <defs><path id="p" d="M 6,50 A 44,44 0 0 1 94,50" fill="none"></path></defs>
+    <!-- the rim itself, drawn so we can see both at once -->
+    <circle cx="50" cy="50" r="50" fill="none" stroke="#0f0" stroke-width=".4"></circle>
+    <path d="M 6,50 A 44,44 0 0 1 94,50" fill="none" stroke="#f0f" stroke-width=".4"></path>
+    <text class="wt-arc-text">
+      <textPath href="#p" startOffset="50%" text-anchor="middle" id="tp">TRUSTED BY FAMILIES</textPath>
+    </text>
+  </svg>
+</div>
+
+<div id="out"></div>
+
+<script>
+const svg = document.querySelector('.wt-arc')
+const tp  = document.getElementById('tp')
+const txt = tp.textContent
+const rows = []
+// Per-glyph extent, in viewBox units, straight from the renderer.
+for (let i = 0; i < txt.length; i++) {
+  if (txt[i] === ' ') continue
+  const p = tp.getStartPositionOfChar(i)
+  const e = tp.getExtentOfChar(i)
+  const rot = tp.getRotationOfChar(i)
+  // distance from the pill's centre (50,50) to this glyph's baseline origin
+  const rBase = Math.hypot(p.x - 50, p.y - 50)
+  // approximate the glyph's visible top by stepping `height` along its own up-vector
+  const up = (rot - 90) * Math.PI / 180
+  const tx = p.x + Math.cos(up) * e.height
+  const ty = p.y + Math.sin(up) * e.height
+  const rTop = Math.hypot(tx - 50, ty - 50)
+  rows.push({ ch: txt[i], x: +p.x.toFixed(2), y: +p.y.toFixed(2),
+              rot: +rot.toFixed(1), rBase: +rBase.toFixed(2),
+              rTop: +rTop.toFixed(2), gap: +(50 - rTop).toFixed(2) })
+}
+const gaps = rows.map(r => r.gap)
+const min = Math.min(...gaps), max = Math.max(...gaps)
+let html = `<p><b>gap to rim</b> — min ${min.toFixed(2)}, max ${max.toFixed(2)},
+            spread <b>${(max-min).toFixed(2)}</b> viewBox units.
+            A spread near 0 means the arc is concentric; anything above ~0.3
+            is what the eye reads as uneven.</p>`
+html += '<table><tr><th>ch<th>x<th>y<th>rot<th>r(base)<th>r(top)<th>gap</tr>'
+for (const r of rows) {
+  const bad = Math.abs(r.gap - (min+max)/2) > 0.25 ? ' class=bad' : ''
+  html += `<tr${bad}><td>${r.ch}<td>${r.x}<td>${r.y}<td>${r.rot}<td>${r.rBase}<td>${r.rTop}<td>${r.gap}</tr>`
+}
+html += '</table>'
+document.getElementById('out').innerHTML = html
+</script>

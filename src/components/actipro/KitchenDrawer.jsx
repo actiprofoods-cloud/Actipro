@@ -64,13 +64,21 @@ export default function KitchenDrawer() {
                     key={product.id}
                     href="#products"
                     className="kd-item"
-                    title={`${product.brand} — ${product.name}`}
+                    aria-label={`${product.brand} — ${product.name}`}
                   >
                     <img
                       src={product.image}
                       alt={`${product.brand} ${product.name}`}
                       loading="lazy"
                     />
+                    {/* Card rides above the pack and only shows on hover / keyboard focus */}
+                    <span className="kd-label" aria-hidden="true">
+                      <span className="kd-label-brand">{product.brand}</span>
+                      <span className="kd-label-name">{product.name}</span>
+                      <span className="kd-label-meta">
+                        {product.tagline} · {product.format}
+                      </span>
+                    </span>
                   </a>
                 ))}
               </div>

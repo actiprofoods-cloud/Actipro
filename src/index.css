@@ -10,7 +10,27 @@
   --color-acti-ink: #17110d;
 }
 
-html {
+/* Lenis owns the easing (see ActiproSite.jsx). Native smooth-scroll on top of
+   it double-animates every anchor jump, so it only applies when Lenis is NOT
+   running — i.e. reduced motion, where the class is never added. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+html:not(.lenis) {
   scroll-behavior: smooth;
 }
 
@@ -46,6 +66,649 @@ section[id] {
 
 .acti-fade-up {
   animation: acti-fade-up 0.6s ease-out both;
+}
+
+/* ===============================================================
+   SCENE 01 → SCENE 02
+   Hero.jsx · KitchenReveal.jsx · ActiproHeader.jsx
+
+   --acti-tone is written by the hero's ScrollTrigger on every scroll
+   frame: 0 = dark hero over the oil pour, 1 = bright cream kitchen.
+   The header derives all of its colours from it, so a 60fps scrub
+   costs zero React renders.
+================================================================*/
+:root {
+  --acti-tone: 0;
+}
+
+/* --- Scroll runways. These two blocks are the main tuning dials. ---
+   --hero-exit  how much scroll the hero → kitchen dissolve takes.
+   .kitchen-scene height  how much scroll the doors take to open.  */
+.hero-scene {
+  --hero-exit: 48vh;
+  height: calc(100svh + var(--hero-exit));
+}
+
+/* A sticky stage is on screen for its whole section: pinned for
+   (height - 100svh), then a further 100svh scrolling itself off the top. That
+   trailing viewport is dead scroll — and because the hero ends on the same
+   cabinet frame the kitchen opens on, it showed the frame twice, one sliding
+   over the other. Pulling the kitchen up by exactly one viewport means it pins
+   the instant the hero unpins, and Hero.jsx retires its stage at that point. */
+.kitchen-scene {
+  margin-top: -100svh;
+  /* 210vh gives a 110vh runway on a phone. The swing now starts almost
+     immediately (see FRAME_RAMP), so this no longer has to absorb a long
+     lead-in of identical shut frames. */
+  height: 190vh;
+}
+
+@media (min-width: 768px) {
+  .hero-scene {
+    --hero-exit: 90vh;
+  }
+  .kitchen-scene {
+    /* Was 300vh, which was sized around ~720px of dead scroll before the doors
+       moved. With the range starting at the swing, 220vh covers the whole
+       open-and-settle with room to breathe. */
+    height: 220vh;
+  }
+}
+
+/* --- Grading -------------------------------------------------------
+   The two clips were generated separately and do not match out of the
+   box. These two rules pull them toward one film — adjust here rather
+   than in the markup. The hero stays deliberately darker. */
+/*
+ * The hero grade is done with an overlay, NOT a CSS filter on the video.
+ *
+ * `filter: brightness(...)` on a playing 1440x900 video forces the compositor
+ * to re-filter the whole frame on every video frame AND every scroll frame.
+ * Measured: median 33.4ms/frame (30fps) with the filter, 16.7ms (60fps)
+ * without — it was the single cause of the hero's jank, and the rest of the
+ * page was already at 60fps.
+ *
+ * A flat multiply layer over the top costs nothing: it is one GPU composite of
+ * a solid colour, and the darkening reads the same. Contrast/saturate are
+ * dropped — they were doing very little at brightness 0.45 and neither can be
+ * faked cheaply. Keep this element filter-free.
+ */
+.hero-video {
+  /* promote to its own layer so scrolling never repaints it */
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.hero-grade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* equivalent of the old brightness(0.45), as a composite instead of a filter */
+  background: rgba(9, 6, 3, 0.55);
+}
+
+/* Same reasoning as .hero-video: no filter on the plate, which is a full-bleed
+   1498x936 image sitting under the dissolve. The canvas (.kitchen-frame) keeps
+   its grade — it is only repainted when the frame index actually changes, so
+   the cost is per-frame-change, not per-scroll-frame. */
+.kitchen-plate {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.kitchen-frame {
+  filter: brightness(0.92) contrast(1.05) saturate(0.88) sepia(0.05);
+}
+
+/* The amber wash that bridges hero black → kitchen cream. It peaks in
+   the middle of the dissolve and is gone by the time the cabinet lands. */
+.hero-warm {
+  background:
+    radial-gradient(78% 62% at 50% 88%, rgba(245, 179, 1, 0.2), transparent 72%),
+    linear-gradient(
+      180deg,
+      rgba(58, 30, 12, 0) 0%,
+      rgba(140, 74, 24, 0.2) 58%,
+      rgba(198, 124, 44, 0.28) 100%
+    );
+}
+
+/* --- Kitchen scrim -------------------------------------------------
+   Weighted to the counter and the bottom-left corner where the copy
+   sits, so the cabinet and the packs themselves stay ungraded. */
+.kitchen-scrim {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(28, 16, 7, 0) 58%,
+      rgba(28, 16, 7, 0.5) 84%,
+      rgba(20, 11, 5, 0.74) 100%
+    ),
+    radial-gradient(56% 44% at 20% 94%, rgba(24, 13, 6, 0.6), transparent 72%);
+}
+
+/* --- Header, driven entirely by --acti-tone ------------------------
+   Transparent over the dark hero, fading to a blurred cream bar as the
+   kitchen arrives. The contents (logo, nav, buttons) ride the same
+   variable, flipping white → ink to stay readable against each. */
+.acti-header {
+  background-color: rgb(255 248 238 / calc(var(--acti-tone) * 0.92));
+  /* No backdrop-filter by default. Over the hero the bar is fully transparent
+     (--acti-tone is 0), so a blur here has nothing of its own to sit behind and
+     simply smears the playing video into a band across the top of the scene.
+     The blur is switched on below, once the cream background is actually there
+     to be frosted — and it stays a CONSTANT radius rather than one interpolated
+     from --acti-tone, because animating the radius re-blurs everything behind
+     the bar on every scroll frame. */
+  box-shadow: 0 1px 0 rgb(23 17 13 / calc(var(--acti-tone) * 0.08));
+  /* Scrolling down retracts the bar, scrolling up brings it back.
+     data-hidden is written by ActiproHeader's rAF loop — transform only,
+     so it never reflows the page underneath it. */
+  transform: translateY(0);
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.acti-header[data-hidden='true'] {
+  transform: translateY(-105%);
+}
+
+/* Frosting, only once there is a cream bar to frost. ActiproHeader flips
+   data-frosted as --acti-tone crosses its threshold, so over the hero the bar
+   stays perfectly clear and the video behind it is untouched. A constant
+   radius — see the note above. */
+.acti-header[data-frosted='true'] {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* The open mobile menu needs a solid bar whatever the scene is doing — and
+   because that bar IS opaque, it frosts regardless of where the scene is. */
+.acti-header[data-solid='true'] {
+  --acti-tone: 1;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.acti-tone-ink {
+  color: color-mix(in srgb, #17110d calc(var(--acti-tone) * 100%), #ffffff);
+}
+
+.acti-tone-border {
+  border-color: color-mix(
+    in srgb,
+    rgb(23 17 13 / 0.25) calc(var(--acti-tone) * 100%),
+    rgb(255 255 255 / 0.6)
+  );
+}
+
+/* Oil gold over the hero → Actipro red over the kitchen */
+.acti-tone-cta {
+  background-color: color-mix(in srgb, #c1121f calc(var(--acti-tone) * 100%), #f5b301);
+  color: color-mix(in srgb, #ffffff calc(var(--acti-tone) * 100%), #17110d);
+}
+
+.acti-logo-light {
+  opacity: var(--acti-tone);
+}
+.acti-logo-dark {
+  opacity: calc(1 - var(--acti-tone));
+}
+
+/* ===============================================================
+   MILESTONES — alternating vertical timeline (Milestones.jsx)
+
+   The connector is a real pour of oil (public/bg/oil-line.webm, an
+   alpha-keyed WebM) rather than a drawn line, so it curves and moves
+   on its own. It is ONE element, fully drawn at all times.
+
+   Scroll drives the READING state instead: --ms-p on .ms-track is the
+   section's progress, and --n-p on each <li> is that milestone's own
+   0 → 1. Every colour below is interpolated from --n-p, so the copy
+   darkens from a pale wash to full ink as the oil passes it.
+================================================================*/
+.ms-scene {
+  background-color: var(--color-acti-cream);
+  background-image: url('/bg/mile.webp');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* mile.png is busy at the edges; lift the middle so the copy stays readable.
+   Two layers, because one ellipse could not do both jobs:
+
+   The radial keeps the centre bright, as before. On its own it falls to 0.35
+   at the edges, which was fine when the list ran five items long and the
+   closing copy sat well inside the bright middle. At three items the section
+   is ~500px shorter, and the last card landed in the busy BOTTOM band of the
+   photo — the garlic and star anise read straight through the text.
+
+   So a second linear layer floors the bottom of the scene to near-opaque
+   cream. It is listed first (top-most) and only covers the lower third, so
+   the decorative border still shows at the top and sides. */
+.ms-scene::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(
+      to bottom,
+      transparent 60%,
+      rgba(255, 248, 238, 0.72) 82%,
+      rgba(255, 248, 238, 0.92) 100%
+    ),
+    radial-gradient(
+      62% 52% at 50% 48%,
+      rgba(255, 248, 238, 0.94) 0%,
+      rgba(255, 248, 238, 0.8) 55%,
+      rgba(255, 248, 238, 0.35) 100%
+    );
+}
+
+.ms-track {
+  --ms-p: 0;
+  /* The centre channel must be wider than the pour, or the inner edge of the
+     copy ends up underneath the oil. Keep --ms-rail >= --ms-oil-w. */
+  --ms-oil-w: clamp(120px, 13vw, 190px);
+  --ms-rail: calc(var(--ms-oil-w) + 5rem);
+  position: relative;
+}
+
+/* --- The pour ------------------------------------------------------
+   Sits in the centre channel, spanning the full height of the track,
+   fully drawn at all times. */
+.ms-oil {
+  /* How much of each end dissolves into the page. Long enough to read as the
+     pour arriving and departing rather than being switched on — roughly one
+     milestone's worth of run at each end. */
+  --ms-fade-top: 13%;
+  /* Longer than the top: the pour should be gone by the time the eye reaches
+     the closing milestone, so the column finishes on copy rather than on a
+     ribbon that simply runs out. */
+  --ms-fade-bottom: 22%;
+
+  position: absolute;
+  top: -2rem;
+  bottom: -2rem;
+  left: 50%;
+  width: var(--ms-oil-w);
+  transform: translateX(-50%);
+  pointer-events: none;
+  /* No overflow clip here. The ribbon carries a drop-shadow glow that spreads
+     ~18px past its own edges; clipping to --ms-oil-w sliced that glow off
+     against a hard vertical line, which read as a rectangular seam running
+     down the pour. That drop-shadow is gone now (see .ms-oil-line), but the
+     rule still stands: the video's own alpha is what bounds the ribbon, not
+     this box, so there is nothing to gain by clipping it. */
+  z-index: 0;
+
+  /* The ends. Without this the ribbon began at full opacity on its first row
+     and stopped dead on its last, so the pour read as a clip someone had cut
+     — you could see exactly where it started and ended. Feathering the alpha
+     at both ends lets it emerge from the cream and settle back into it.
+
+     The mask goes on the wrapper, not on .ms-oil-line: the child already owns a
+     filter chain (colour plus the alpha steepener), and stacking a mask on the
+     same element makes the two fight over the same alpha. */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    rgba(0, 0, 0, 0.55) calc(var(--ms-fade-top) * 0.55),
+    #000 var(--ms-fade-top),
+    #000 calc(100% - var(--ms-fade-bottom)),
+    rgba(0, 0, 0, 0.5) calc(100% - var(--ms-fade-bottom) * 0.4),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    rgba(0, 0, 0, 0.55) calc(var(--ms-fade-top) * 0.55),
+    #000 var(--ms-fade-top),
+    #000 calc(100% - var(--ms-fade-bottom)),
+    rgba(0, 0, 0, 0.5) calc(100% - var(--ms-fade-bottom) * 0.4),
+    transparent 100%
+  );
+}
+
+/* A soft warm bloom under the pour, brightest along the middle where the oil
+   is fully opaque and gone by the ends. Two jobs: it seats the ribbon on the
+   background instead of leaving it pasted on top, and it gives the faded ends
+   something to dissolve INTO, so they read as light rather than as absence.
+   Sits behind the ribbon and spills well past the channel — the blur is the
+   whole point, so it is deliberately wider than --ms-oil-w. */
+.ms-oil::before {
+  content: '';
+  position: absolute;
+  inset: 6% -85% 6% -85%;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    46% 40% at 50% 50%,
+    rgba(226, 168, 46, 0.16) 0%,
+    rgba(226, 168, 46, 0.07) 45%,
+    transparent 78%
+  );
+  filter: blur(26px);
+}
+
+/* ONE element. public/bg/oil-line.webm is 300x2136 (1:7.12) — the tall ribbon
+   is baked into the file rather than tiled here, so nothing repeats.
+
+   object-fit: cover with a top anchor means the rail always fills, and any
+   height it does not need is cropped off the bottom. Where the rail is
+   proportionally taller than 1:7.12 (narrow gutters, very long tracks) cover
+   crops the sides instead — the ribbon stays continuous either way.
+
+   The source clip has an opaque WHITE background, so alpha is keyed on
+   saturation (max-min of RGB): white and grey go transparent, the gold oil
+   stays. The `-14` is a noise floor — without it the clip's low-saturation
+   JPEG speckle keyed partly OPAQUE, which painted a mottled off-white
+   rectangle across the cream page and read as "the oil has a background".
+   Subtracting the floor before the multiply drives flat background to a
+   true zero. Keep it: at 0 the box comes back.
+
+   HOW THE TALL RIBBON IS JOINED. A plain vstack of the clip does NOT work,
+   whatever the flip: the frame's top edge is a wide splash head (~74px of ink)
+   and its bottom edge is a narrow stream (~23px), so an un-mirrored join steps
+   from thin to thick in one row — a hard, visible seam across the pour. vflip
+   fixes one join and breaks the other, and `reverse` after vflip stops the
+   joined rows being identical at all.
+
+   So the four copies are CROSS-FADED into each other over a 150px overlap
+   instead: the outgoing copy's alpha ramps to zero while the incoming one ramps
+   up (smoothstepped). No single row has to match, so the mismatch dissolves
+   rather than stepping. Each copy also reads the clip at a different time
+   offset, so the four segments are never the same shape at once.
+
+   The clip also LOOPS by construction. Its last frame did not match its first
+   (mean alpha delta 12.8 across the wrap, against ~4 for any normal adjacent
+   pair), so <video loop> restarted with a visible stutter. The last 28 frames
+   are therefore held back and cross-dissolved over the first 28, which makes
+   the end of the clip identical to its start — the wrap now measures 2.1, i.e.
+   less than an ordinary frame-to-frame change.
+
+   That blend is per-pixel alpha compositing, which ffmpeg's overlay cannot do
+   on a transparent canvas (its `color` source composites onto opaque black and
+   the alpha is lost — the ribbon comes back as a BLACK rectangle). It is done
+   in a small Node script instead. To re-bake, key the frames with ffmpeg:
+     ffmpeg -i public/oil/<clip> -filter_complex "[0:v]fps=14,format=rgba,\
+       scale=300:-2,geq=a='clip((max(max(r(X,Y),g(X,Y)),b(X,Y))\
+       -min(min(r(X,Y),g(X,Y)),b(X,Y))-14)*11,0,255)':\
+       r='r(X,Y)':g='g(X,Y)':b='b(X,Y)'[k]" -map "[k]" \
+       -f rawvideo -pix_fmt rgba frames.raw
+   crossfade-stack them 4 high with a 150px overlap, dissolve the loop tail,
+   pad 26px each side (see below), then encode:
+     ffmpeg -f rawvideo -pix_fmt rgba -s 352x1686 -r 14 -i ribbon.raw \
+       -c:v libvpx-vp9 -pix_fmt yuva420p -auto-alt-ref 0 -b:v 0 -crf 40 \
+       -deadline good -cpu-used 2 -an -row-mt 1 public/bg/oil-line.webm
+
+   The 26px transparent PAD matters: the composited ink used to reach x=0, and
+   VP9 codes alpha in blocks, so an edge block that is part ink and part
+   background had no clean background left to bleed into — it clamped, and the
+   bleed read as a hard vertical wall down both sides of the pour. Padding gives
+   every edge block pure zero to fall off into.
+
+   Re-bake the poster from the SAME stack (one frame, libwebp -q:v 88) so the
+   reduced-motion still and the video agree. Verify alpha survived by drawing
+   the webm on a red canvas: the corners must stay pure red. */
+.ms-oil-line {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  opacity: 0.95;
+  /* NO drop-shadow. It used to carry one, and on the alpha video that is what
+     painted the pale rectangle down the page: VP9 codes the alpha plane lossily,
+     so the flat background decodes as a very-low-but-nonzero film rather than a
+     clean cut-out, and drop-shadow faithfully blurred THAT — producing a
+     soft-edged box the width of the element instead of a glow around the oil.
+     Isolated by rendering with `filter: none` (box gone) against dropping only
+     the drop-shadow (box also gone, colour retained).
+
+     The warm seating the shadow was there to provide is what .ms-oil::before
+     already does, and that one is a radial, so it cannot square off.
+
+     The residual film is then crushed rather than tolerated. Baking pads the
+     ribbon and snaps near-zero alpha to zero, which fixed the hard edge wall
+     (the frame edge no longer holds opaque ink), but ~2% of very low alpha
+     survives the encode across the flat area — and 2% over a whole column still
+     reads as a pale box. CSS has no alpha curve, so the steepening is done by
+     the inline SVG filter that Milestones.jsx renders (#oil-alpha): a
+     feComponentTransfer with a steep ramp on the alpha channel only, which maps
+     everything under ~15% to zero and leaves the oil's own pixels alone. */
+  filter: saturate(1.05) contrast(1.02) url(#oil-alpha);
+}
+
+/* --- Items --------------------------------------------------------- */
+.ms-list {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 0;
+}
+
+.ms-item {
+  position: relative;
+  display: grid;
+  /* left column · centre channel · right column */
+  grid-template-columns: 1fr var(--ms-rail) 1fr;
+  align-items: start;
+  /* gives the pour a tall enough run to actually read as flowing */
+  min-height: 15rem;
+}
+
+/* The min-height above exists to give the pour room to run BETWEEN milestones.
+   After the last one there is nothing left to run to, so reserving a further
+   15rem just left a band of empty cream between the closing copy and the
+   footer. The last item is sized by its own text instead. */
+.ms-item:last-child {
+  min-height: 0;
+}
+
+/* Odd items sit left of the pour and read toward it; even items mirror. */
+.ms-item:nth-child(odd) .ms-card {
+  grid-column: 1;
+  text-align: right;
+  align-items: flex-end;
+}
+.ms-item:nth-child(even) .ms-card {
+  grid-column: 3;
+  text-align: left;
+  align-items: flex-start;
+}
+
+/* Weave the rows the way the reference does, instead of leaving each milestone
+   marooned in its own band. Pull only the left-hand items up — pulling the
+   right-hand ones too would ride their labels into the pour. */
+.ms-item + .ms-item {
+  margin-top: -2rem;
+}
+
+/* --- The darkening -------------------------------------------------
+   Every milestone starts as a pale wash and resolves to full ink as the
+   oil reaches it. --n-p is that milestone's own 0 → 1, written by
+   Milestones.jsx. Interpolating colour (rather than opacity) keeps the
+   text painted against mile.png the whole way, so nothing ghosts. */
+.ms-item {
+  --n-p: 0;
+}
+
+.ms-card {
+  display: flex;
+  flex-direction: column;
+  max-width: 25rem;
+  /* a whisper of travel — the colour shift is what carries the reveal */
+  transform: translateY(calc((1 - var(--n-p)) * 10px));
+}
+
+.ms-icon {
+  color: color-mix(in srgb, var(--color-acti-sun) calc(25% + var(--n-p) * 75%), transparent);
+}
+
+.ms-stat {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2.1rem, 3.4vw, 2.9rem);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  margin-top: 0.7rem;
+  color: color-mix(in srgb, var(--color-acti-ink) calc(12% + var(--n-p) * 88%), transparent);
+}
+
+.ms-label {
+  margin-top: 0.55rem;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-acti-sun) calc(30% + var(--n-p) * 70%), transparent);
+}
+
+.ms-body {
+  margin-top: 0.8rem;
+  font-size: 15px;
+  line-height: 1.7;
+  color: color-mix(in srgb, var(--color-acti-ink) calc(14% + var(--n-p) * 58%), transparent);
+}
+
+/* --- The milestone marker ------------------------------------------
+   This used to sit at the centre of the rail, "on the line". It cannot:
+   the pour is a filmed ribbon that meanders across the rail AND animates,
+   so at some rows the rail centre is empty space and the dot floated in
+   the gap (measured: at 10% and 70% down, dead centre has no ink).
+
+   No static x can track a moving ribbon, so the marker now sits on the
+   ribbon's inner edge instead, where its position is deterministic. The
+   pour itself is the connector — it does not need dots on it. */
+/* The marker holds STILL while it reads in. It used to animate its own
+   geometry off --n-p — `transform: scale(0.8 → 1)` on a 9px box, plus a
+   box-shadow ring whose spread grew 1px → 3px. Both are geometry on a
+   sub-pixel-sized element, so every scrub frame re-rounded the painted
+   circle to a different device pixel and the dot visibly shivered as you
+   scrolled: the scale moved its edges, the ring changed its overall size,
+   and neither landed on a whole pixel. That is the "dots are not stable".
+
+   The fix is to animate only COLOUR, which cannot move anything. The box,
+   the ring, and the position are all fixed. It still reads in — it warms
+   from pale wash to full gold exactly as the copy beside it does. */
+.ms-dot {
+  grid-column: 2;
+  align-self: start;
+  margin-top: 2.6rem;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-acti-sun) calc(30% + var(--n-p) * 70%), var(--color-acti-cream));
+  /* Constant 2px spread — a fixed ring, so the footprint never changes. */
+  box-shadow: 0 0 0 2px rgba(255, 248, 238, 0.9);
+}
+/* odd items read leftward, so their marker hugs the rail's left edge */
+.ms-item:nth-child(odd) .ms-dot {
+  justify-self: start;
+}
+.ms-item:nth-child(even) .ms-dot {
+  justify-self: end;
+}
+
+/* --- Phones: one column, the pour runs down the left gutter -------- */
+@media (max-width: 767px) {
+  .ms-track {
+    /* The pour reads as a real ribbon here, not a hairline — it fills most of
+       the gutter. The channel still has to clear it, so --ms-rail stays above
+       --ms-oil-w or the oil runs under the copy.
+
+       Wider than it was (76/88). At three milestones the copy column no longer
+       needs to fight for width, and 76px was squeezing a 300px-wide ribbon into
+       a quarter of its width — see the object-fit note below. */
+    --ms-oil-w: 104px;
+    --ms-rail: 116px;
+  }
+  .ms-oil {
+    /* centred in the gutter rather than on the page */
+    left: calc(var(--ms-rail) / 2);
+    /* The phone track is far taller relative to its width, so the same
+       percentage would fade most of the first milestone out. Shorter at both
+       ends — and shorter still at the bottom, where the rail already stops
+       deliberately above the closing item rather than running out of room. */
+    --ms-fade-top: 7%;
+    --ms-fade-bottom: 9%;
+  }
+  /* The bloom's spread is tuned to the desktop channel (-85% either side); in a
+     narrow gutter that reaches across the copy and greys it. Rather than drop it
+     altogether — the pour is live video here now, so it does want seating on the
+     background — it is pulled in tight and softened. */
+  .ms-oil::before {
+    inset: 8% -25% 8% -25%;
+    filter: blur(18px);
+  }
+  /* `fill` was the old choice here, to span a ~1:17 gutter from a 1:6.6 clip.
+     It is wrong now for two reasons: the track is much shorter at three
+     milestones, and `fill` does not just stretch vertically — it squeezed the
+     300px-wide ribbon into a 76px gutter, i.e. to a quarter of its width, which
+     flattened every curl into the thin vertical hairline the pour had become.
+
+     `cover` keeps the ribbon's own proportions and crops instead. Paired with
+     the wider gutter above there is enough width for the meander to read as
+     poured oil rather than a drawn line. */
+  .ms-oil-line {
+    object-fit: cover;
+  }
+  .ms-item {
+    grid-template-columns: var(--ms-rail) 1fr;
+    min-height: 0;
+  }
+  .ms-item:nth-child(odd) .ms-card,
+  .ms-item:nth-child(even) .ms-card {
+    grid-column: 2;
+    text-align: left;
+    align-items: flex-start;
+  }
+  /* One column here, all copy to the right of the gutter, so every marker
+     hugs the gutter's inner edge rather than alternating. */
+  .ms-dot,
+  .ms-item:nth-child(odd) .ms-dot,
+  .ms-item:nth-child(even) .ms-dot {
+    grid-column: 1;
+    justify-self: end;
+    margin-top: 1.9rem;
+    margin-right: -4px;
+  }
+  .ms-item + .ms-item {
+    margin-top: 2.25rem;
+  }
+
+  /* All three milestones stay ON the rail.
+     The last one used to step out from under the pour and run full width
+     beneath it, which meant dropping its marker. That was tuned for a
+     five-item list, where losing the fifth dot cost little. At three items
+     it costs a THIRD of the markers — the user asked for three points and
+     only two would paint. So the closing item keeps its column and its dot,
+     and the pour simply runs past all three. */
+  .ms-item:last-child {
+    margin-top: 2.25rem;
+  }
+  /* The phone column is ~250px wide, so the desktop type scale reads as
+     oversized in it. These bring the block back to the reference's density —
+     a compact stat, a small caps label, and body text that fits 5-6 words a
+     line instead of 3-4. */
+  .ms-stat {
+    font-size: 1.85rem;
+    margin-top: 0.4rem;
+  }
+  .ms-label {
+    font-size: 12px;
+    letter-spacing: 0.12em;
+  }
+  .ms-body {
+    font-size: 13px;
+    line-height: 1.6;
+    margin-top: 0.55rem;
+  }
+  .ms-icon svg {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
 }
 
 /* ---------------------------------------------------------------
@@ -274,16 +937,100 @@ section[id] {
   border: 0;
   padding: 0;
   cursor: pointer;
+  /* Perspective lives here so the pack itself can turn in 3D on hover */
+  perspective: 800px;
 }
 .kd-item img {
   height: 100%;
   width: auto;
   object-fit: contain;
+  transform-origin: 50% 100%;
   filter: drop-shadow(0 14px 14px rgba(0, 0, 0, 0.45)) brightness(0.97);
-  transition: transform 0.35s ease;
+  transition:
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.35s ease;
 }
-.kd-item:hover img {
-  transform: translateY(-6px);
+/* Hover / keyboard focus: the pack lifts, turns toward the viewer and brightens */
+.kd-item:hover img,
+.kd-item:focus-visible img {
+  transform: translateY(-14px) scale(1.07) rotateY(-16deg) rotateZ(-1.5deg);
+  filter: drop-shadow(0 22px 22px rgba(0, 0, 0, 0.5)) brightness(1.06);
+}
+/* Everything else in the drawer steps back so the hovered pack reads first */
+.kd-items:hover .kd-item:not(:hover) img {
+  filter: drop-shadow(0 14px 14px rgba(0, 0, 0, 0.45)) brightness(0.78);
+}
+.kd-item:focus-visible {
+  outline: none;
+}
+
+/* The detail card that rises above the hovered pack */
+.kd-label {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: max-content;
+  max-width: min(210px, 30vw);
+  padding: 9px 12px;
+  border-radius: 11px;
+  text-align: center;
+  line-height: 1.3;
+  color: #fdf6ea;
+  background: rgba(30, 18, 8, 0.93);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, 8px) scale(0.96);
+  transition:
+    opacity 0.3s ease,
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0.3s;
+}
+.kd-label::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  margin-left: -4.5px;
+  margin-top: -5px;
+  transform: rotate(45deg);
+  background: rgba(30, 18, 8, 0.93);
+  border-right: 1px solid rgba(255, 255, 255, 0.14);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+.kd-label-brand {
+  font-size: clamp(11px, 1.15vw, 13px);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.kd-label-name {
+  font-size: clamp(10px, 1vw, 12px);
+  color: rgba(253, 246, 234, 0.82);
+}
+.kd-label-meta {
+  margin-top: 3px;
+  font-size: clamp(9px, 0.85vw, 11px);
+  color: #f0b46a;
+}
+.kd-item:hover .kd-label,
+.kd-item:focus-visible .kd-label {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0) scale(1);
+}
+/* Only meaningful with a pointer — touch devices go straight to #products */
+@media (hover: none) {
+  .kd-label {
+    display: none;
+  }
 }
 .kd-scene[data-open='true'] .kd-item {
   opacity: 1;
@@ -356,6 +1103,1027 @@ section[id] {
   z-index: 1;
 }
 
+/* ===============================================================
+   MISSION & VISION — MissionVision.jsx
+
+   Two cards, each split by a sweeping arc instead of a straight edge.
+   The same curve is used twice per card: once as a clip-path on the
+   photo, once as an SVG stroke drawn over the join. Keep the two in
+   sync — if you edit the path in MissionVision.jsx, mirror the change
+   in --mv-curve below.
+
+   The photo comes from public/bg/MISSION.png, which is one two-panel
+   image. It is split at its gutter (x 759..772 of 1535) into
+   bg/mission.webp + bg/vision.webp, 900px wide each, so each card
+   shows its own panel. To re-split after replacing the source:
+     python - <<'EOF'
+     from PIL import Image
+     im = Image.open("public/bg/MISSION.png").convert("RGB"); w,h = im.size
+     for name, box in (("mission",(2,2,757,h-2)), ("vision",(774,2,w-2,h-2))):
+         p = im.crop(box); tw = 900
+         p.resize((tw, round(p.height*tw/p.width)), Image.LANCZOS)          .save(f"public/bg/{name}.webp","WEBP",quality=84,method=6)
+     EOF
+================================================================*/
+.mv-scene {
+  position: relative;
+  background-color: var(--color-acti-cream);
+}
+
+/*
+ * Pinned run. The section is one viewport of stage plus a runway; the stage
+ * holds itself still with position:sticky (browser-native — no GSAP pin, which
+ * desyncs against Lenis, see the note in WhyTrust.jsx) while the scroll drives
+ * the drop down the curve.
+ *
+ * --mv-runway is THE dial for the drop's speed: it is the scroll distance the
+ * drop's whole journey is spread over, so longer = slower. It is also how long
+ * the section holds before releasing, so the icon has filled by the time the
+ * page moves on (ARRIVE_AT in MissionVision.jsx lands it at 80% of this,
+ * leaving the last 20% lit and still).
+ *
+ * At 190vh the drop takes ~0.8 x 190vh of scroll to run the curve. Raise this
+ * number alone to slow it further — do not reach for scrub, which only changes
+ * how much the drop lags the wheel, not how far it travels per pixel.
+ */
+.mv-scene--pinned {
+  --mv-runway: 190vh;
+  height: calc(100svh + var(--mv-runway));
+}
+.mv-scene--pinned .mv-stage {
+  position: sticky;
+  top: 0;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-block: 3rem;
+}
+
+/* --- Heading ------------------------------------------------------- */
+.mv-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--color-acti-red);
+}
+
+.mv-rule {
+  display: block;
+  width: clamp(48px, 9vw, 110px);
+  height: 1px;
+  background: color-mix(in srgb, var(--color-acti-sun) 60%, transparent);
+}
+
+.mv-flourish {
+  margin-top: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+}
+
+/* --- Card shell ---------------------------------------------------- */
+.mv-card {
+  --mv-accent: var(--color-acti-red);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 26px;
+  background: #fffdf8;
+  box-shadow:
+    0 1px 0 rgb(23 17 13 / 0.04),
+    0 18px 40px -24px rgb(90 62 30 / 0.28);
+  /* tall enough for the arc to read as a sweep rather than a kink */
+  min-height: 27rem;
+}
+.mv-card[data-tone='sun'] {
+  --mv-accent: var(--color-acti-sun);
+}
+
+/* The photo fills the card and is cut by the curve.
+   clip-path: path() would not work here — it takes absolute pixels, so it
+   cannot track a fluid card. The referenced <clipPath> uses
+   clipPathUnits="objectBoundingBox" (0-1 coords), which scales for free.
+   The def lives once in MissionVision.jsx; both cards share it. */
+.mv-figure {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  z-index: 0;
+  clip-path: url(#mv-curve);
+}
+.mv-figure img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* The arc, stroked in the card's accent over the photo/copy join */
+.mv-stroke {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+  fill: none;
+  stroke: var(--mv-accent);
+  stroke-width: 1.4;
+  opacity: 0.85;
+}
+
+/*
+ * The dot that rides down the curve as the card scrolls into view.
+ * --mv-dot-x/y are written by MissionVision.jsx straight from the path's own
+ * getPointAtLength(), so it tracks the sweep exactly at any card size.
+ */
+.mv-card {
+  --mv-dot-x: 4%;
+  --mv-dot-y: 0%;
+}
+
+.mv-dot {
+  position: absolute;
+  left: var(--mv-dot-x);
+  top: var(--mv-dot-y);
+  /* --mv-dot-a is the curve's tangent at this point, written by the scroll
+     effect. Without it the teardrop stays upright and reads as a pin stuck on
+     a bend rather than a bead running down the line. */
+  --mv-dot-a: 0deg;
+  transform: translate(-50%, -50%) rotate(var(--mv-dot-a));
+  z-index: 3;
+  width: 19px;
+  height: 19px;
+  color: var(--mv-accent);
+  /* The drop is a shape, not a disc, so the old ring-shaped box-shadow would
+     cut a square hole in the curve behind it. A drop-shadow follows the alpha
+     of the glyph itself — cream halo first to lift it off the stroke, then a
+     soft accent glow. */
+  filter:
+    drop-shadow(0 0 2px #fffdf8) drop-shadow(0 0 2px #fffdf8)
+    drop-shadow(0 0 6px color-mix(in srgb, var(--mv-accent) 55%, transparent));
+}
+
+/* --- Copy --------------------------------------------------------- */
+.mv-body {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  /* The curve holds x ~46-50% for most of the card's height, so the copy is
+     capped just inside that. Widen the curve first if you widen this, or the
+     text will run under the photo. */
+  width: 42%;
+  /* Extra top padding drops the copy clear of the card's top edge and settles
+     it against the badge, which is pinned to a measured point on the curve at
+     56% and must not move with it. --mv-copy-drop is the dial. */
+  --mv-copy-drop: 2.5rem;
+  padding: calc(2.25rem + var(--mv-copy-drop)) 0.75rem 2.25rem 2.25rem;
+}
+
+/*
+ * One icon per stop, each sitting ON the curve at the point the drop passes
+ * through. Positions are written inline from the path itself (see the
+ * placeBadges effect in MissionVision.jsx), so a stop's `at` is the only place
+ * its position is defined — nothing here has to be kept in step with it.
+ *
+ * Each starts as an outline on cream and fills with the accent as the drop
+ * reaches it (data-lit), which is what makes the arrival read as an arrival.
+ */
+.mv-badge {
+  position: absolute;
+  /* left/top are written INLINE by MissionVision.jsx from the path's own
+     getPointAtLength (see the placeBadges effect), so a stop's position is
+     defined once — in its `at` — instead of being duplicated here and having to
+     be re-measured by hand whenever it moves. */
+  transform: translate(-50%, -50%);
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Three badges now share the curve, so each is smaller than the single one it
+     replaces or they crowd into each other on a short card. */
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 999px;
+  color: var(--mv-accent);
+  background: #fffdf8;
+  border: 2px solid color-mix(in srgb, var(--mv-accent) 45%, transparent);
+  box-shadow: 0 8px 18px -12px color-mix(in srgb, var(--mv-accent) 70%, transparent);
+  transition:
+    background-color 0.45s ease,
+    border-color 0.45s ease,
+    color 0.45s ease,
+    box-shadow 0.45s ease,
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mv-badge[data-lit='true'] {
+  color: #fff;
+  background: var(--mv-accent);
+  border-color: var(--mv-accent);
+  box-shadow: 0 10px 26px -10px color-mix(in srgb, var(--mv-accent) 80%, transparent);
+  transform: translate(-50%, -50%) scale(1.06);
+}
+
+/*
+ * The stop copy. All lines are stacked in the same grid cell so the block is as
+ * tall as the tallest of them from the outset — the card must not resize as the
+ * text changes, or the whole layout twitches on every stop.
+ *
+ * grid (rather than absolute positioning) is what makes that height automatic:
+ * every child occupies 1/1, so the track takes the max of their heights.
+ */
+.mv-stops {
+  display: grid;
+  margin-top: 1.1rem;
+}
+.mv-stop {
+  grid-area: 1 / 1;
+  margin-top: 0;
+  opacity: 0;
+  /* A short lift on the way in, so a stop arrives rather than just appears. */
+  transform: translateY(0.4rem);
+  transition:
+    opacity 0.45s ease,
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  /* Hidden lines must not be clickable or focus-reachable while invisible. */
+  pointer-events: none;
+}
+.mv-stop[data-on='true'] {
+  opacity: 1;
+  transform: none;
+}
+
+/*
+ * The reveal: once the drop reaches the last stop, --mv-reveal runs 0 -> 1 and
+ * the photo opens out of its curve to fill the card while the copy fades under
+ * it.
+ *
+ * The clip-path is interpolated toward a full-bleed rectangle rather than being
+ * switched off, which is what makes it grow smoothly — clip-path:none would
+ * simply pop. inset() is used for the target because a path() cannot animate to
+ * a different node count, and inset(0) is exactly "the whole card".
+ */
+/* Registered for the same reason as --mv-flip below: it feeds calc() inside
+   color-mix() and clamp(), which need a resolved number, not a token list. */
+@property --mv-reveal {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+.mv-card {
+  --mv-reveal: 0;
+}
+/*
+ * The resting figure retires as the reveal layer takes over.
+ *
+ * Both draw the same photo, but the reveal layer's clip is the one that travels;
+ * leaving this one at full opacity underneath meant its stationary curve showed
+ * through as a lighter panel wherever the two clips did not coincide — the seam
+ * down the middle of the card. Gone by the time the curve has cleared the copy.
+ */
+/*
+ * The resting figure holds until the reveal layer has genuinely overtaken it.
+ *
+ * Both draw the same photo from the same box, so while the growing clip is still
+ * inside the resting one they are pixel-identical and there is no seam to hide.
+ * Fading this out early (it was gone by reveal 0.33) just exposed bare cream
+ * where the picture had been — the washed-out panel. It only needs to go at the
+ * very end, and by then the layer above covers the whole card anyway.
+ */
+.mv-figure {
+  opacity: clamp(0, calc((0.98 - var(--mv-reveal)) / 0.06), 1);
+}
+/* The photo layer that grows.
+ *
+ * It sits above the clipped figure and is wiped in from the RIGHT — i.e. from
+ * the side the photo already occupies — so the curve reads as sweeping left
+ * across the card. Insetting from the top instead made the picture drop down
+ * over the copy and left the old curved edge showing as a ghost through the
+ * half-faded layer beneath.
+ *
+ * Fully opaque throughout: the clip alone does the reveal. Fading it in as well
+ * meant the copy showed through the photo for the whole transition. */
+.mv-reveal-img {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  margin: 0;
+  pointer-events: none;
+  /*
+   * The reveal keeps the CURVE and slides it off the left edge, rather than
+   * wiping a straight line across. The layer shares the same #mv-curve clip as
+   * the resting figure, and --mv-reveal translates it left by its own width —
+   * so what the viewer sees is the sweep travelling out of frame, and the card
+   * is full-bleed once it has gone.
+   *
+   * A straight-edged inset() was the obvious implementation and the wrong one:
+   * every edge in this design is that curve, so a vertical line crossing the
+   * card read as a slide transition dropped on top of the artwork.
+   *
+   * translate on a clip-path is composited, so this stays cheap during a scrub.
+   */
+  /*
+   * The clip is a second copy of the sweep, declared inline in the markup as
+   * #mv-curve-open and interpolated by MissionVision.jsx: its control points are
+   * lerped from the resting curve toward the card's left edge, so the boundary
+   * stays a curve for the whole reveal and simply travels out of frame.
+   *
+   * Animating the path's DATA rather than transforming the layer is what keeps
+   * the picture still — a translate moved the clip and the image together, and
+   * counter-translating the img just put a visible seam where the two
+   * disagreed.
+   */
+  clip-path: url(#mv-curve-open);
+  transition: none;
+}
+.mv-reveal-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* The curve furniture retires as the image takes the card — the stroke and the
+   drop describe a boundary that no longer exists once the photo is full-bleed.
+   The COPY does not: it stays, and rides on top of the finished picture. */
+.mv-stroke,
+.mv-dot {
+  opacity: clamp(0, calc(1 - var(--mv-reveal) * 2), 1);
+  transition: none;
+}
+
+/*
+ * The copy stays legible over the full-bleed photo instead of fading out.
+ *
+ * It has to outrank .mv-reveal-img in the stacking order, and it needs its own
+ * ground once the cream panel behind it is gone — the ink-on-cream colours have
+ * no contrast against a sunlit field. So past the reveal the panel fades in a
+ * dark scrim behind the text and the type inverts to white.
+ */
+.mv-body {
+  position: relative;
+  z-index: 3;
+}
+/*
+ * The scrim behind the copy once the photo is full-bleed.
+ *
+ * An elliptical radial gradient, NOT a rounded rectangle: a box with a hard
+ * edge (even a bled, rounded one) reads as a grey slab pasted over the picture.
+ * A radial falloff has no edge to notice, so the copy simply sits in a pool of
+ * shade. It is anchored left-of-centre because that is where the text is.
+ *
+ * The gradient extends well past the element so its own bounds never show.
+ */
+.mv-body::before {
+  content: '';
+  position: absolute;
+  inset: -55% -70% -55% -60%;
+  z-index: -1;
+  /* Only as dark as the type needs. The first pass was near-opaque black and
+     buried the photo it was supposed to sit on — the point is a readable
+     pool of shade, not a dark panel. */
+  background: radial-gradient(
+    56% 50% at 32% 50%,
+    rgba(10, 7, 4, 0.62) 0%,
+    rgba(10, 7, 4, 0.46) 45%,
+    rgba(10, 7, 4, 0.18) 72%,
+    rgba(10, 7, 4, 0) 100%
+  );
+  /*
+   * Held back until the photo has actually reached the copy column.
+   *
+   * The curve's leading edge only crosses the text late in the run, so anything
+   * that fades in earlier is darkening the CREAM panel, not the picture — which
+   * is the grey wash over a white card. Starting at 0.82 (rather than 0.35)
+   * keeps the panel clean for the whole of the travel and only lays the scrim in
+   * over the last stretch, once there is a photo underneath to sit on.
+   */
+  opacity: clamp(0, calc((var(--mv-reveal) - 0.82) / 0.18), 1);
+  pointer-events: none;
+}
+/* Type inverts over the scrim. Interpolating the colours (rather than swapping
+   them at a threshold) keeps it readable at every point of the transition,
+   including the middle where both the panel and the scrim are half-strength. */
+/*
+ * --mv-flip has to be a REGISTERED property, not a plain custom property.
+ *
+ * An unregistered var holds an unresolved token list, so
+ * `calc(var(--mv-flip) * 100%)` inside color-mix() is invalid at computed-value
+ * time and the whole colour falls back — which is exactly what left dark ink
+ * sitting on the dark scrim. @property gives it a <number> type, so the clamp
+ * resolves to a real number before color-mix() sees it.
+ */
+@property --mv-flip {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+.mv-card {
+  /* Tracks the SCRIM exactly — same curve, same numbers — so the type turns
+     white only once there is something dark behind it. Inverting any earlier
+     gives white text on a cream panel, which is invisible. */
+  --mv-flip: clamp(0, calc((var(--mv-reveal) - 0.82) / 0.18), 1);
+  --mv-ink: color-mix(in srgb, #fff calc(var(--mv-flip) * 100%), var(--color-acti-ink));
+}
+/* The badges STAY once the photo is full-bleed — they are lit accent discs by
+   then, and they are the only thing tying the finished card back to the three
+   points the drop just made. Only the curve furniture it drew on (the stroke and
+   the drop itself) retires, since that boundary no longer exists. */
+.mv-badge {
+  opacity: 1;
+}
+
+.mv-kicker {
+  margin-top: 2rem;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  /* --mv-ink is ink at rest and white once the photo is full-bleed, so the copy
+     stays readable over the picture instead of being faded out. The alpha lifts
+     with it for the same reason as .mv-text below. */
+  color: color-mix(
+    in srgb,
+    var(--mv-ink) calc(62% + var(--mv-flip) * 25%),
+    transparent
+  );
+}
+
+.mv-title {
+  margin-top: 0.1rem;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2rem, 3.6vw, 2.65rem);
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  /*
+   * Keeps the brand accent all the way through, including over the photo.
+   *
+   * It was interpolating to white on the reasoning that red/gold has poor
+   * contrast on a sunlit field — true in the abstract, but it cost the card its
+   * only piece of brand colour at exactly the moment the picture is full-bleed.
+   * The accent is kept and the scrim below is what buys back the legibility,
+   * plus a shadow so the letterforms hold their edge over busy pixels.
+   */
+  color: var(--mv-accent);
+  text-shadow: 0 2px 14px rgba(10, 7, 4, calc(var(--mv-flip) * 0.55));
+}
+
+.mv-underline {
+  display: block;
+  width: 3.2rem;
+  height: 2px;
+  margin-top: 0.9rem;
+  /* Stays the accent, matching the title above it. */
+  background: var(--mv-accent);
+}
+
+.mv-text {
+  margin-top: 1.1rem;
+  font-size: 15.5px;
+  line-height: 1.72;
+  /* The alpha lifts to 1 with --mv-flip: 80% of ink is a comfortable grey on
+     cream, but 80% of white over a photo is a washed-out grey that reads as
+     unfinished. Over the picture the copy wants to be solid white. */
+  color: color-mix(
+    in srgb,
+    var(--mv-ink) calc(80% + var(--mv-flip) * 20%),
+    transparent
+  );
+}
+
+/* The faint outline motif low in the copy panel */
+.mv-motif {
+  width: 3.6rem;
+  height: 3.6rem;
+  margin-top: auto;
+  padding-top: 1.75rem;
+  /* Keeps the accent, but strengthens over the photo: a 26% tint that reads as a
+     soft watermark on cream is simply invisible against the picture. */
+  color: color-mix(
+    in srgb,
+    var(--mv-accent) calc(26% + var(--mv-flip) * 44%),
+    transparent
+  );
+}
+
+/* --- Phones: photo on top, copy beneath, no arc ------------------- */
+/* --- Phones -------------------------------------------------------
+   The card keeps its curved layout here rather than stacking into
+   photo-above-copy: copy down the left, photo bleeding in from the right,
+   the sweep dividing them. The clipPath is in objectBoundingBox units so
+   the same curve scales to the narrower card for free.
+
+   Only the proportions change — a taller card (the phone is narrow, so the
+   copy needs more vertical room) and a smaller badge sat on the curve. */
+@media (max-width: 639px) {
+  /* Short enough that both cards, the heading and the section padding fit one
+     844px viewport together (2x300 + 112 + 28 gap + 2x48 pad = 836). The card
+     was 30rem/480px, which put the pair at 1308px — a screen and a half.
+
+     Everything below follows from that budget: the copy has to fit ~300px of
+     card, so the column widens (fewer wrapped lines) and the badge comes off
+     the curve's lower reach, which the copy can no longer clear. */
+  .mv-card {
+    min-height: 0;
+    height: 18.75rem;
+  }
+  /* The gap and the grid's top margin count against the same budget as the
+     cards. Tailwind's gap-7/mt-12 utilities are overridden here rather than
+     changed in the markup, so the desktop spacing is untouched. */
+  .mv-grid.mv-grid {
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .mv-body {
+    /* Wider than the 42% used when the card was tall: at 300px there is no
+       vertical room to spend on wrapping, so the copy buys width instead.
+       The curve pinches around 46-50% of the card, hence the cap. */
+    /* 50% is the width at which BOTH cards' copy fits four lines instead of
+       five or six (measured), ending at y=204 — clear of the badge at y=243.
+       Narrower columns wrap more and push the last line into the badge, which
+       is the failure this card is short enough to hit easily. */
+    width: 50%;
+    --mv-copy-drop: 0rem;
+    /* Copy rides high in the card, leaving the lower half for the badge that
+       the drop travels down to. */
+    padding: 1.15rem 0.3rem 0 1.15rem;
+    justify-content: flex-start;
+  }
+
+  /* The badges stay ON the curve here too, just smaller.
+     This used to pin a single badge below the copy with a fixed left/bottom,
+     which is what forced the drop to peel off the path to reach it. With three
+     stops that override would stack all three in the same corner, so only the
+     size changes — the inline left/top from the path still positions them. */
+  .mv-badge {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  .mv-badge svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+  .mv-badge[data-lit='true'] {
+    transform: scale(1.06);
+  }
+  .mv-badge svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .mv-kicker {
+    font-size: 11px;
+  }
+  /* Must fit the 54% column without wrapping — "MISSION" is the long one. */
+  .mv-title {
+    font-size: clamp(1.35rem, 6vw, 1.8rem);
+    margin-top: 0.1rem;
+  }
+  .mv-underline {
+    margin-top: 0.5rem;
+  }
+  .mv-text {
+    margin-top: 0.7rem;
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
+
+  /* The corner motif crowds the copy at this width */
+  .mv-motif {
+    display: none;
+  }
+
+  /* Section chrome tightened too — the pair of cards only fits the viewport
+     if the heading and padding give up their share as well. */
+  .mv-scene {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+  .mv-flourish {
+    margin-top: 0.5rem;
+  }
+}
+
+/* ---------------------------------------------------------------
+   Why-trust scene (WhyTrust.jsx)
+   A pinned stage whose row of ovals travels right-to-left as the
+   page scrolls down. Photo ovals and copy ovals alternate.
+
+   The pin height is set by GSAP (end: +=travel distance), so there
+   is no fixed runway to keep in sync here — the stage is one
+   viewport tall and the rail is as wide as its content.
+----------------------------------------------------------------*/
+/* GSAP pins .wt-stage with position:fixed, so this element must NOT become a
+   containing block for it — no transform, no filter, no isolation, and no
+   overflow:hidden. Any of those re-anchor the fixed stage to this box and the
+   scene ends up parked off-screen (blank cream) mid-scrub. The warm wash is
+   therefore painted straight onto the background here rather than through an
+   ::before that would need a stacking context, and the horizontal clip lives
+   on .wt-viewport, which has no fixed child. */
+.wt-scene {
+  /* One viewport for the stage + however far the rail has to travel. The
+     travel is content-dependent, so WhyTrust.jsx measures it and writes
+     --wt-runway; the fallback keeps the layout sane before that first write. */
+  --wt-runway: 0px;
+  position: relative;
+  height: calc(100svh + var(--wt-runway));
+  background-color: var(--color-acti-cream);
+  background-image:
+    radial-gradient(120% 70% at 50% 0%, rgba(245, 179, 1, 0.11), transparent 60%),
+    radial-gradient(90% 60% at 12% 100%, rgba(193, 18, 31, 0.06), transparent 65%);
+}
+
+/* The stage holds itself still with sticky — no GSAP pin, no spacer, and
+   nothing that can desync from Lenis (see the note in WhyTrust.jsx).
+   height (not min-height) so it is exactly one viewport tall; box-sizing keeps
+   the padding inside that viewport instead of adding to it. */
+.wt-stage {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 100svh;
+  padding-block: clamp(2rem, 5vh, 4rem);
+  gap: clamp(1.25rem, 3.5vh, 2.5rem);
+  overflow: hidden;
+}
+
+/* --- Heading -------------------------------------------------- */
+.wt-head {
+  text-align: center;
+  padding-inline: 5vw;
+}
+
+.wt-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-acti-ink) 45%, transparent);
+}
+
+.wt-heading {
+  margin-top: 0.75rem;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2rem, 4.2vw, 3.1rem);
+  line-height: 1.12;
+  color: var(--color-acti-ink);
+}
+
+/* --- The travelling row --------------------------------------- */
+.wt-viewport {
+  overflow: hidden;
+}
+
+/* Two spacings, deliberately different — this is what groups the row into
+   pairs instead of one undifferentiated ribbon of ovals:
+
+     --wt-lap   the photo and its card overlap by this much, so a step reads
+                as one unit (picture + claim tucked together).
+     --wt-gap   clear space BETWEEN one pair and the next, so the eye can tell
+                where a step ends and the following one begins.
+
+   The gap must stay comfortably larger than the lap, or the grouping reads
+   as accidental. */
+.wt-rail {
+  --wt-lap: clamp(1.5rem, 3.2vw, 3rem);
+  --wt-gap: clamp(3rem, 6vw, 6rem);
+  display: flex;
+  align-items: center;
+  gap: var(--wt-gap);
+  /* Half a viewport of lead-in and lead-out, so the first oval starts inset
+     from the edge and the last one is not flush against it. */
+  padding-inline: clamp(1.25rem, 6vw, 7rem);
+  width: max-content;
+  will-change: transform;
+}
+
+.wt-pair {
+  display: flex;
+  align-items: center;
+}
+
+/* Inside a pair only: the card slides under the photo. Deliberately NOT
+   `.wt-pair + .wt-pair` — the space between pairs is the rail's gap above. */
+.wt-pair > * + * {
+  margin-left: calc(var(--wt-lap) * -1);
+}
+
+/* Later ovals stack on top of earlier ones, so the row reads as a deck
+   dealt left-to-right rather than a random pile. Photos sit above cards at
+   the same index, which is what puts the curved kicker over the card edge. */
+.wt-pair {
+  position: relative;
+}
+.wt-pair:nth-child(1) {
+  z-index: 4;
+}
+.wt-pair:nth-child(2) {
+  z-index: 3;
+}
+.wt-pair:nth-child(3) {
+  z-index: 2;
+}
+.wt-pair:nth-child(4) {
+  z-index: 1;
+}
+.wt-photo {
+  z-index: 2;
+}
+.wt-card {
+  z-index: 1;
+}
+
+/* --- Photo oval ----------------------------------------------- */
+.wt-photo {
+  position: relative;
+  flex: none;
+  width: clamp(15rem, 25vw, 23rem);
+  aspect-ratio: 1 / 1.32;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.wt-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* The kicker curved along the top of the photo, as in the reference.
+   A real <textPath> on an inset ellipse, so the letters follow the oval.
+   WhyTrust.jsx rotates the whole <svg> on scroll — rotating the ring
+   (not the glyphs) is what makes the line read as rolling around the
+   rim rather than tilting as a block. */
+.wt-arc {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  /* Spin about the oval's centre. */
+  transform-origin: 50% 50%;
+}
+
+.wt-arc-text {
+  /* viewBox is 100 wide, so this is ~4.4% of the oval's width — it tracks the
+     oval at every clamp size instead of needing its own breakpoints. */
+  font-size: 4.4px;
+  font-weight: 600;
+  /* Tracking is what decides how much of the arc a kicker eats, which in turn
+     caps how far the ring can roll (see ARC_SPIN in WhyTrust.jsx) before the
+     tail slides off the pill's rounded cap and gets clipped by the crop. At
+     0.34em the longest kicker spanned ~115 of the arc's 180 and had almost no
+     room to travel. */
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  fill: rgba(255, 255, 255, 0.94);
+  paint-order: stroke;
+  stroke: rgba(23, 17, 13, 0.28);
+  stroke-width: 0.5px;
+  stroke-linejoin: round;
+}
+
+/* --- Copy oval ------------------------------------------------- */
+.wt-card {
+  --wt-tone: var(--color-acti-sun);
+  position: relative;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: clamp(15rem, 25vw, 23rem);
+  aspect-ratio: 1 / 1.32;
+  border-radius: 999px;
+  padding: clamp(2rem, 3vw, 3.25rem);
+  background: #fffdf7;
+  border: 1px solid color-mix(in srgb, var(--wt-tone) 34%, transparent);
+  /* Inset only — a drop shadow here reads as a hard edge under the oval
+     against flat cream, which is the artefact it was meant to avoid. */
+  box-shadow: inset 0 0 0 6px color-mix(in srgb, var(--wt-tone) 8%, transparent);
+}
+
+.wt-card--sun {
+  --wt-tone: var(--color-acti-sun);
+}
+.wt-card--red {
+  --wt-tone: var(--color-acti-red);
+}
+.wt-card--green {
+  --wt-tone: var(--color-acti-green);
+}
+
+.wt-step {
+  position: absolute;
+  top: clamp(1.6rem, 3vh, 2.6rem);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  color: color-mix(in srgb, var(--wt-tone) 70%, transparent);
+}
+
+.wt-icon {
+  color: var(--wt-tone);
+}
+
+.wt-title {
+  margin-top: 0.85rem;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.35rem, 1.9vw, 1.9rem);
+  line-height: 1.15;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  color: var(--color-acti-red);
+}
+
+/* The small diamond rule under the title */
+.wt-rule {
+  display: block;
+  width: 4.5rem;
+  height: 1px;
+  margin-top: 0.9rem;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--wt-tone) 75%, transparent),
+    transparent
+  );
+}
+
+.wt-body {
+  margin-top: 0.9rem;
+  font-size: clamp(13.5px, 1vw, 15px);
+  line-height: 1.65;
+  color: color-mix(in srgb, var(--color-acti-ink) 72%, transparent);
+}
+
+.wt-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: clamp(1.1rem, 2vh, 1.6rem);
+  padding: 0.7rem 1.4rem;
+  border-radius: 999px;
+  background: var(--color-acti-red);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  transition:
+    background-color 0.25s ease,
+    transform 0.25s ease;
+}
+
+.wt-cta:hover,
+.wt-cta:focus-visible {
+  background: var(--color-acti-orange-dark);
+  transform: translateY(-2px);
+}
+
+/* --- Footer line ----------------------------------------------- */
+.wt-foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  padding-inline: 5vw;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-acti-red) 78%, transparent);
+}
+
+/* --- The swipe-strip fallback ----------------------------------
+   Reduced motion only. Everything else — phones included — gets the pinned
+   horizontal scrub, so this is keyed off .wt-viewport--swipe, which WhyTrust.jsx
+   only applies when prefers-reduced-motion is set. It cannot be a width query:
+   the pin needs .wt-stage to stay sticky at every size. */
+.wt-viewport--swipe {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.wt-viewport--swipe::-webkit-scrollbar {
+  display: none;
+}
+.wt-viewport--swipe .wt-rail {
+  /* GSAP is not driving this one; let the browser own the scroll. */
+  transform: none !important;
+  will-change: auto;
+}
+.wt-viewport--swipe .wt-pair {
+  scroll-snap-align: center;
+}
+
+/* Tablet: the ovals come down but the pin stays. */
+@media (max-width: 1023px) {
+  .wt-photo,
+  .wt-card {
+    width: min(60vw, 18rem);
+  }
+}
+
+/* Phone: a pair is photo + card side by side, so each oval gets a little under
+   half the viewport. Type inside the card steps down with it — at this width the
+   desktop sizes overflow the oval instead of sitting inside the curve. */
+@media (max-width: 639px) {
+  .wt-photo,
+  .wt-card {
+    width: min(46vw, 13rem);
+  }
+  /* A pair is now ~92vw, so the default lead-in left the first photo hanging off
+     the left edge before the scrub had moved anything. Centre the pair instead
+     and pull the overlap in, so both ovals of step 01 are fully on screen at
+     rest. --wt-gap still separates one pair from the next. */
+  .wt-rail {
+    --wt-lap: 0.75rem;
+    --wt-gap: 2rem;
+    padding-inline: 1.25rem;
+  }
+  /* The card is an ellipse, not a rectangle, so the usable width is narrower
+     than the box near the rounded ends. Padding is what keeps the body copy and
+     the CTA inside the curve rather than merely inside the bounding box —
+     content that fits the box still reads as spilling out of the oval. */
+  .wt-card {
+    padding: 1.1rem 1.85rem;
+  }
+  .wt-step {
+    top: 1rem;
+    font-size: 9px;
+  }
+  .wt-icon svg {
+    width: 1.4rem;
+    height: 1.4rem;
+  }
+  .wt-title {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    line-height: 1.2;
+  }
+  .wt-rule {
+    width: 2.25rem;
+    margin-top: 0.5rem;
+  }
+  /* Narrower than the padding box: at the vertical extremes of the ellipse the
+     usable width is less than the middle, and the body sits high enough in the
+     card for the difference to show as text touching the curve. */
+  .wt-body {
+    margin-top: 0.5rem;
+    max-width: 92%;
+    font-size: 10.5px;
+    line-height: 1.4;
+  }
+  /* One line inside the narrowed oval — wrapped, the pill grows tall enough to
+     push the stack past the bottom of the curve. Sitting where the ellipse is
+     already narrowing, the pill has to stay well inside the box, not just fit
+     it: hence the cap below plus type small enough that the longest label
+     ('Know our promise') still fits on one line at that width. */
+  .wt-cta {
+    margin-top: 0.7rem;
+    padding: 0.45rem 0.7rem;
+    /* The base rule's 0.5rem gap is most of the pill's width at this scale. */
+    gap: 0.3rem;
+    font-size: 7px;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+  /* The arrow is decorative next to a 7px label and only costs width. */
+  .wt-cta svg {
+    width: 0.65rem;
+    height: 0.65rem;
+    flex: none;
+  }
+  /* The kicker rides the photo's rim, so it scales with the oval too —
+     otherwise a 13rem oval carries desktop-sized type around its edge and the
+     line runs past the cap and out of the crop. */
+  .wt-arc-text {
+    font-size: 5.6px;
+    letter-spacing: 0.14em;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -364,9 +2132,790 @@ section[id] {
   .acti-fade-up {
     animation: none;
   }
+  /* No scrub is driving --acti-tone here, so the header flips at a threshold
+     instead. A short colour fade keeps that from being a hard cut — motion is
+     what's being reduced, not colour. Note this deliberately drops the
+     transform transition too: the show/hide cuts rather than slides. */
+  .acti-header,
+  .acti-tone-ink,
+  .acti-tone-border,
+  .acti-tone-cta,
+  .acti-logo-light,
+  .acti-logo-dark {
+    transition:
+      background-color 0.3s linear,
+      border-color 0.3s linear,
+      box-shadow 0.3s linear,
+      color 0.3s linear,
+      opacity 0.3s linear;
+  }
   .kd-front,
   .kd-item,
-  .kd-item img {
-    transition: none;
+  .kd-item img,
+  .kd-label,
+  /* Milestones.jsx paints --n-p straight to 1, so everything is already at
+     full ink — nothing left to transition. */
+  .ms-card {
+    transform: none;
   }
+  .kd-item:hover img,
+  .kd-item:focus-visible img {
+    transform: translateY(-6px);
+  }
+  /* WhyTrust.jsx already falls back to the native swipe strip here, so there
+     is no scrub to disable — only the hover lift on the button. Lenis is not
+     constructed at all under this setting, so the page keeps its native scroll. */
+  .wt-cta:hover,
+  .wt-cta:focus-visible {
+    transform: none;
+  }
+  /* No tween is driving the rings, so they rest level along the oval's top. */
+  .wt-arc {
+    transform: none;
+  }
+
+  /* The swipe fallback lays out at natural height. Without this the stage stays
+     sticky and the section keeps its --wt-runway, leaving a tall dead gap that
+     nothing scrolls through — the tween that used to consume it is not running.
+     (This lived in the max-width:1023px block until the pin was extended to
+     phones; it belongs with the fallback, not with a width.) */
+  .wt-scene {
+    height: auto;
+  }
+  .wt-stage {
+    position: static;
+    height: auto;
+    overflow: visible;
+  }
+}
+
+/* ===============================================================
+   ROOTED IN TRUST — TrustSection.jsx
+
+   Full-bleed photographic scene, centred heading, one translucent
+   panel of four pillars, then a strip of secondary assurances.
+
+   Images come from public/build/ (upload artefacts) resized into
+   public/rooted/ as WebP. To regenerate the background after replacing
+   anything in build/:
+
+     python - <<'EOF'
+     from PIL import Image
+     JOBS = [("bg (2).png","scene",1800,0), ("9.png","bottle",620,0),
+             ("3 (3).png","droplet",360,1), ("4 (2).png","wave",1000,1)]
+     for src,name,tw,keep in JOBS:
+         im = Image.open(f"public/build/{src}")
+         a  = im.mode in ("RGBA","LA") and keep
+         im = im.convert("RGBA" if a else "RGB")
+         im.resize((tw, round(im.height*tw/im.width)), Image.LANCZOS)\
+           .save(f"public/rooted/{name}.webp","WEBP",quality=82,method=6)
+     EOF
+
+   The four pillar cards are separate: their sources are already small
+   (~440x175), so they are re-encoded at native size — upscaling would
+   only add bytes, not detail. 32 KB for all four.
+
+     python - <<'EOF'
+     from PIL import Image
+     CARDS = [("traceability_farm_exact (1).png","farm"),
+              ("certifications_exact.png","certs"),
+              ("small_batch_factory_exact.png","batch"),
+              ("purity_oil_ripple_exact.png","ripple")]
+     for src,name in CARDS:
+         Image.open(f"public/build/{src}").convert("RGB")\
+           .save(f"public/rooted/{name}.webp","WEBP",quality=86,method=6)
+     EOF
+================================================================*/
+.trust-scene {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(3rem, 6vw, 5.5rem) 0 clamp(2.5rem, 4vw, 4rem);
+  /* Matches the page rather than setting a paler ground of its own, which read
+     as a step against the cream on either side — the photo carries the warmth. */
+  background: var(--color-acti-cream);
+  /* Top edge only. Above is the dark cabinet, which genuinely needs the
+     dissolve; below is WhyTrust, already cream — so a bottom seam blends
+     nothing and only washes a pale band over the foot of the pillar cards. */
+  --seam-bottom: 0px;
+}
+
+.trust-scene > picture {
+  display: contents;
+}
+
+.trust-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* The scene's middle is already pale, but the copy needs a guaranteed floor */
+.trust-veil {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(58% 46% at 50% 30%, rgba(255, 250, 240, 0.82), transparent 74%),
+    linear-gradient(180deg, rgba(255, 250, 240, 0.42) 0%, rgba(250, 242, 228, 0.2) 55%, rgba(246, 235, 216, 0.5) 100%);
+}
+
+.trust-inner {
+  position: relative;
+  margin: 0 auto;
+  /* Same measure and gutter as .acti-shell, so the trust panel's edges line up
+     with Mission, Milestones and the footer instead of sitting 40px inboard. */
+  max-width: calc(var(--shell-max) + var(--shell-gutter) * 2);
+  padding-inline: var(--shell-gutter);
+}
+
+/* --- Heading ------------------------------------------------------- */
+.trust-head {
+  text-align: center;
+}
+
+.trust-eyebrow {
+  margin-top: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-acti-ink) 52%, transparent);
+}
+
+.trust-rule {
+  display: block;
+  width: clamp(34px, 6vw, 74px);
+  height: 1px;
+  background: color-mix(in srgb, var(--color-acti-sun) 65%, transparent);
+}
+
+.trust-title {
+  margin-top: 0.5rem;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2.1rem, 5vw, 3.4rem);
+  line-height: 1.1;
+  color: #3d3020;
+}
+.trust-title em {
+  font-style: normal;
+  color: var(--color-acti-sun);
+}
+
+.trust-sub {
+  margin-top: 0.5rem;
+  font-size: 13.5px;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--color-acti-ink) 60%, transparent);
+}
+
+/* --- The pillar panel ---------------------------------------------- */
+/*
+ * The right edge is a straight edge, matching the other three sides.
+ *
+ * It previously carried a concave radial mask so the panel appeared to curve
+ * around the bottle standing behind it. Removed on request — the sweep read as
+ * an unexplained fade on the fourth column rather than as a shaped edge.
+ */
+.trust-panel {
+  margin-top: clamp(1.75rem, 3vw, 2.75rem);
+  border-radius: 20px;
+  /* Opaque enough that the bottle behind never reads through a cell — at 0.66
+     it showed straight through the fourth column. */
+  background: rgba(255, 252, 245, 0.93);
+  /* The panel is 93% opaque, so the blur behind it is barely perceptible —
+     6px composites meaningfully cheaper over the full-bleed scene photo. */
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 24px 50px -30px rgba(90, 62, 30, 0.35);
+  overflow: hidden;
+}
+
+.trust-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.trust-cell {
+  /* Shared with .trust-figure, which cancels this padding with a negative
+     margin so its picture reaches the cell's edges. Change it in one place. */
+  --trust-cell-pad: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.75rem var(--trust-cell-pad) 0;
+  /* hairline dividers, as in the reference */
+  border-left: 1px solid rgba(120, 92, 54, 0.14);
+  overflow: hidden;
+}
+.trust-cell:first-child {
+  border-left: 0;
+}
+
+/* The sweep bites into this column's right edge, so its copy is inset to stay
+   clear of it. Only while the cut is active — the narrow layouts zero it. */
+@media (min-width: 1024px) {
+  .trust-cell:last-child {
+    padding-right: calc(var(--trust-cell-pad) + 1.75rem);
+  }
+}
+
+.trust-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  color: var(--color-acti-sun);
+  border: 1px solid color-mix(in srgb, var(--color-acti-sun) 45%, transparent);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.trust-cell-copy {
+  width: 100%;
+}
+
+.trust-cell-title {
+  margin-top: 1rem;
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #3d3020;
+}
+
+.trust-cell-body {
+  margin-top: 0.5rem;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: color-mix(in srgb, var(--color-acti-ink) 62%, transparent);
+}
+
+/* Each cell's picture bleeds to the bottom corners of its column, as in the
+   reference — no inset, no rounded top, so the four images read as one band
+   across the foot of the panel. The negative margins cancel .trust-cell's
+   padding; the cell itself clips them back to the panel's rounded corners. */
+/* Sides only. The cell has left/right padding for the picture to cancel, but
+   its bottom padding is already 0 — a negative bottom margin here had nothing
+   to pull back against, so it hung the image ~18px BELOW the panel, past the
+   cream that is meant to sit behind it. That overhang is what read as the
+   picture fading out at the bottom; it was actually the panel ending. */
+.trust-figure {
+  margin: auto calc(var(--trust-cell-pad) * -1) 0;
+  width: auto;
+  height: 8.5rem;
+  overflow: hidden;
+}
+
+/*
+ * The picture dissolves in from its top edge rather than starting on a hard
+ * line across the card. A mask is used, not a cream gradient laid on top: the
+ * panel behind is translucent (rgba + backdrop-blur), so an opaque overlay
+ * would paint a lighter bar over it and read as a band of its own. Masking
+ * removes the pixels instead, letting the real card show through.
+ *
+ * --trust-fade is the depth of that dissolve; raise it for a longer fade.
+ */
+.trust-figure img {
+  --trust-fade: 42%;
+  width: 100%;
+  height: 100%;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--trust-fade));
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--trust-fade));
+}
+.trust-figure[data-fit='cover'] img {
+  object-fit: cover;
+}
+/* The marks must never be cropped, so this one is contained. It also fades
+   over a shorter distance — the logos sit high in their own artwork, and a
+   42% dissolve eats into the tops of the FSSAI and ISO rings. */
+.trust-figure[data-fit='contain'] img {
+  --trust-fade: 18%;
+  object-fit: contain;
+  object-position: bottom center;
+}
+
+/* --- Bottom assurance strip ---------------------------------------- */
+.trust-strip {
+  margin-top: clamp(1.25rem, 2.5vw, 2rem);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  border-radius: 999px;
+  padding: 1rem clamp(1rem, 3vw, 2rem);
+  background: rgba(61, 48, 32, 0.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.trust-strip > li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0 clamp(0.5rem, 1.5vw, 1.25rem);
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+}
+.trust-strip > li:first-child {
+  border-left: 0;
+}
+
+
+.trust-strip-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #fdf6ea;
+}
+.trust-strip-body {
+  margin-top: 0.15rem;
+  font-size: 11px;
+  line-height: 1.5;
+  color: rgba(253, 246, 234, 0.62);
+}
+
+/* --- Tablet: 2 x 2 ------------------------------------------------- */
+@media (max-width: 1023px) {
+  .trust-grid,
+  .trust-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .trust-cell:nth-child(odd) {
+    border-left: 0;
+  }
+  .trust-cell:nth-child(n + 3) {
+    border-top: 1px solid rgba(120, 92, 54, 0.14);
+  }
+  .trust-strip {
+    border-radius: 20px;
+    row-gap: 1rem;
+  }
+  .trust-strip > li:nth-child(odd) {
+    border-left: 0;
+  }
+}
+
+/* --- Phones: single column, taller pictures ------------------------ */
+@media (max-width: 639px) {
+  /* --- Heading -----------------------------------------------------
+     No phone override existed, so the title was inheriting the desktop
+     clamp's floor of 2.1rem and dominating the section. */
+  .trust-head {
+    padding-inline: 0.5rem;
+  }
+  .trust-eyebrow {
+    gap: 0.6rem;
+  }
+  .trust-rule {
+    width: clamp(24px, 7vw, 44px);
+  }
+  .trust-title {
+    margin-top: 0.35rem;
+    font-size: 1.7rem;
+    line-height: 1.14;
+  }
+  .trust-sub {
+    margin-top: 0.35rem;
+    font-size: 12.5px;
+  }
+
+  /* --- The scene sits ABOVE the panel, not behind it ---------------
+     Full-bleed, the portrait crop ran the whole section height and its leaves
+     and bottle collided with the heading and showed through the panel. It is
+     now a top band that fades out before the pillars begin. */
+  .trust-bg {
+    height: 42%;
+    object-position: center top;
+    /* The crop is a bright, low-contrast plate; knocking it back gives the
+       heading something to sit on and stops the bottle competing with it. */
+    filter: brightness(0.82) contrast(1.06) saturate(1.04);
+    -webkit-mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
+  }
+  /* The bottle and the pour sit right where the heading does, so the veil
+     needs a firm local floor behind the type — a soft wash left "every drop."
+     reading straight over the bottle's neck. */
+  .trust-veil {
+    background:
+      radial-gradient(78% 20% at 50% 14%, rgba(255, 250, 240, 0.82), rgba(255, 250, 240, 0.34) 64%, transparent 100%),
+      linear-gradient(180deg, rgba(255, 250, 240, 0.24) 0%, rgba(255, 248, 238, 0.86) 34%, var(--color-acti-cream) 50%);
+  }
+
+  /* --- Phone layout ------------------------------------------------
+     Desktop gives each pillar its own column with a photo underneath. On a
+     phone that stacks into four tall photo blocks and the section runs to
+     several screens, so the pillars become compact icon-left / text-right
+     rows and the per-cell picture is dropped — the scene behind the panel is
+     already carrying the imagery. The assurance strip stays 4-across with the
+     icon above its label, which fits because the labels are two short words. */
+  .trust-grid {
+    grid-template-columns: 1fr;
+  }
+  .trust-panel {
+    /* tighter than full-bleed so the scene reads around it */
+    margin-inline: 0.25rem;
+    border-radius: 16px;
+  }
+  .trust-cell {
+    /* row, not a centred column */
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0.65rem;
+    text-align: left;
+    border-left: 0;
+    padding: 0.75rem 0.9rem;
+  }
+  .trust-cell + .trust-cell {
+    border-top: 1px solid rgba(120, 92, 54, 0.14);
+  }
+  .trust-badge {
+    flex: none;
+    width: 1.9rem;
+    height: 1.9rem;
+    margin-top: 0.05rem;
+  }
+  .trust-badge svg {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+  /* The copy column sits to the right of the icon, title stacked over body */
+  .trust-cell-copy {
+    flex: 1;
+    min-width: 0;
+  }
+  .trust-cell-title {
+    margin-top: 0;
+    font-size: 13px;
+  }
+  .trust-cell-body {
+    margin-top: 0.15rem;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .trust-marks {
+    justify-content: flex-start;
+    margin-top: 0.55rem;
+  }
+  /* The pillar photos are what made this section three screens tall */
+  .trust-figure {
+    display: none;
+  }
+
+  /* --- Assurance strip: 4 across, icon over label ------------------ */
+  .trust-strip {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border-radius: 18px;
+    padding: 0.9rem 0.4rem;
+  }
+  /* The 1023px block sets border-left:0 on :nth-child(odd) for its 2-up
+     layout. That selector is specificity 0,2,1 and beats a plain
+     `.trust-strip > li` (0,1,1) whatever the order, so child 3 lost its
+     divider — the "missing middle line". Re-assert at equal specificity. */
+  .trust-strip > li:nth-child(odd) {
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .trust-strip > li:first-child {
+    border-left: 0;
+  }
+  .trust-strip > li {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.4rem;
+    padding: 0 0.25rem;
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .trust-strip > li:first-child {
+    border-left: 0;
+  }
+  .trust-strip-title {
+    font-size: 12px;
+    line-height: 1.25;
+    letter-spacing: 0;
+  }
+  /* Only the label survives at this width — the sentence would wrap to four
+     lines each and the strip would be taller than the panel above it. */
+  .trust-strip-body {
+    display: none;
+  }
+}
+
+/* ===============================================================
+   SEAMS — one continuous page, not six slides
+
+   Every section used to end on a hard horizontal edge: the ones with
+   full-bleed photography (.ms-scene, .trust-scene) simply stopped, and
+   .trust-scene's base was #f6efe2 against #fff8ee on both sides, so the
+   join read as a colour step too.
+
+   The fix is applied once here rather than per section:
+
+     --seam        the height of the dissolve at each end
+     .acti-seam    a section that fades its own background into the page
+                   cream at top and bottom, so neighbours bleed together
+     .acti-joint   a cream veil laid over the junction itself
+
+   Anything full-bleed added later just needs the .acti-seam class.
+================================================================*/
+:root {
+  --seam: clamp(4rem, 9vh, 8.5rem);
+}
+
+/*
+ * The dissolve. A section tagged .acti-seam keeps its own background but has
+ * page-cream feathered over both edges, so where two of them meet the eye sees
+ * cream → cream instead of photo | photo.
+ *
+ * ::after is used (not ::before) because .ms-scene and .mv-card already own
+ * ::before for their own washes. pointer-events:none so nothing is captured,
+ * and a high z-index keeps it above section artwork but below copy, which all
+ * sits in positioned children.
+ */
+.acti-seam::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* Each edge is separately sizeable, so a section that only needs to blend
+     into ONE neighbour is not forced to wash over its own content at the other
+     end. The defaults live in these var() fallbacks rather than in a
+     `.acti-seam { --seam-top: ... }` rule: that rule would sit later in the
+     file than the sections themselves and, at equal specificity, would silently
+     overwrite any per-section override. Set --seam-top/-bottom to 0 on a
+     section to switch that edge off. */
+  background:
+    linear-gradient(
+      to bottom,
+      var(--color-acti-cream) 0,
+      color-mix(in srgb, var(--color-acti-cream) 55%, transparent)
+        calc(var(--seam-top, var(--seam)) * 0.55),
+      transparent var(--seam-top, var(--seam))
+    ),
+    linear-gradient(
+      to top,
+      var(--color-acti-cream) 0,
+      color-mix(in srgb, var(--color-acti-cream) 55%, transparent)
+        calc(var(--seam-bottom, var(--seam)) * 0.55),
+      transparent var(--seam-bottom, var(--seam))
+    );
+}
+
+
+/* The copy has to sit above the veil. Targeted rather than blanket
+   (.acti-seam > *) on purpose: .trust-bg and .trust-veil live at z-index -2/-1
+   so the seam can fade them, and promoting every child would drag those back
+   above it and defeat the dissolve. */
+.trust-inner,
+.ms-scene > div {
+  position: relative;
+  z-index: 1;
+}
+
+/*
+ * Kitchen → Trust was the harshest join on the page: a dark, nearly black
+ * cabinet frame butting straight onto the bright trust scene. The kitchen is a
+ * sticky video stage, so it cannot fade its own tail — the veil goes on the
+ * section that follows and reaches back over the edge.
+ */
+/*
+ * Kitchen -> Trust was the harshest join on the page: a nearly black cabinet
+ * frame butting straight onto the bright trust scene.
+ *
+ * It cannot be solved from the section below. The kitchen's stage is
+ * overflow:hidden and #range carries z-index:0 (a real stacking context, from
+ * the hero/kitchen overlap fix), so a veil placed above the boundary is both
+ * clipped and painted over. The dissolve has to be inside the stage — hence
+ * .kitchen-tail, rendered as the last layer of KitchenReveal's sticky stage.
+ */
+.kitchen-tail {
+  height: calc(var(--seam) * 1.5);
+  z-index: 3;
+  background: linear-gradient(
+    to bottom,
+    transparent 0,
+    color-mix(in srgb, var(--color-acti-cream) 45%, transparent) 46%,
+    color-mix(in srgb, var(--color-acti-cream) 88%, transparent) 78%,
+    var(--color-acti-cream) 100%
+  );
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --seam: clamp(3rem, 6vh, 5.5rem);
+  }
+}
+
+/* ===============================================================
+   MOBILE OPTIMISATION
+
+   Measured on 360 / 390 / 414 portrait. Four real problems, not
+   guesses:
+
+   1. WhyTrust's swipe strip snapped the PAIR (560px) into a 390px
+      viewport, so every stop cut a card in half. It now snaps each
+      oval, so one lands centred at a time.
+   2. Tap targets under 44px (header icons, carousel dots, the hero's
+      secondary link, footer links).
+   3. 11px body/eyebrow text, below comfortable reading size.
+   4. The hero clip is landscape with burnt-in Hindi titles; on
+      portrait object-cover crops hard and they sit behind the
+      headline, so the scrim is deepened to hold contrast.
+================================================================*/
+@media (max-width: 639px) {
+  /* --- 1. Snap one oval at a time, not the pair ------------------ */
+  .wt-viewport--swipe {
+    scroll-padding-inline: 11vw;
+    /* An edge fade is the affordance: the cut-off oval reads as "there is
+       more this way" rather than as a broken layout. Nothing in the strip
+       announced that it scrolled, so it was easy to miss entirely. */
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 7%,
+      #000 84%,
+      rgba(0, 0, 0, 0.15) 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 7%,
+      #000 84%,
+      rgba(0, 0, 0, 0.15) 100%
+    );
+  }
+  /* Snap one oval at a time rather than a whole pair. Scoped to the swipe
+     fallback: it is the only place with a scroll-snap container, so outside it
+     these would be inert declarations that merely look load-bearing. */
+  .wt-viewport--swipe .wt-pair {
+    scroll-snap-align: none;
+  }
+  .wt-viewport--swipe .wt-photo,
+  .wt-viewport--swipe .wt-card {
+    scroll-snap-align: center;
+  }
+
+  /* --- 3. Lift the smallest type -------------------------------- */
+  .trust-eyebrow,
+  .wt-eyebrow,
+  .ms-label,
+  .mv-kicker {
+    font-size: 12px;
+  }
+  .trust-strip-body,
+  .wt-foot {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+  }
+  /* The oval CTA was 11.5px in a 40px box */
+  .wt-cta {
+    padding: 0.85rem 1.5rem;
+    font-size: 12.5px;
+  }
+  .trust-cell-body,
+  .ms-body,
+  .mv-text {
+    font-size: 14.5px;
+  }
+
+  /* --- 4. Hold headline contrast against the burnt-in titles ---- */
+  /* Phones need the footage knocked back harder (burnt-in titles sit behind the
+     copy). Still an overlay, not a filter — see the note on .hero-video. */
+  .hero-grade {
+    background: rgba(9, 6, 3, 0.64);
+  }
+
+  /* --- 5. Phone hero: footage on top, copy on a panel below ------
+     The portrait cut has its subject (the jerrycan on the counter) in the
+     upper half, so the copy is given the lower 55% and sat on a scrim that
+     goes solid at the bottom. Without this the headline competes with the
+     counter detail behind it and the whole frame reads as mush.
+
+     A gradient rather than a hard edge: the footage should fade into the
+     copy panel, not sit in a box on top of it. */
+  .hero-panel {
+    flex: none;
+    height: 55%;
+    justify-content: flex-end;
+    background: linear-gradient(
+      180deg,
+      rgba(12, 8, 5, 0) 0%,
+      rgba(12, 8, 5, 0.72) 18%,
+      rgba(12, 8, 5, 0.93) 42%,
+      rgb(12, 8, 5) 100%
+    );
+  }
+
+  /* The product image is the anchor of the right-hand column, so it gets the
+     room; its supporting type steps down to match the narrower column.
+     The pack art is photographed on white, so it needs a light card behind it
+     to read at all against the dark panel — on desktop the image floats free
+     over the footage, but at this size that leaves it muddy. */
+  .hero-panel .acti-fade-up img {
+    height: 8.5rem;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0.6rem;
+    border-radius: 0.6rem;
+    background: #fff;
+    object-fit: contain;
+  }
+}
+
+/* --- 2. Touch targets ------------------------------------------
+   Applies on any coarse pointer, not a width breakpoint — a small
+   tablet has the same fingers. */
+@media (pointer: coarse) {
+  .acti-tap {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  /* The carousel indicators are 2px rules inside a flex button; the button
+     grows to a real 44px box so neighbouring targets never overlap. */
+  .acti-dot {
+    min-height: 44px;
+    min-width: 40px;
+  }
+}
+
+/* ===============================================================
+   PAGE SHELL — one gutter and one measure for the whole site
+
+   Sections had grown three different containers (max-w-[1600px],
+   max-w-7xl, max-w-6xl, plus a raw 1120px in .trust-inner) and three
+   gutters (px-4 / px-5 / px-10). Measured at 1440px, content started
+   at 40px in the hero, 176px in Mission, 216px in Trust — so nothing
+   lined up down the page.
+
+   .acti-shell is the single container. Change --shell-max or
+   --shell-gutter here and every section moves together.
+================================================================*/
+:root {
+  --shell-max: 1200px;
+  --shell-gutter: clamp(1.25rem, 4vw, 3rem);
+}
+
+.acti-shell {
+  width: 100%;
+  max-width: calc(var(--shell-max) + var(--shell-gutter) * 2);
+  margin-inline: auto;
+  padding-inline: var(--shell-gutter);
+}
+
+/* The two cinematic scenes are full-bleed by design — their copy sits in the
+   frame, not in a measured column — but the copy still has to align with the
+   rest of the page, so they take the same gutter on a wider measure. */
+.acti-shell--wide {
+  --shell-max: 1520px;
 }
