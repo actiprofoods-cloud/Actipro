@@ -12,8 +12,9 @@ Same pipeline as the desktop set (see kitchenFrames.js):
 
 Frame range comes from the motion profile of this clip:
   0-40    camera pushing in       (dropped - the hero already did the move)
-  40-75   cabinet held shut
-  76-150  the door swing
+  40-73   cabinet shut, camera drifting (dropped - the scene should open on
+          the swing, not on a run of near-identical shut frames)
+  74-150  the door swing
   150-165 settling, packs lit
   165+    static hold             (dropped - nothing happens)
 """
@@ -26,7 +27,7 @@ SRC = "C:/Users/meetr/AppData/Local/Temp/claude/c--Users-meetr-Desktop-Madhuri/0
 ORIG = "../assets-src/scroll/cabinet-mobile-orig"
 OUT = "public/scroll/cabinet-mobile"
 
-FIRST, LAST = 60, 165
+FIRST, LAST = 74, 165
 
 # (x0, x1, y0, y1) of each mark, padded a little past the measured bounds so
 # the boundary ring used by the solver is clean background, not mark fringe.

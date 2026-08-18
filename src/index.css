@@ -2422,12 +2422,17 @@ section[id] {
        phone never gets a pin taller than its own screen. The scene reserves the same value, so sticky still holds for
        exactly the runway — see the note there. */
     --wt-pin: min(100svh, 36rem);
+    /* Whatever the viewport has spare over the pin. The stage is offset by half
+       of it and the scene reserves all of it, which keeps (sceneH - stageH)
+       equal to the runway — the condition for the pin releasing exactly when
+       the rail finishes. */
+    --wt-slack: max(0px, 100svh - var(--wt-pin));
 
     /* The scene reserves exactly the STAGE's height plus the runway. Those two
        must agree: sticky can only hold for (sceneH - stageH), so if the scene
        reserves a full viewport while the stage is shorter — or the reverse —
        the pin releases at the wrong moment. Here both are --wt-pin. */
-    height: calc(var(--wt-pin) + var(--wt-runway));
+    height: calc(var(--wt-pin) + var(--wt-slack) + var(--wt-runway));
   }
   /* Sticky at top:0 pinned a 34rem stage to the TOP of the viewport, leaving the
      rest of the screen empty for the whole scroll. Centring it splits that
@@ -2451,9 +2456,19 @@ section[id] {
      stops at stickyTop + childHeight) AND desynced it from the section's
      ScrollTrigger, which starts at 'top top' — that combination is what let the
      next section climb in while the last oval was still arriving. */
+  /* The pin is shorter than the screen, so the difference has to sit somewhere.
+     At top:0 it ALL sat below the stage — 320px of empty cream under the footer
+     line, which is what read as "the bottom padding was never reduced" even
+     though the stage's own padding is 28px, the same as the top.
+
+     Splitting it centres the pin in the viewport, so the leftover becomes a
+     small even margin at both ends instead of one large band at the bottom.
+     The scene adds the same amount to its height (see --wt-slack there) so
+     sticky still holds for exactly the runway: a bare `top` offset without that
+     would release the pin early and let the next section climb in. */
   .wt-stage {
     height: var(--wt-pin);
-    top: 0;
+    top: calc(var(--wt-slack) / 2);
   }
 
   /* The stage MUST keep height:100svh here — it is a sticky pin, and the scene
@@ -3286,20 +3301,37 @@ section[id] {
 
      A gradient rather than a hard edge: the footage should fade into the
      copy panel, not sit in a box on top of it. */
-  /* 68%, not the 55% this had while copy and pack shared one row: stacking the
-     pack under the copy makes the panel taller, and at 55% the headline was
-     pushed up off the scrim into the footage. The gradient still starts at the
-     panel's own top edge, so the fade into the footage is unchanged. */
+  /* The scrim behind the hero copy.
+
+     NOTE: until now this whole block was DEAD. The element carried
+     `max-sm:hero-panel`, and a Tailwind variant only applies to Tailwind
+     utilities — on a hand-written class the variant generates nothing and
+     the literal string `max-sm:hero-panel` ends up as the class name, which
+     matches no selector. The markup now uses the plain `hero-panel`; these
+     rules are inside @media (max-width: 639px) already, so the breakpoint is
+     still honoured.
+
+     Consequences of it going live, both fixed here:
+
+     1. height. A fixed 62%/68% made the panel a BAND: it ended partway down
+        the screen with footage visible below it. The panel is the copy's
+        ground and has to reach the bottom of the stage, so it is full height
+        now and the gradient alone decides where the darkening starts. The
+        copy is held low by justify-content:flex-end, not by the box ending.
+
+     2. the gradient's foot. It ran to solid rgb(12,8,5), which is what made
+        the cut-off read as a black slab. It now stops at 0.9 so the footage
+        still shows faintly through the base and the panel reads as a scrim
+        over the video rather than a panel pasted onto it. */
   .hero-panel {
-    flex: none;
-    height: 68%;
+    flex: 1 1 auto;
     justify-content: flex-end;
     background: linear-gradient(
       180deg,
-      rgba(12, 8, 5, 0) 0%,
-      rgba(12, 8, 5, 0.72) 18%,
-      rgba(12, 8, 5, 0.93) 42%,
-      rgb(12, 8, 5) 100%
+      rgba(12, 8, 5, 0) 30%,
+      rgba(12, 8, 5, 0.55) 48%,
+      rgba(12, 8, 5, 0.85) 68%,
+      rgba(12, 8, 5, 0.9) 100%
     );
   }
 
@@ -3308,8 +3340,15 @@ section[id] {
      it was too small to read against the dark panel; in its own bottom-right
      block it has the height to carry itself, and the card had started to read
      as a box pasted onto the scene. */
+  /* 9rem. This is the BOTTLE PHOTOGRAPH only — the brand name, the product
+     line and the dashes underneath it are separate elements and keep their
+     own size, so shrinking this does not touch the type.
+
+     Note it is not a dial for the copy's position: the copy is placed by its
+     own margin-top:auto, with the pack pinned to the panel's foot by
+     margin-top:auto on .hero-showcase, so the two move independently. */
   .hero-panel .acti-fade-up img {
-    height: 11rem;
+    height: 9rem;
     width: auto;
     margin-left: auto;
     margin-right: 0;
@@ -3322,7 +3361,34 @@ section[id] {
      The dots come back to the right edge for the same reason. */
   .hero-showcase {
     text-align: right;
+    /* NO margin-top:auto here. With auto on BOTH this and the copy block, the
+       two shared the row's slack — each took half, which left ~79px of empty
+       scrim between the headline and the pack that neither could close. The
+       pack is already last in a justify-end row, so it sits at the bottom
+       without any margin of its own; the copy's mt-auto now takes the whole
+       slack and drops the copy down to meet it. */
   }
+
+  /* The row fills the panel, so the copy can be positioned INDEPENDENTLY of
+     the pack.
+
+     While the row was content-height (flex:none) the two were welded
+     together: the stack was bottom-anchored, so the copy sat on top of the
+     pack and the only way to move the copy down was to shrink the pack.
+     That is not acceptable — the pack is the product shot.
+
+     Filling the panel and using margin-top:auto on the pack (below) pins the
+     pack to the panel's foot at its full size, and leaves all the slack
+     ABOVE it. The copy's own margin-top then decides where in that slack it
+     sits, without the pack moving at all. */
+  .hero-panel > div {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+
   .hero-showcase .acti-dot {
     justify-content: flex-end;
   }
@@ -3339,11 +3405,33 @@ section[id] {
     min-width: 44px;
     min-height: 44px;
   }
+  /* The hero's primary button is the one exception. 44px is the right default
+     for a bare tap target, but this one is a wide pill (its width is far past
+     44px, so the target area is already generous) sitting in a compact scrim
+     where the height was making it the loudest thing on the screen. 34px keeps
+     a comfortable target on a full-width pill while letting the copy block
+     stay tight. It is scoped to this button, so every other .acti-tap keeps
+     the full 44px. */
+  .hero-cta-primary.acti-tap {
+    min-height: 34px;
+  }
   /* The carousel indicators are 2px rules inside a flex button; the button
-     grows to a real 44px box so neighbouring targets never overlap. */
+     grows to a real 44px box so neighbouring targets never overlap.
+
+     min-width is NOT set here. At 40px the button was twice the width of the
+     20px rule inside it, and that surplus rendered as a 24px space between
+     the dashes — on top of the flex gap, which is what made them look far
+     apart.
+
+     Width now comes from the rule plus 6px of padding: a 32x44 target with a
+     12px space between rules. That halves the gap while keeping each dash
+     comfortably tappable and its target clear of its neighbour's. The 44px
+     guideline is about the tap AREA and these stay 44px tall; going tighter
+     still (3px pad, 6px gap) would have taken the buttons down to 26px wide
+     and started crowding adjacent targets. */
   .acti-dot {
     min-height: 44px;
-    min-width: 40px;
+    padding-inline: 6px;
   }
   /* Contact's controls measured 38-43px tall — close enough to look right, but
      under a finger. The inline phone/email links are the worst of them at 20px:

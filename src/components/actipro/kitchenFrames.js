@@ -40,14 +40,16 @@
  *
  *   MOBILE   public/4/mobile (2).mp4                              720x1280
  *            A portrait re-shoot of the same cabinet, 240 frames at 24fps.
- *            REAL source frames 60 → 165, exported 1:1 as f_060 → f_165.
+ *            REAL source frames 74 → 165, exported 1:1 as f_074 → f_165.
  *
  *            Range comes from the clip's own motion profile (frame-to-frame
  *            mean difference):
  *              0-40    the camera pushing in — DROPPED, the hero already
  *                      did that move and repeating it reads as a stumble
- *              60-75   cabinet shut, camera drifting gently
- *              76-150  the door swing, difference climbing 1.9 → 5.9
+ *              40-73   cabinet shut, camera drifting gently — DROPPED, the
+ *                      scene should open ON the swing rather than spend the
+ *                      first seventh of the scroll on a closed cabinet
+ *              74-150  the door swing, difference climbing 1.9 → 5.9
  *              150-165 settling, all four packs lit
  *              165+    a static hold — DROPPED, nothing happens
  *
@@ -77,9 +79,11 @@
  * CSS fix. KitchenReveal picks between them at KITCHEN_MOBILE_QUERY and reloads
  * the sequence if the viewport crosses it.
  *
- * Hero.jsx crossfades into the desktop FIRST_SRC, and KitchenReveal.jsx starts
- * its canvas on that same frame — which is why the handoff between the two is
- * invisible.
+ * Hero.jsx crossfades into firstSrcFor(isMobile) and KitchenReveal.jsx starts
+ * its canvas on the same frame — which is why the handoff between the two is
+ * invisible. Both read the viewport through KITCHEN_MOBILE_QUERY so they can
+ * never disagree about which set is in play; anything that pins one of them
+ * to a fixed set reintroduces a visible jump at the join.
  */
 
 const DESKTOP = {
@@ -119,40 +123,46 @@ const DESKTOP = {
 
 const MOBILE = {
   dir: '/scroll/cabinet-mobile',
-  /* The whole exported range is used. Unlike the desktop set there is no
-     shut-cabinet run to skip past: the camera is already drifting at f_060,
-     so every frame here is doing something. */
-  first: 60,
+  /*
+   * Starts on the swing, not before it. Frames 60-73 are the camera drifting
+   * across a shut cabinet: visible change, but nothing HAPPENS, so the first
+   * seventh of the scroll was spent on a cabinet that stayed closed.
+   *
+   * Trimming them also removed the reason this set needed a corrective ramp
+   * (see below).
+   */
+  first: 74,
   last: 165,
   /*
-   * Not hand-placed like the desktop ramp above: this one is SOLVED so that
-   * equal scroll produces equal visible change. Measure the frame-to-frame
-   * difference across the range, take the cumulative sum, normalise it, and
-   * invert it — the result is the frame fraction that keeps the rate of
-   * change constant. Uneven rate is exactly what reads as jerky, and this
-   * clip is very uneven raw: the camera drifts slowly at the head and the
-   * doors swing hard through the middle (abs 76-150, i.e. range positions
-   * 0.15-0.86 — much later and wider than the desktop take's swing, which
-   * is why a shared ramp could not serve both).
+   * LINEAR, deliberately — and measured, not assumed.
    *
-   *   d    = [mean |frame[i] - frame[i-1]| for i in range]
-   *   cum  = cumsum(d) / sum(d)
-   *   ramp = [(x, interp(x, cum, linspace(0,1,N))) for x in linspace(0,1,7)]
+   * The desktop set and the old 60-165 mobile range both needed a shaped
+   * ramp because their raw pacing was lopsided: a slow drift at the head and
+   * a hard swing through the middle, which reads as dead scroll then a lurch.
+   * From 74 the drift is gone and what is left is close to evenly paced
+   * already (per-frame change std/mean = 0.41).
    *
-   * Re-solve it if the clip or the range changes; the numbers are specific
-   * to both. More than ~7 points does not help — what is left is the frame
-   * quantisation itself, which the scrub easing in KitchenReveal absorbs.
+   * Scored as max/mean of the per-scroll-step visual change, lower = smoother:
+   *
+   *              100 samples   200   400
+   *   linear         1.75      3.50  7.00
+   *   solved ramp    2.29      3.50  7.00
+   *
+   * The solved ramp is worse at coarse sampling and identical at fine, so
+   * there is nothing for it to fix — it would only add distortion. The
+   * remaining ratio is frame quantisation, which the scrub easing in
+   * KitchenReveal absorbs.
+   *
+   * If the clip or the range changes, re-measure before assuming either
+   * shape: run the cumulative-difference solve described on the desktop set
+   * and compare it against linear like this.
    */
   ramp: [
-    [0.0, 0.0], // cabinet shut, camera drifting  (abs 60)
-    [0.167, 0.292], // doors already cracking         (abs 91)
-    [0.333, 0.436], // opening                        (abs 106)
-    [0.5, 0.554], // mid-swing                      (abs 118)
-    [0.667, 0.655], // packs becoming readable        (abs 129)
-    [0.833, 0.758], // doors wide                     (abs 140)
-    [1.0, 1.0], // fully open, settled            (abs 165)
+    [0.0, 0.0],
+    [1.0, 1.0],
   ],
 }
+
 
 // Matches the `sm:` breakpoint the section's type already steps at, so the
 // portrait frames and the small-screen copy switch over together.

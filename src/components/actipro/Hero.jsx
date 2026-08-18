@@ -263,19 +263,68 @@ export default function Hero() {
             From sm: up this is the original full-bleed layout, unchanged. */}
         <div
           ref={uiRef}
-          className="acti-shell acti-shell--wide flex flex-1 flex-col justify-end pb-14 pt-32 sm:pb-16 max-sm:hero-panel max-sm:pt-0 max-sm:pb-12"
+          // No max-sm:justify-start any more — the panel keeps justify-end at
+          // every width, so the copy and the pack stack against the BOTTOM of
+          // the scrim and the footage above them is left clear. The override
+          // used to pull the stack to the top, which put the headline
+          // mid-screen over the face in the shot.
+          //
+          // max-sm:pb-1 (4px), against the 48px it started with: with the
+          // stack bottom-anchored, this padding is the ONLY thing between the
+          // copy and the foot of the screen, so it is the dial for how low the
+          // block sits. The panel's gradient is solid ink at its base, so the
+          // type stays legible this close to the edge. It is not 0 because the
+          // pack's dashes sit at the very bottom of the stack and would
+          // otherwise touch the screen edge.
+          className="acti-shell acti-shell--wide flex flex-1 flex-col justify-end pb-14 pt-32 sm:pb-16 hero-panel max-sm:pt-20 max-sm:pb-1"
         >
           {/* On phone this is a single column: copy first, pack underneath and
               pushed to the right edge. Side by side at this width squeezed the
               headline into three-word lines and shrank the pack to a thumbnail,
               so the two now get the full measure in turn. */}
-          <div className="flex flex-col gap-10 sm:flex-row sm:items-end sm:justify-between max-sm:gap-5">
-            <div ref={copyRef} className="max-w-2xl max-sm:min-w-0">
-              <p className="text-[12px] font-semibold uppercase sm:text-[11px] tracking-[0.24em] text-white/60 max-sm:text-[11px] max-sm:leading-[1.5]">
+          {/* max-sm:flex-1 removed with it: stretching the row to the panel's
+              height is what spread its two children apart. Content-height, so
+              copy and pack read as one block.
+              gap-2 rather than gap-5 on phone: with the stack anchored to the
+              bottom, every pixel between the copy and the pack pushes the copy
+              back UP the screen. */}
+          {/* max-sm:gap-2 closes the hole between the copy and the pack. The
+              row's gap was 20px (gap-5) but the pack also carries its own top
+              spacing, and with the copy bottom-anchored the two together left
+              an ~85px band of empty scrim between the headline and the pack. */}
+          <div className="flex flex-col gap-10 sm:flex-row sm:items-end sm:justify-between max-sm:gap-2">
+            {/* max-sm:mt-auto is what moves the copy down, and it only works
+                because the row now FILLS the panel (see .hero-panel > div)
+                and the pack is pinned to the foot by margin-top:auto on
+                .hero-showcase. The slack between them lands above this
+                column, so auto pushes the copy to the bottom of that gap —
+                with the pack staying exactly where it is, at full size.
+
+                An earlier attempt used a fixed mt-28 while the row was
+                content-height. That could not work: the stack was
+                bottom-anchored, so a top margin merely grew the row upward
+                and the copy never moved. */}
+            {/* max-sm:mb-* is the dial for how far DOWN the copy sits, and it is
+                the only one that moves the copy without touching the pack: the
+                row's slack all sits above the copy (mt-auto), so a bottom
+                margin pushes the copy into the gap between it and the pack
+                rather than resizing anything in the showcase.
+
+                -14.5rem lands the copy's baseline level with the pack's, so the
+                two columns finish together instead of the copy floating a
+                screenful above it. They overlap vertically by design and are
+                kept apart horizontally: the copy is left, the pack is right. */}
+            <div ref={copyRef} className="max-w-2xl max-sm:mt-auto max-sm:mb-[-14.5rem] max-sm:min-w-0">
+              <p className="text-[12px] font-semibold uppercase sm:text-[11px] tracking-[0.24em] text-white/60 max-sm:text-[10px] max-sm:leading-[1.4]">
                 Lite hai. Right hai.
               </p>
 
-              <h1 className="mt-5 font-serif text-4xl leading-[1.1] text-white sm:text-6xl lg:text-[4.25rem] max-sm:mt-3 max-sm:text-[2.35rem]">
+              {/* max-w-[11ch] on phones is what sets the headline over THREE
+                  lines instead of two. 13ch is measured, not guessed: 14ch and
+                  above still fit two lines, 11ch spills to four. A measure cap rather than hard <br>s: the break still
+                  falls between words at any width, and the desktop measure is
+                  untouched. */}
+              <h1 className="mt-5 font-serif text-4xl leading-[1.1] text-white sm:text-6xl lg:text-[4.25rem] max-sm:mt-2.5 max-sm:max-w-[13ch] max-sm:text-[1.6rem] max-sm:leading-[1.2]">
                 The right oil makes everything{' '}
                 {/* The reference accents the last word rather than the whole line. */}
                 <span className="text-acti-sun">lighter.</span>
@@ -283,16 +332,22 @@ export default function Hero() {
 
               {/* Back to one row on phone now the column is full-width — the
                   stacked variant was only there to survive a 57% column. */}
-              <div className="mt-8 flex flex-wrap items-center gap-4 max-sm:mt-5 max-sm:gap-3">
+              {/* items-start + flex-col on phones: the distributor link moves to
+                  its own line under the button rather than sitting beside it. */}
+              <div className="mt-8 flex flex-wrap items-center gap-4 max-sm:mt-4 max-sm:flex-col max-sm:items-start max-sm:gap-2">
                 <a
                   href="#range"
-                  className="acti-tap inline-flex items-center justify-center rounded-full bg-acti-sun px-9 py-3.5 text-[12px] font-bold uppercase tracking-[0.18em] text-acti-ink transition-colors hover:bg-acti-orange hover:text-white max-sm:px-7 max-sm:py-3"
+                  className="acti-tap hero-cta-primary inline-flex items-center justify-center rounded-full bg-acti-sun px-9 py-3.5 text-[12px] font-bold uppercase tracking-[0.18em] text-acti-ink transition-colors hover:bg-acti-orange hover:text-white max-sm:px-5 max-sm:py-1 max-sm:text-[10px]"
                 >
                   See the range
                 </a>
                 <a
                   href="#contact"
-                  className="acti-tap inline-flex items-center gap-2 py-3 text-[12px] font-bold uppercase tracking-[0.18em] text-white underline-offset-8 hover:underline max-sm:whitespace-nowrap"
+                  // Hidden on phones: the hero there is a short scrim over the
+                  // footage and the button below already carries the primary
+                  // action. The distributor page stays reachable from the header
+                  // and footer nav, so nothing becomes unreachable.
+                  className="acti-tap inline-flex items-center gap-2 py-3 text-[12px] font-bold uppercase tracking-[0.18em] text-white underline-offset-8 hover:underline max-sm:hidden"
                 >
                   Become a distributor
                   <ArrowRightIcon className="h-4 w-4 shrink-0" />
@@ -305,7 +360,10 @@ export default function Hero() {
                 where hero-showcase right-aligns its type to match. */}
             <div
               ref={showcaseRef}
-              className="max-sm:hero-showcase max-sm:w-[52%] max-sm:shrink-0 max-sm:self-end"
+              // mt-auto dropped along with the row's flex-1 — with a
+              // content-height row there is no slack for it to absorb, and
+              // keeping it would push the pack away from the copy again.
+              className="hero-showcase max-sm:w-[52%] max-sm:shrink-0 max-sm:self-end"
             >
               <HeroProducts />
             </div>
