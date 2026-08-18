@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { MenuIcon, CloseIcon, PhoneIcon } from './icons'
 import { NAV_LINKS } from './navLinks'
 import { setSceneTone } from './sceneTone'
@@ -55,6 +56,15 @@ const HERO_ID = 'top'
 export default function ActiproHeader() {
   const [open, setOpen] = useState(false)
   const headerRef = useRef(null)
+
+  /* The nav is a list of hash anchors (#why, #products …) and those ids only
+     exist on the landing page. Left as bare "#why" they are dead links on
+     /contact — the browser looks for the id on the CURRENT page, finds
+     nothing, and does nothing. Prefixing with "/" on any other route turns
+     them into "navigate home, THEN jump to the section". */
+  const { pathname } = useLocation()
+  const onLanding = pathname === '/'
+  const sectionHref = (hash) => (onLanding ? hash : `/${hash}`)
 
   useEffect(() => {
     const node = headerRef.current
@@ -183,16 +193,20 @@ export default function ActiproHeader() {
     // data-hero starts true because the page always opens on the hero: on phone
     // that attribute is what keeps the bar transparent (see index.css), and
     // starting false would flash a cream bar before the first rAF corrects it.
+    /* data-hero drives the light-on-dark inversion used over the hero video.
+       Only the landing page has one; starting it 'true' on another route
+       flashes a white-on-cream bar for a frame before the rAF tick corrects
+       it, so it is bound to the route rather than hard-coded. */
     <header
       ref={headerRef}
       className="acti-header fixed inset-x-0 top-0 z-50"
       data-solid={open ? 'true' : 'false'}
       data-hidden="false"
       data-frosted="false"
-      data-hero="true"
+      data-hero={onLanding ? 'true' : 'false'}
     >
       <div className="acti-shell acti-shell--wide flex items-center justify-between gap-6 py-4">
-        <a href="#top" className="relative flex shrink-0 items-center" aria-label="Actipro home">
+        <Link to="/" className="relative flex shrink-0 items-center" aria-label="Actipro home">
           {/* Two stacked prints crossfade — cleaner than filtering one through grey */}
           <img
             src="/logo/actipro.png"
@@ -205,19 +219,28 @@ export default function ActiproHeader() {
             aria-hidden="true"
             className="acti-logo-dark absolute left-0 top-0 h-10 w-auto brightness-0 invert sm:h-12"
           />
-        </a>
+        </Link>
 
         <div className="flex items-center gap-6">
           <nav className="hidden items-center gap-8 lg:flex">
             {NAV_LINKS.map((link) => (
               <a
                 key={link.label}
-                href={link.href}
+                href={sectionHref(link.href)}
                 className="acti-tone-ink text-[13px] font-semibold uppercase tracking-[0.1em] transition-opacity hover:opacity-60"
               >
                 {link.label}
               </a>
             ))}
+
+            {/* Contact is a ROUTE, not a section, so it is a <Link> rather
+                than one of the hash anchors above. */}
+            <Link
+              to="/contact"
+              className="acti-tone-ink text-[13px] font-semibold uppercase tracking-[0.1em] transition-opacity hover:opacity-60"
+            >
+              Contact Us
+            </Link>
           </nav>
 
           <div className="flex items-center gap-2.5">
@@ -229,12 +252,12 @@ export default function ActiproHeader() {
               <PhoneIcon className="h-4 w-4" />
             </a>
 
-            <a
-              href="#contact"
+            <Link
+              to="/contact"
               className="acti-tone-cta hidden rounded-full px-5 py-2 text-[12px] font-bold uppercase tracking-[0.12em] sm:inline-flex"
             >
               Enquire
-            </a>
+            </Link>
 
             <button
               type="button"
@@ -255,7 +278,7 @@ export default function ActiproHeader() {
             {NAV_LINKS.map((link) => (
               <li key={link.label}>
                 <a
-                  href={link.href}
+                  href={sectionHref(link.href)}
                   onClick={() => setOpen(false)}
                   className="block border-b border-acti-ink/10 py-3 text-[13px] font-semibold uppercase tracking-[0.1em] text-acti-ink"
                 >
@@ -263,14 +286,23 @@ export default function ActiproHeader() {
                 </a>
               </li>
             ))}
+            <li>
+              <Link
+                to="/contact"
+                onClick={() => setOpen(false)}
+                className="block border-b border-acti-ink/10 py-3 text-[13px] font-semibold uppercase tracking-[0.1em] text-acti-ink"
+              >
+                Contact Us
+              </Link>
+            </li>
           </ul>
-          <a
-            href="#contact"
+          <Link
+            to="/contact"
             onClick={() => setOpen(false)}
-            className="mt-5 block rounded-full bg-acti-sun px-5 py-3 text-center text-[12px] font-bold uppercase tracking-[0.12em] text-acti-ink"
+            className="acti-tap mt-5 flex items-center justify-center rounded-full bg-acti-sun px-5 py-3 text-center text-[12px] font-bold uppercase tracking-[0.12em] text-acti-ink"
           >
             Enquire
-          </a>
+          </Link>
         </nav>
       )}
     </header>

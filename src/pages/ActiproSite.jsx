@@ -29,8 +29,12 @@ gsap.registerPlugin(ScrollTrigger)
  * owners. Check the component before wiring an anchor to either.
  *
  * The older sections (Ticker, Why, Products, Nutrition, Process, Kitchen,
- * Reviews, Faq, Contact) are unmounted, not deleted — their files are still
- * under src/components/actipro/ ready to be slotted back in.
+ * Reviews, Faq) are unmounted, not deleted — their files are still under
+ * src/components/actipro/ ready to be slotted back in.
+ *
+ * Contact is NOT among them: it is its own route now (/contact, see
+ * src/pages/ContactPage.jsx), not a section of this page. The header's
+ * "Contact Us" link and its Enquire button both navigate there.
  */
 export default function ActiproSite() {
   useEffect(() => {

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+/* FlameIcon and StarIcon went with the fifth badge on each card — their
+   sentences survive, merged into the opening stop (see CARDS below). */
 import {
   TargetIcon,
   EyeIcon,
@@ -11,8 +13,6 @@ import {
   HeartIcon,
   SparkleIcon,
   PinIcon,
-  FlameIcon,
-  StarIcon,
 } from './icons'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -45,31 +45,38 @@ gsap.registerPlugin(ScrollTrigger)
  * so each card gets its own panel instead of both showing the same picture.
  *
  * ── TUNING ──────────────────────────────────────────────────────────────────
- * stops[].at where along the curve (0-1) a stop's badge sits, 0 being the top of
- *            the card. Badge positions are MEASURED from the path at mount, so
+ * badges[].at where along the curve (0-1) a badge sits, 0 being the top of the
+ *            card. Badge positions are MEASURED from the path at mount, so
  *            editing this number is all that is needed — nothing in index.css
  *            has to be kept in step with it.
  * ARRIVE_AT  the fraction of the section's scroll by which the drop reaches the
- *            final stop. The reveal begins at exactly this point (REVEAL_FROM),
+ *            final badge. The reveal begins at exactly this point (REVEAL_FROM),
  *            so the landing and the image opening are one moment by
  *            construction rather than two constants that can drift apart.
  */
 /*
- * The drop now runs to the LAST stop rather than to a single badge, so the end
- * of its journey is the last entry in a card's `stops` array. ARRIVE_AT is the
+ * The drop runs to the LAST badge rather than to a single one, so the end of its
+ * journey is the last entry in a card's `badges` array. ARRIVE_AT is the
  * fraction of the section's scroll by which it gets there; the remainder is
  * spent on the reveal (see REVEAL_FROM), which is what gives the image room to
  * open smoothly instead of snapping the moment the drop lands.
  */
-const ARRIVE_AT = 0.72
+const ARRIVE_AT = 0.66
 
 /*
- * Once the drop reaches the final stop the photo grows to fill the whole card
- * and the copy fades out over it. Starting the reveal exactly at ARRIVE_AT ties
- * the two together by construction — the same mistake the original code called
- * out for the badge fill, where two independent constants drifted apart.
+ * Once the drop reaches the final badge the photo grows to fill the whole card
+ * and the copy fades out over it.
+ *
+ * The reveal used to start exactly at ARRIVE_AT. That was right when the last
+ * badge was also the last piece of copy, but the points now run one ahead of the
+ * icons: the fifth point only appears when the fourth badge lights, i.e. at
+ * ARRIVE_AT itself. Beginning the fade there flashed that line up and wiped it
+ * in the same frame. HOLD is the beat the last point gets to be read before the
+ * image starts opening over it — expressed as a fraction of the section's
+ * scroll, and still derived from ARRIVE_AT so the two cannot drift apart.
  */
-const REVEAL_FROM = ARRIVE_AT
+const HOLD = 0.12
+const REVEAL_FROM = ARRIVE_AT + HOLD
 
 // One source of truth for the sweep. The clipPath in the markup below is the
 // same curve at 0-1 scale — edit both together or the photo and stroke drift.
@@ -96,12 +103,26 @@ const CLIP_AT = (t) => {
   )
 }
 /*
- * Each card is now a three-stop run rather than a single landing.
+ * BADGES and POINTS are two separate lists, and deliberately different lengths:
+ * four icons on the curve, five lines of copy.
  *
- * STOPS are ordered top-to-bottom down the curve. `at` is the fraction along the
- * curve (0 = top of the card) where that stop's badge sits, and the drop pauses
- * at each one in turn: reaching a stop lights its badge AND swaps the card's
- * body copy to that stop's text.
+ * They interleave — a point is shown, then the next badge lights, then the next
+ * point, and so on:
+ *
+ *     point 0            <- at rest, before the drop reaches anything
+ *   badge 0 lights  ->  point 1
+ *   badge 1 lights  ->  point 2
+ *   badge 2 lights  ->  point 3
+ *   badge 3 lights  ->  point 4
+ *
+ * So the active point index is simply "how many badges are lit", which is why
+ * POINTS is always one longer than BADGES. Adding a badge means adding a point;
+ * the render and paint() both derive their counts from the arrays, so nothing
+ * else has to be kept in step.
+ *
+ * `at` on a badge is the fraction along the curve (0 = top of the card) where it
+ * sits. Positions are MEASURED from the real path at mount, so editing `at` is
+ * all that is needed — nothing in index.css has to change with it.
  *
  * The copy is drawn from claims already on the site (see Milestones.jsx and
  * Faq.jsx) rather than newly invented, so the section does not start making
@@ -116,32 +137,18 @@ const CARDS = [
     alt: 'Actipro oil being poured over a bowl of vegetables',
     Motif: LeafIcon,
     tone: 'red',
-    stops: [
-      {
-        at: 0.22,
-        Icon: TargetIcon,
-        body: 'To bring pure, healthy and honest cooking oils to every Indian kitchen.',
-      },
-      {
-        at: 0.35,
-        Icon: DropIcon,
-        body: 'Refined six times over, so nothing but the good stuff reaches your kadhai.',
-      },
-      {
-        at: 0.48,
-        Icon: LeafIcon,
-        body: 'Fortified with Vitamin A and D, and 100% vegetarian across the range.',
-      },
-      {
-        at: 0.61,
-        Icon: SparkleIcon,
-        body: 'Light on the pan, neutral in taste — so the food tastes of the food.',
-      },
-      {
-        at: 0.74,
-        Icon: FlameIcon,
-        body: 'A high smoke point, so it holds up to a real Indian tadka.',
-      },
+    badges: [
+      { at: 0.24, Icon: TargetIcon },
+      { at: 0.41, Icon: DropIcon },
+      { at: 0.58, Icon: LeafIcon },
+      { at: 0.75, Icon: SparkleIcon },
+    ],
+    points: [
+      'To bring pure, healthy and honest cooking oils to every Indian kitchen.',
+      'Refined six times over, so nothing but the good stuff reaches your kadhai.',
+      'Fortified with Vitamin A and D, and 100% vegetarian across the range.',
+      'Light on the pan, neutral in taste — so the food tastes of the food.',
+      'A high smoke point, so it holds up to a real Indian tadka.',
     ],
   },
   {
@@ -152,39 +159,25 @@ const CARDS = [
     alt: 'A bottle of Actipro refined soyabean oil in a field at sunrise',
     Motif: DropIcon,
     tone: 'sun',
-    stops: [
-      {
-        at: 0.22,
-        Icon: EyeIcon,
-        body: 'To be India’s most trusted edible oil brand, known for quality, purity and care.',
-      },
-      {
-        at: 0.35,
-        Icon: ShieldIcon,
-        body: 'Crushed and refined on our own lines at Dhannad, Mandsaur and Shinde Gaon.',
-      },
-      {
-        at: 0.48,
-        Icon: HeartIcon,
-        body: 'Three plants, three FSSAI licences, and no third-party packing.',
-      },
-      {
-        at: 0.61,
-        Icon: PinIcon,
-        body: 'Madhya Pradesh and Maharashtra today, one state at a time from here.',
-      },
-      {
-        at: 0.74,
-        Icon: StarIcon,
-        body: 'Every batch logged against its own lab report before it leaves the plant.',
-      },
+    badges: [
+      { at: 0.24, Icon: EyeIcon },
+      { at: 0.41, Icon: ShieldIcon },
+      { at: 0.58, Icon: HeartIcon },
+      { at: 0.75, Icon: PinIcon },
+    ],
+    points: [
+      'To be India’s most trusted edible oil brand, known for quality, purity and care.',
+      'Crushed and refined on our own lines at Dhannad, Mandsaur and Shinde Gaon.',
+      'Three plants, three FSSAI licences, and no third-party packing.',
+      'Madhya Pradesh and Maharashtra today, one state at a time from here.',
+      'Every batch logged against its own lab report before it leaves the plant.',
     ],
   },
 ]
 
-// Keyed lookup so paint() can reach a card's stops from its dataset alone,
-// without closing over the render's props.
-const STOPS_BY_KEY = Object.fromEntries(CARDS.map((c) => [c.key, c.stops]))
+// Keyed lookup so paint() can reach a card's badge positions from its dataset
+// alone, without closing over the render's props.
+const BADGES_BY_KEY = Object.fromEntries(CARDS.map((c) => [c.key, c.badges]))
 
 export default function MissionVision() {
   const sectionRef = useRef(null)
@@ -199,16 +192,70 @@ export default function MissionVision() {
    */
   const [pinned, setPinned] = useState(false)
 
+  /*
+   * Pinning is what makes the reveal finish BEFORE the page moves on: the stage
+   * holds still (position:sticky) while the runway is spent on the animation.
+   * Unpinned, the cards scroll away underneath a run that is still playing.
+   *
+   * So pin WHENEVER THE STAGE FITS, at any width — and that has to be measured,
+   * not inferred from a media query. Card height is set by width (27rem from the
+   * desktop rule, 18.75rem below 640px) while the space available is set by
+   * height, so no single breakpoint describes it: a 709x848 tablet passes a
+   * `min-height: 840px` test yet needs ~1146px of stage, and pinning there
+   * clips the bottom card and releases before the reveal is done.
+   *
+   * The measurement is of the stage's natural content height, taken while it is
+   * NOT pinned (see the guard below), because once sticky is applied the
+   * element reports the pinned height and the test would feed on its own
+   * result. Reduced motion never pins.
+   */
   useEffect(() => {
-    const wide = window.matchMedia('(min-width: 1024px)')
+    const section = sectionRef.current
+    if (!section) return undefined
+
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const apply = () => setPinned(wide.matches && !reduce.matches)
-    apply()
-    wide.addEventListener('change', apply)
-    reduce.addEventListener('change', apply)
+
+    /*
+     * The CONTENT block is measured, not .mv-stage itself.
+     *
+     * The stage takes `min-height: 100svh` the moment it is pinned, so its own
+     * height would report at least a full viewport whenever the answer is
+     * "yes" — the test would immediately contradict itself and the section
+     * would oscillate between pinned and not on every frame. Its inner shell
+     * carries the same children with no such floor, so its height is the true
+     * content height in BOTH states and the test is stable.
+     */
+    const content = section.querySelector('.mv-stage > .acti-shell')
+
+    const measure = () => {
+      if (reduce.matches) {
+        setPinned(false)
+        return
+      }
+      if (!content) return
+      /* The stage adds its own block padding around this, which the CSS keeps in
+         step with the breakpoint (3rem desktop, 1.5rem on phones), so it is read
+         from the live style rather than hard-coded here. */
+      const stage = content.parentElement
+      const cs = getComputedStyle(stage)
+      const pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)
+      const needed = content.getBoundingClientRect().height + pad
+      /* A little slack so a stage that fits almost exactly is not left flapping
+         between states when a mobile URL bar collapses. */
+      setPinned(needed <= window.innerHeight - 8)
+    }
+
+    measure()
+    /* Re-measure on resize and whenever the content reflows — fonts and images
+       both land after first paint and change the height. */
+    const ro = new ResizeObserver(measure)
+    if (content) ro.observe(content)
+    window.addEventListener('resize', measure)
+    reduce.addEventListener('change', measure)
     return () => {
-      wide.removeEventListener('change', apply)
-      reduce.removeEventListener('change', apply)
+      ro.disconnect()
+      window.removeEventListener('resize', measure)
+      reduce.removeEventListener('change', measure)
     }
   }, [])
 
@@ -224,7 +271,7 @@ export default function MissionVision() {
    * from getPointAtLength on that same path, which is the only way to guarantee
    * the drop passes exactly through it. The original code hard-coded one badge's
    * position in CSS and left a comment warning that changing BADGE_AT meant
-   * re-measuring by hand — with three stops per card that is three chances to
+   * re-measuring by hand — with four badges per card that is four chances to
    * drift, so it is measured instead.
    *
    * Re-run on resize: the SVG is stretched with preserveAspectRatio="none", so
@@ -284,26 +331,33 @@ export default function MissionVision() {
       const run = Math.min(1, Math.max(0, p) / ARRIVE_AT)
 
       // Where the drop has got to along the curve. The journey ends at the LAST
-      // stop, so that stop's `at` is the full extent of the travel.
-      const stops = STOPS_BY_KEY[card.dataset.key] || []
-      const lastAt = stops.length ? stops[stops.length - 1].at : 0
+      // badge, so that badge's `at` is the full extent of the travel.
+      const badges = BADGES_BY_KEY[card.dataset.key] || []
+      const lastAt = badges.length ? badges[badges.length - 1].at : 0
       const travel = run * lastAt
       const at = len * travel
       const point = path.getPointAtLength(at)
 
       /*
-       * Which stops the drop has passed. Each badge lights as the drop reaches
-       * it, and the card's copy switches to that stop's text — so the active
-       * index is simply the last stop whose `at` is behind the drop.
-       *
-       * A small bias means a badge lights as the drop meets its centre rather
-       * than a frame after it has already gone past.
+       * How many badges the drop has passed. A small bias means a badge lights
+       * as the drop meets its centre rather than a frame after it has already
+       * gone past.
        */
       const BIAS = 0.012
-      let active = 0
-      stops.forEach((s, i) => {
-        if (travel >= s.at - BIAS) active = i
+      let lit = 0
+      badges.forEach((b) => {
+        if (travel >= b.at - BIAS) lit += 1
       })
+
+      /*
+       * The copy runs one ahead of the icons: point 0 is on screen before the
+       * drop reaches anything, and each badge that lights advances to the next
+       * point. So the active index IS the number of lit badges — which is why
+       * `points` is one longer than `badges`. Clamped anyway, so a card whose
+       * two arrays fall out of step degrades to holding the last line rather
+       * than blanking the copy.
+       */
+      const active = Math.min(lit, card.querySelectorAll('.mv-stop').length - 1)
       if (card.dataset.active !== String(active)) {
         card.dataset.active = String(active)
         // Written as a data attribute, not React state: the scrub runs at 60fps
@@ -313,7 +367,7 @@ export default function MissionVision() {
         })
       }
       card.querySelectorAll('.mv-badge').forEach((b, i) => {
-        b.dataset.lit = travel >= stops[i].at - BIAS ? 'true' : 'false'
+        b.dataset.lit = travel >= badges[i].at - BIAS ? 'true' : 'false'
       })
 
       /*
@@ -402,12 +456,36 @@ export default function MissionVision() {
               invalidateOnRefresh: true,
             }
           : {
-              // Unpinned, run it while the cards are genuinely on screen
-              // rather than while they are still entering.
+              /*
+               * Unpinned (phones and tablets), run it while the cards are
+               * genuinely on screen rather than while they are still entering.
+               *
+               * The window is deliberately WIDER than the section itself. On a
+               * phone the two cards are only 18.75rem each (see the 639px block
+               * in index.css), so the section is about one viewport tall — the
+               * old 'top 70%' → 'bottom 75%' pair gave the whole run ~800px of
+               * scroll to cover four badges and five lines of copy, i.e. one
+               * point per ~105px. That is a single flick, which is why the drop
+               * read as far too fast here while feeling right on desktop.
+               *
+               * Starting earlier and carrying the end 45% of a viewport PAST the
+               * section's own bottom stretches the runway to ~1300px (~172px a
+               * point) without letting the finish drift off screen: at the
+               * moment the last badge lights the card band still covers most of
+               * the viewport, so the final line and the photo reveal are both
+               * watched rather than happening below the fold.
+               *
+               * Nothing is pinned, so the wider window costs no layout — the
+               * scrub simply keeps running as the section leaves.
+               */
               trigger: section,
-              start: 'top 70%',
-              end: 'bottom 75%',
-              scrub: 0.8,
+              start: 'top 85%',
+              end: 'bottom+=45% 75%',
+              /* Heavier than the pinned 0.8. Touch scrolling arrives in fast
+                 flicks rather than the steady wheel deltas a trackpad gives, so
+                 the extra easing is what keeps the drop gliding down the curve
+                 instead of jumping between the positions each flick lands on. */
+              scrub: 1.1,
               invalidateOnRefresh: true,
             },
         onUpdate: () => cards.forEach((card) => paint(card, state.p)),
@@ -468,7 +546,7 @@ export default function MissionVision() {
         </header>
 
         <div className="mv-grid mt-12 grid gap-7 sm:mt-16 lg:grid-cols-2 lg:gap-8">
-          {CARDS.map(({ key, kicker, title, image, alt, Motif, tone, stops }) => (
+          {CARDS.map(({ key, kicker, title, image, alt, Motif, tone, badges, points }) => (
             <article key={key} className="mv-card" data-key={key} data-tone={tone}>
               {/* The photo, clipped to the sweeping curve */}
               <figure className="mv-figure">
@@ -502,15 +580,15 @@ export default function MissionVision() {
 
               {/* The travelling drop. Its position along the curve is written as
                   --mv-dot-x/y by the scroll effect; it starts at the top of the
-                  card and runs down through every stop in turn. */}
+                  card and runs down through every badge in turn. */}
               <DropFilledIcon className="mv-dot" aria-hidden="true" />
 
-              {/* One badge per stop, each sitting ON the curve so the drop runs
-                  through them rather than veering off to reach one. Their
-                  left/top are measured from the real path at mount (see the
-                  placeBadges effect) — hard-coded percentages drifted from the
-                  curve whenever the card's aspect changed. */}
-              {stops.map(({ at, Icon: StopIcon }, i) => (
+              {/* Each badge sits ON the curve so the drop runs through it rather
+                  than veering off to reach it. Their left/top are measured from
+                  the real path at mount (see the placeBadges effect) —
+                  hard-coded percentages drifted from the curve whenever the
+                  card's aspect changed. */}
+              {badges.map(({ at, Icon: BadgeIcon }, i) => (
                 <span
                   key={i}
                   className="mv-badge"
@@ -519,10 +597,9 @@ export default function MissionVision() {
                   aria-hidden="true"
                 >
                   {/* Destructured to a capitalised local rather than rendered as
-                      <stop.Icon>: `stop` is itself an SVG element name, and a
-                      lowercase member expression in JSX resolves to undefined,
-                      which crashed the whole section. */}
-                  <StopIcon className="h-5 w-5" />
+                      a lowercase member expression, which JSX resolves to an
+                      unknown element and which crashed the whole section. */}
+                  <BadgeIcon className="h-5 w-5" />
                 </span>
               ))}
 
@@ -531,16 +608,18 @@ export default function MissionVision() {
                 <h3 className="mv-title">{title}</h3>
                 <span className="mv-underline" aria-hidden="true" />
 
-                {/* All three lines are rendered and stacked; the scroll effect
-                    flips data-on so only the active one is visible. Keeping them
-                    in the DOM means the block reserves the height of the tallest
+                {/* Every point is rendered and stacked; the scroll effect flips
+                    data-on so only the active one is visible. Keeping them in
+                    the DOM means the block reserves the height of the tallest
                     from the start, so the card does not resize as the copy
                     changes — and a screen reader gets the whole list, not just
-                    whichever line the scroll happens to be showing. */}
+                    whichever line the scroll happens to be showing.
+                    The first point is on by default: it is what shows before the
+                    drop has reached any badge. */}
                 <div className="mv-stops">
-                  {stops.map((stop, i) => (
+                  {points.map((line, i) => (
                     <p key={i} className="mv-stop mv-text" data-on={i === 0 ? 'true' : 'false'}>
-                      {stop.body}
+                      {line}
                     </p>
                   ))}
                 </div>

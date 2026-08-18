@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { FIRST_SRC, KITCHEN_MOBILE_QUERY, frameSetFor } from './kitchenFrames'
+import { KITCHEN_MOBILE_QUERY, frameSetFor } from './kitchenFrames'
 import { setSceneTone } from './sceneTone'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -21,40 +21,26 @@ gsap.registerPlugin(ScrollTrigger)
  * FRAME_RAMP, TEXT, STILL_AT — is expressed as a fraction and applies to either.
  *
  * ── TUNING ──────────────────────────────────────────────────────────────────
- * FRAME_RAMP maps [scroll progress → position in the frame range]. It is not
- *   linear on purpose. Measured by frame-to-frame difference, the door swing is
- *   at ABSOLUTE frames 72-110; everything before is the camera settling and
- *   everything after is it drifting back. With first=40 (kitchenFrames.js) that
- *   swing sits at range positions 0.06-0.68, so the doors begin moving within
- *   the first tenth of the scroll instead of after 40% of it, and the swing gets
- *   the bulk of the travel.
- *
- *   The y values are FRACTIONS OF THE FRAME RANGE, so they must be remapped
- *   whenever first/last change — changing first from 0 to 40 silently pointed
- *   these at frames past the swing until they were recomputed.
+ * The [scroll progress → position in the frame range] ramp now lives on each
+ *   frame set in kitchenFrames.js, as `ramp`, because its y values are
+ *   fractions of THAT set's range. The desktop and mobile clips are separate
+ *   takes whose door swings land at different fractions, so one shared ramp
+ *   mistimed whichever set it was not written for.
  * TEXT is [start, duration] as a fraction of the section's scroll.
  * Want the whole scene slower? Raise .kitchen-scene's height in index.css.
  */
-const FRAME_RAMP = [
-  [0.0, 0.0], // shut                        (abs 68)
-  [0.08, 0.06], // a short held beat, then it goes (abs 72)
-  [0.45, 0.32], // doors parting               (abs 88)
-  [0.72, 0.52], // packs readable              (abs 101)
-  [0.9, 0.68], // fully open                  (abs 111)
-  [1.0, 1.0], // camera settles               (abs 130)
-]
 
 const TEXT = {
   secondIn: [0.75, 0.15], // "Open it up" arrives as the packs become readable
   ctaIn: [0.88, 0.12],
 }
 
-// Piecewise-linear lookup through FRAME_RAMP.
-function rampedFrame(progress) {
-  for (let i = 1; i < FRAME_RAMP.length; i += 1) {
-    const [x1, y1] = FRAME_RAMP[i]
+// Piecewise-linear lookup through a set's ramp.
+function rampedFrame(ramp, progress) {
+  for (let i = 1; i < ramp.length; i += 1) {
+    const [x1, y1] = ramp[i]
     if (progress <= x1) {
-      const [x0, y0] = FRAME_RAMP[i - 1]
+      const [x0, y0] = ramp[i - 1]
       const t = x1 === x0 ? 0 : (progress - x0) / (x1 - x0)
       return y0 + (y1 - y0) * t
     }
@@ -103,7 +89,8 @@ export default function KitchenReveal() {
   // so a fresh one each render would refetch the whole sequence on every paint.
   const frames = useMemo(() => frameSetFor(isMobile), [isMobile])
 
-  // ~2.2 MB of frames (133 of them, see kitchenFrames.js). The hero clip gets
+  // ~2 MB of frames per set (63 desktop / 106 mobile, see kitchenFrames.js).
+  // The hero clip gets
   // the network to itself first; these only start once the browser is idle (or
   // after 1.2s, whichever comes first). They are requested in order and at low
   // priority, so the early frames — the ones the viewer reaches first — land
@@ -203,7 +190,7 @@ export default function KitchenReveal() {
 
     const render = () => {
       rafRef.current = 0
-      const want = Math.round(rampedFrame(targetRef.current) * (frames.count - 1))
+      const want = Math.round(rampedFrame(frames.ramp, targetRef.current) * (frames.count - 1))
       const index = nearestLoaded(want)
       if (index >= 0 && index !== drawnRef.current) draw(index)
     }
@@ -303,13 +290,14 @@ export default function KitchenReveal() {
             <canvas ref={canvasRef} className="kitchen-frame absolute inset-0 h-full w-full" />
 
             {/* Stands in until the frames arrive, so the scene is never blank.
-                On desktop this is FIRST_SRC, the exact image the hero dissolved
-                into; on a phone it is the portrait set's own shut-cabinet frame,
-                since flashing the landscape crop first would undo the point of
-                having a second export. */}
+                Always this set's own frame 0 — which is also the exact image
+                Hero.jsx dissolved into, because it picks the plate from the
+                same query (see firstSrcFor in kitchenFrames.js). Any other
+                choice here shows one cabinet during the fade and a different
+                one the moment the section takes over. */}
             {!ready && (
               <img
-                src={isMobile ? frames.src(0) : FIRST_SRC}
+                src={frames.src(0)}
                 alt=""
                 aria-hidden="true"
                 className="kitchen-frame absolute inset-0 h-full w-full object-cover"

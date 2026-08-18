@@ -22,7 +22,7 @@ export default function HeroProducts() {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <p className="text-[12px] font-semibold uppercase sm:text-[11px] tracking-[0.24em] text-white/50 max-sm:text-[10px] max-sm:tracking-[0.16em]">
+      <p className="text-[12px] font-semibold uppercase sm:text-[11px] tracking-[0.24em] text-white/50 max-sm:text-[11px] max-sm:tracking-[0.16em]">
         From our range
       </p>
 
@@ -39,7 +39,7 @@ export default function HeroProducts() {
         <p className="mt-5 font-serif text-2xl leading-tight text-white sm:text-3xl max-sm:mt-3">
           {product.brand}
         </p>
-        <p className="mt-1 text-[13px] font-semibold uppercase tracking-[0.14em] text-acti-sun max-sm:text-[11px] max-sm:leading-[1.45]">
+        <p className="mt-1 text-[13px] font-semibold uppercase tracking-[0.14em] text-acti-sun max-sm:text-[12px] max-sm:leading-[1.45]">
           {product.name}
         </p>
         <p className="mt-1.5 text-sm text-white/60 max-sm:text-[12.5px] max-sm:leading-snug">

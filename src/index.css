@@ -1168,6 +1168,37 @@ section[id] {
   --mv-runway: 190vh;
   height: calc(100svh + var(--mv-runway));
 }
+
+/*
+ * Below the two-column breakpoint the cards STACK, so the pair is twice as tall
+ * as the grid assumes and the 27rem card that reads well side by side puts the
+ * stage well past one viewport. That matters now that pinning is decided by
+ * whether the stage fits (see MissionVision.jsx): left at 27rem, every tablet
+ * fails the test and loses the hold that keeps the reveal on screen.
+ *
+ * Capped rather than fixed: `min()` lets a short viewport shrink the cards
+ * further instead of overflowing, while a tall one still gets the full 27rem.
+ * The phone block further down narrows this again for its own budget.
+ *
+ * NOTE this block sits ABOVE the .mv-scene--pinned .mv-stage rule that follows,
+ * so anything it needs to override there has to be repeated after it — see the
+ * padding rule further down rather than putting it here.
+ */
+@media (max-width: 1023px) {
+  .mv-card {
+    min-height: 0;
+    /* 30svh a card: two of them plus the heading, the grid's top margin and the
+       stage padding come to roughly 88svh, which clears one viewport with room
+       for the URL bar. Capped at 27rem so a very tall tablet does not stretch
+       the cards past the proportion the curve was drawn for. */
+    height: min(27rem, 30svh);
+  }
+  /* Chrome counts against the same budget as the cards. */
+  .mv-grid.mv-grid {
+    gap: 1.25rem;
+    margin-top: 2rem;
+  }
+}
 .mv-scene--pinned .mv-stage {
   position: sticky;
   top: 0;
@@ -1176,6 +1207,25 @@ section[id] {
   flex-direction: column;
   justify-content: center;
   padding-block: 3rem;
+}
+
+/*
+ * Stacked layouts pin too, and the stage's own padding is part of the budget
+ * that decides whether they can. It has to be declared AFTER the rule above,
+ * not inside the max-width:1023px block further up, or the 3rem there wins on
+ * source order and the measurement it feeds is 2rem too pessimistic.
+ *
+ * The runway comes down with it: the dial is scroll DISTANCE, so the desktop
+ * 190vh on a much shorter viewport is a far longer thumb journey for the same
+ * animation.
+ */
+@media (max-width: 1023px) {
+  .mv-scene--pinned {
+    --mv-runway: 150vh;
+  }
+  .mv-scene--pinned .mv-stage {
+    padding-block: 2rem;
+  }
 }
 
 /* --- Heading ------------------------------------------------------- */
@@ -1337,9 +1387,9 @@ section[id] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  /* Five badges share the curve now, so they are smaller again — at 3.4rem the
-     gaps between stops (0.13 of the path apart) were narrower than the badges
-     themselves and they overlapped on a short card. */
+  /* Four badges share the curve, so they are smaller than the original single
+     one — at 3.4rem the gaps between them (0.17 of the path apart) were
+     narrower than the badges themselves and they overlapped on a short card. */
   width: 2.7rem;
   height: 2.7rem;
   border-radius: 999px;
@@ -1566,12 +1616,16 @@ section[id] {
   --mv-flip: clamp(0, calc((var(--mv-reveal) - 0.82) / 0.18), 1);
   --mv-ink: color-mix(in srgb, #fff calc(var(--mv-flip) * 100%), var(--color-acti-ink));
 }
-/* The badges STAY once the photo is full-bleed — they are lit accent discs by
-   then, and they are the only thing tying the finished card back to the three
-   points the drop just made. Only the curve furniture it drew on (the stroke and
-   the drop itself) retires, since that boundary no longer exists. */
+/* The badges retire WITH the curve furniture.
+   They used to stay, on the reasoning that they tie the finished card back to
+   the points the drop just made — but once the photo is full-bleed there is no
+   curve left underneath them, so a column of accent discs is left floating over
+   the picture, tracing a line that is no longer there. The same fade as the
+   stroke and the drop: gone by the time --mv-reveal reaches 0.5, which is well
+   before the photo has finished opening.
+   The COPY still stays — it rides on top of the finished picture. */
 .mv-badge {
-  opacity: 1;
+  opacity: clamp(0, calc(1 - var(--mv-reveal) * 2), 1);
 }
 
 .mv-kicker {
@@ -1667,7 +1721,13 @@ section[id] {
      the curve's lower reach, which the copy can no longer clear. */
   .mv-card {
     min-height: 0;
-    height: 18.75rem;
+    /* Was a flat 18.75rem, which fits a 844px phone but overflows a 667px one —
+       and a stage that does not fit cannot be pinned, so those short phones lost
+       the hold that keeps the photo reveal on screen (see the measurement in
+       MissionVision.jsx). Scaling with the viewport keeps the pair inside one
+       screen at every phone size; the 18.75rem cap means tall phones are exactly
+       as before. 14rem floor so the copy still has somewhere to go. */
+    height: clamp(14rem, 31svh, 18.75rem);
   }
   /* The gap and the grid's top margin count against the same budget as the
      cards. Tailwind's gap-7/mt-12 utilities are overridden here rather than
@@ -1695,23 +1755,24 @@ section[id] {
 
   /* The badges stay ON the curve here too, just smaller.
      This used to pin a single badge below the copy with a fixed left/bottom,
-     which is what forced the drop to peel off the path to reach it. With five
-     stops that override would stack them all in the same corner, so only the
+     which is what forced the drop to peel off the path to reach it. With four
+     badges that override would stack them all in the same corner, so only the
      size changes — the inline left/top from the path still positions them. */
   .mv-badge {
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2.25rem;
+    height: 2.25rem;
   }
   .mv-badge svg {
-    width: 1.1rem;
-    height: 1.1rem;
+    width: 1.05rem;
+    height: 1.05rem;
   }
+  /* MUST keep the translate. The base rule centres the badge on its path point
+     with translate(-50%,-50%), and `transform` is one property — a lit badge
+     that declares only scale() drops the centring and jumps down-right by half
+     its own size, which is what threw the icons off the line on phones. The
+     desktop lit rule gets this right; this override did not. */
   .mv-badge[data-lit='true'] {
-    transform: scale(1.06);
-  }
-  .mv-badge svg {
-    width: 1.25rem;
-    height: 1.25rem;
+    transform: translate(-50%, -50%) scale(1.06);
   }
 
   .mv-kicker {
@@ -1744,6 +1805,13 @@ section[id] {
   }
   .mv-flourish {
     margin-top: 0.5rem;
+  }
+
+  /* Tighter still than the 2rem the 1023px block sets — a phone has the least
+     room of all, and the runway it inherits from there (150vh) is already
+     right. */
+  .mv-scene--pinned .mv-stage {
+    padding-block: 1.5rem;
   }
 }
 
@@ -2031,6 +2099,76 @@ section[id] {
 }
 
 /* --- Footer line ----------------------------------------------- */
+/* --- Step control -------------------------------------------------
+   Arrows and dots under the row. Desktop hides it: the travel is obvious
+   with a pointer, and the section already reads as horizontal there.
+   On a phone the row moves with the PAGE scroll, so this is both the
+   position readout and a way to jump between steps. */
+.wt-nav {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+}
+
+.wt-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* 44px, the minimum comfortable tap target. */
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-acti-red) 35%, transparent);
+  color: var(--color-acti-red);
+  background: #fffdf7;
+  transition:
+    opacity 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.wt-nav-btn:disabled {
+  opacity: 0.35;
+}
+
+.wt-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* The button is the tap target and stays transparent; the visible dot is the
+   ::before inside it. Padding the button and clipping its background was the
+   obvious way to get a big hit area around a small dot, but background-clip
+   cannot round the CONTENT box — the paint came out as a rectangle. A pseudo
+   element has its own box, so it takes border-radius properly. */
+.wt-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.wt-dot::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-acti-ink) 22%, transparent);
+  transition:
+    background-color 0.25s ease,
+    transform 0.25s ease;
+}
+
+.wt-dot[data-on='true']::before {
+  background: var(--color-acti-red);
+  transform: scale(1.35);
+}
+
 .wt-foot {
   display: flex;
   align-items: center;
@@ -2080,9 +2218,59 @@ section[id] {
    half the viewport. Type inside the card steps down with it — at this width the
    desktop sizes overflow the oval instead of sitting inside the curve. */
 @media (max-width: 639px) {
+  /* Bigger than they were (46vw/13rem). With the pin at a full viewport there is
+     ~674px of vertical room for a row that only needed 251px, and undersized
+     ovals were what left the section looking empty. Capped by height as well as
+     width so a short phone shrinks them rather than clipping them: the pair is
+     still two ovals side by side, so the width cap keeps them both on screen. */
   .wt-photo,
   .wt-card {
-    width: min(46vw, 13rem);
+    /* Height-led, not width-led. The ovals are sized from the vertical room the
+       pin actually leaves them, and only then capped by width so a step's photo
+       and card still read as a pair. Sized off width alone they stopped at
+       339px in a 686px row and the surplus came back as empty cream. */
+    width: min(62vw, 46svh);
+  }
+
+
+  /*
+   * Below ~360px the ovals get narrow enough that the body copy no longer fits
+   * the fixed 1/1.32 box: measured at 320px it was clipped mid-sentence and the
+   * pill was cut off entirely.
+   *
+   * The oval cannot simply grow — it lives in a viewport-height stage, so a
+   * taller card just overflows and clips at BOTH ends instead (tried, worse).
+   * So the card widens a little and its type tightens, which is what actually
+   * buys the lines back.
+   */
+  @media (max-width: 359px) {
+    .wt-photo,
+    .wt-card {
+      width: 52vw;
+    }
+    .wt-title {
+      font-size: 0.8rem;
+    }
+    /* Even tightened, the longest body runs three lines past the curve at this
+       width. The oval's height is fixed by the stage, so the copy is clamped to
+       what actually fits and the rest is trimmed with an ellipsis — a truncated
+       sentence reads as deliberate, whereas text sliding out through the bottom
+       of the card reads as broken. The full claim is still one tap away. */
+    .wt-body {
+      margin-top: 0.35rem;
+      font-size: 9.5px;
+      line-height: 1.32;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 5;
+      line-clamp: 5;
+      overflow: hidden;
+    }
+    .wt-cta {
+      margin-top: 0.4rem;
+      font-size: 10px;
+      padding: 0.35rem 0.6rem;
+    }
   }
   /* A pair is now ~92vw, so the default lead-in left the first photo hanging off
      the left edge before the scrub had moved anything. Centre the pair instead
@@ -2131,21 +2319,165 @@ section[id] {
      already narrowing, the pill has to stay well inside the box, not just fit
      it: hence the cap below plus type small enough that the longest label
      ('Know our promise') still fits on one line at that width. */
-  /* A real pill, not a miniature of one. At 7px the label was below reading
-     size and the padding collapsed with it, so the button read as a smudge —
-     and it was well under the 44px tap target a phone needs. */
+  /* A real pill, not a miniature of one. This is the LAST .wt-cta rule in the
+     file, so it is the one that lands — an earlier attempt at 12.5px further up
+     was being overridden by this block and never took effect.
+
+     The oval is the constraint, not the viewport: the card measures 179px wide
+     at 390px and only reaches ~208px by 639px, and the pill sits where the
+     ellipse is already turning in. Hence 11px type with tight tracking, which
+     keeps the longest label ('Know our promise') on one line, plus a real 44px
+     tap target from min-height rather than from padding. */
   .wt-cta {
-    margin-top: 0.9rem;
-    padding: 0.6rem 1.1rem;
-    gap: 0.4rem;
-    font-size: 10px;
-    letter-spacing: 0.08em;
+    /* Sits HIGHER in the card than it used to. The pill's width is bounded by
+       the ellipse at its own band, and that band narrows fast toward the bottom
+       of the oval: measured on a 190x279 card it is 149px at the pill's top
+       edge but only 95px at its bottom, so a 153px pill burst the curve even
+       though it fitted the 190px box. A smaller margin-top lifts the whole pill
+       into the wider part of the taper.
+
+       min-height, not vertical padding, carries the 44px tap target — padding
+       would make the pill taller downward, back into the narrow end. */
+    margin-top: 0.55rem;
+    padding: 0.4rem 0.8rem;
+    /* 44px, the minimum comfortable tap target — 40 was close but still under
+       a finger. It grows the pill downward into the narrower part of the
+       taper, which the horizontal padding above is already conservative
+       enough to absorb. */
+    min-height: 44px;
+    gap: 0.3rem;
+    /* 11px, the floor the rest of the phone layout uses. At 10px this was the
+       only remaining sub-floor label on the page; the tighter tracking below
+       is what keeps 'Know our promise' on one line at the new size. */
+    font-size: 11px;
+    letter-spacing: 0.02em;
     white-space: nowrap;
+  }
+  /* The pill's width is bounded by the ellipse AT ITS OWN HEIGHT, and the card
+     is an aspect-ratio box: the more body copy, the taller the oval and the
+     deeper into the closing curve the pill lands. Measured before this rule,
+     .wt-body ran 112px tall and pushed the pill to y=245-285 on a 304px card,
+     where the ellipse is ~91px — a 133px pill cannot fit there at any type size.
+
+     So the body is tightened rather than the button shrunk further: smaller
+     leading and a slightly narrower measure pull the whole stack up, which puts
+     the pill back in the part of the oval that is wide enough to hold it. */
+  .wt-body {
+    font-size: 11px;
+    line-height: 1.4;
+    margin-top: 0.4rem;
+    max-width: 88%;
+  }
+  /* The card keeps its 1/1.32 aspect ratio — see the base rule. Overriding it
+     to auto let the oval grow with its copy, which made it taller than the
+     viewport row and it was clipped at the bottom.
+
+     The ratio alone is not quite enough on the narrowest phones: at 360px the
+     copy still forced the oval to 266px against the ~219px its width implies,
+     and the bottom of the pill was cut off by the row. max-height holds it to
+     the ratio, and min-height:0 stops the flex row stretching it back. */
+  .wt-card {
+    max-height: calc(min(62vw, 46svh) * 1.32);
+    min-height: 0;
   }
   .wt-cta svg {
     width: 0.85rem;
     height: 0.85rem;
     flex: none;
+  }
+
+  /* The stage is still a sticky full-viewport pin here, so it keeps its height
+     — but the base padding is sized for a laptop's vertical room and on a phone
+     it just pushes the row down and leaves dead cream above and below it. The
+     gap tightens with it, so heading, row, control and footer read as one
+     block rather than four floating bands. */
+  /* The pin is one viewport tall by default, which on a phone is far more than
+     the ovals need — the row is ~250px inside a 900px stage, and the surplus
+     reads as dead cream above and below the section. --wt-pin lets the pinned
+     height come down to what the content actually uses; the scene reserves the
+     same value, so the two stay in step and no gap opens under the section.
+     svh (not vh) so the mobile URL bar collapsing does not resize the pin. */
+  .wt-scene {
+    /* The pin is only as tall as the ovals actually need. It was one full
+       viewport, which on a phone left the row floating in ~356px of spare
+       cream — the "extra space above and below" the section reads as having.
+       31rem is the content height (heading + ovals + control + footer line)
+       measured at 390-430px wide, so there is no surplus left to distribute. */
+    /* The pin fills the viewport, and the ovals are sized from the vertical room
+       inside it rather than from their width alone.
+
+       A pin SHORTER than the screen cannot avoid a gap: the stage is sticky, so
+       whatever the viewport has spare over the pin ends up as empty cream at one
+       end or the other — below it at top:0, above it with any offset (and an
+       offset also drags the previous section up the screen while this one is
+       held, which is worse). So the pin is a full screen and the surplus is
+       removed by growing the content into it instead. */
+    /* Sized to the content, not to the screen. The block (heading, oval row,
+       step control, footer line) comes to ~520px; a full-viewport pin left the
+       remaining ~380px to justify-content, which put ~188px of blank cream
+       above the heading and below the footer line.
+
+       36rem is what the block actually measures — at 34rem the row was 17px
+       shy of the oval and clipped every card. Capped at 100svh so a short
+       phone never gets a pin taller than its own screen. The scene reserves the same value, so sticky still holds for
+       exactly the runway — see the note there. */
+    --wt-pin: min(100svh, 36rem);
+
+    /* The scene reserves exactly the STAGE's height plus the runway. Those two
+       must agree: sticky can only hold for (sceneH - stageH), so if the scene
+       reserves a full viewport while the stage is shorter — or the reverse —
+       the pin releases at the wrong moment. Here both are --wt-pin. */
+    height: calc(var(--wt-pin) + var(--wt-runway));
+  }
+  /* Sticky at top:0 pinned a 34rem stage to the TOP of the viewport, leaving the
+     rest of the screen empty for the whole scroll. Centring it splits that
+     surplus evenly, which is what a short pin should do — but the surplus only
+     exists because the SCENE reserves a full viewport. It is reserved as
+     --wt-pin instead (above), so the section is exactly as tall as the pinned
+     stage plus the rail's travel and no taller.
+
+     The stage sticks at top:0, NOT at a centred offset. A sticky child stops
+     sticking once the parent's bottom reaches stickyTop + childHeight, so a
+     centred `top` released the pin one offset-worth of scroll EARLY: the stage
+     slid up and the next section climbed into view while the rail was still
+     only ~80% travelled. The section's ScrollTrigger also starts at 'top top',
+     so any offset here desyncs the tween from the hold.
+
+     The stage is --wt-pin tall, not a full viewport: at 31rem it is just what
+     the ovals need, so justify-content has almost no surplus left to spread and
+     the section stops carrying ~200px of empty cream at each end.
+
+     It sticks at top:0. A centred `top` offset released the pin early (sticky
+     stops at stickyTop + childHeight) AND desynced it from the section's
+     ScrollTrigger, which starts at 'top top' — that combination is what let the
+     next section climb in while the last oval was still arriving. */
+  .wt-stage {
+    height: var(--wt-pin);
+    top: 0;
+  }
+
+  /* The stage MUST keep height:100svh here — it is a sticky pin, and the scene
+     above it reserves 100svh + --wt-runway for exactly that. Shrinking the
+     stage to its content does not shrink the scene, it just uncovers the
+     difference as a band of dead cream under the section.
+
+     The dead space is removed by tightening the padding and gap instead, so
+     the four rows (heading, ovals, control, footer line) sit as one block
+     inside the pin rather than being spread down a laptop-sized viewport. */
+  .wt-stage {
+    padding-block: 1.25rem;
+    gap: 0.75rem;
+  }
+
+  /* The step control is a phone affordance — see .wt-nav. */
+  .wt-nav {
+    display: flex;
+  }
+  /* A finger-sized hit area around the 7px dot. The button grows; the dot
+     itself (::before) does not. */
+  .wt-dot {
+    width: 2.1rem;
+    height: 2.75rem;
   }
   /* The kicker rides the photo's rim, so it scales with the oval too —
      otherwise a 13rem oval carries desktop-sized type around its edge and the
@@ -2547,12 +2879,11 @@ section[id] {
   .trust-head {
     padding-inline: 0.5rem;
   }
-  /* The heading sits on the dark ground now, so all three parts invert from the
-     desktop ink mixes to cream. "every drop." keeps its gold — that already
-     reads on ink. */
+  /* Ink again, inherited from the desktop rules — the ground under the heading
+     went back to cream, so the cream text it used to carry would now be
+     invisible. Only the sizes are set here. */
   .trust-eyebrow {
     gap: 0.6rem;
-    color: rgba(253, 246, 234, 0.62);
   }
   .trust-rule {
     width: clamp(24px, 7vw, 44px);
@@ -2561,73 +2892,50 @@ section[id] {
     margin-top: 0.35rem;
     font-size: 1.7rem;
     line-height: 1.14;
-    color: #fdf6ea;
   }
   .trust-sub {
     margin-top: 0.35rem;
     font-size: 12.5px;
-    color: rgba(253, 246, 234, 0.62);
   }
 
   /* --- The scene sits ABOVE the panel, not behind it ---------------
      Full-bleed, the portrait crop ran the whole section height and its leaves
      and bottle collided with the heading and showed through the panel. It is
      now a top band that fades out before the pillars begin. */
-  /* --- Dark ground on phone ----------------------------------------
-     The section's own base goes to ink instead of page cream, so the light
-     pillar card and the assurance strip both sit ON something rather than
-     dissolving into a pale field. The seam mix at the section's top/bottom
-     edges reads from this too, so the fade into the neighbouring sections
-     follows automatically. */
-  /* Ink for the body of the section, easing back to page cream over the last
-     stretch so the cream WhyTrust below is met with a gradient rather than a
-     hard edge. The section's own background does that hand-off, because the
-     .acti-seam overlay can only feather to a single colour and that colour is
-     needed dark at the top. */
+  /* --- The section keeps its OWN cream ground on phone ---------------
+     It used to paint an ink gradient here so the light panel had something to
+     sit on. That read as a black slab dropped into a cream page — a colour the
+     section does not otherwise own. The photographic scene is the ground now,
+     as on desktop, so the phone matches the reference: warm cream top and
+     bottom, the pour and bottle showing through behind the panel. */
   .trust-scene {
-    background: linear-gradient(
-      180deg,
-      #241b11 0%,
-      #241b11 82%,
-      #3a2c1c 90%,
-      var(--color-acti-cream) 100%
-    );
-    /* The seam feathers to this section's own ink, not page cream — see the
-       note on --seam-color in the SEAMS block. Without it the overlay washes a
-       cream band across the top of the dark section. Above is the dark cabinet,
-       so ink is the right thing to blend into there.
-       --seam-bottom stays 0 (set on .trust-scene): the gradient above already
-       owns the hand-off to cream, and a second overlay there would double it. */
-    --seam-color: #241b11;
+    background: var(--color-acti-cream);
+    /* Trimmed: without the four tall pillar photos and with the panel pulled up
+       into the heading, the old desktop-scale padding left a dead cream band
+       above and below. */
+    padding: clamp(2rem, 7vw, 3rem) 0 clamp(1.75rem, 5vw, 2.5rem);
   }
 
   .trust-bg {
-    height: 42%;
-    object-position: center top;
-    /* Darker than the light-ground version: the photo is now the brightest
-       thing in a dark section, and at 0.82 it read as a lit panel stuck to the
-       top. Screen-blended into the ink instead of sitting on it. */
-    filter: brightness(0.5) contrast(1.05) saturate(1.02);
-    -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 45%, transparent 100%);
+    /* Full height again. The portrait crop keeps the pour at the left and the
+       bottle at the right, and the panel sits over its clear middle — which is
+       exactly the reference. No mask: the section is cream on both edges, so
+       the photo has nothing dark to be cut away from. */
+    object-position: center;
   }
-  /* The veil now darkens rather than lightens: same job as before (a guaranteed
-     floor behind the heading, so "every drop." never reads over the bottle's
-     neck) but towards ink.
-     It only has to cover the top band where the photo is, so it goes opaque
-     through the middle and then fades out by 100% — that leaves the section's
-     own gradient owning the foot, where the hand-off to the cream section below
-     happens, instead of being painted over by a flat ink layer. */
+  /* Lightens, as on desktop. Its only job is a guaranteed floor under the
+     heading so "every drop." never lands on the bottle's neck — stronger than
+     the desktop mix because the phone crop puts the leaves right behind the
+     title, and easing off by the foot so the panel keeps live photo behind it. */
   .trust-veil {
     background:
-      radial-gradient(78% 22% at 50% 14%, rgba(36, 27, 17, 0.45), rgba(36, 27, 17, 0.72) 64%, rgba(36, 27, 17, 0.9) 100%),
+      radial-gradient(90% 34% at 50% 16%, rgba(255, 250, 240, 0.9), rgba(255, 250, 240, 0.5) 62%, transparent 100%),
       linear-gradient(
         180deg,
-        rgba(36, 27, 17, 0.3) 0%,
-        rgba(36, 27, 17, 0.82) 30%,
-        #241b11 46%,
-        #241b11 58%,
-        rgba(36, 27, 17, 0) 100%
+        rgba(255, 250, 240, 0.72) 0%,
+        rgba(255, 250, 240, 0.4) 34%,
+        rgba(250, 242, 228, 0.28) 70%,
+        rgba(250, 242, 228, 0.45) 100%
       );
   }
 
@@ -2644,10 +2952,15 @@ section[id] {
   .trust-panel {
     /* tighter than full-bleed so the scene reads around it */
     margin-inline: 0.25rem;
-    border-radius: 16px;
-    /* Light card, as on desktop — the section GROUND is what goes dark on
-       phone (see .trust-scene / .trust-veil below), so this needs to stay pale
-       to read against it. */
+    /* Pulled up under the heading. With the pillar photos dropped the panel is
+       short, and the desktop clamp's 1.75rem floor left it floating in the
+       middle of the section with cream above and below — the reference has it
+       tucked straight under the subtitle. */
+    margin-top: 1rem;
+    border-radius: 18px;
+    /* A touch more opaque than desktop: the photo runs full height behind it
+       on phone, so the pour and bottle sit directly under the copy. */
+    background: rgba(255, 253, 248, 0.96);
   }
   /* Tighter rows: the four pillars were running ~92px each, which is what
      pushed the strip below the fold. */
@@ -2655,23 +2968,23 @@ section[id] {
     /* row, not a centred column */
     flex-direction: row;
     align-items: flex-start;
-    gap: 0.6rem;
+    gap: 0.85rem;
     text-align: left;
     border-left: 0;
-    padding: 0.6rem 0.8rem;
+    padding: 0.95rem 1rem;
   }
   .trust-cell + .trust-cell {
     border-top: 1px solid rgba(120, 92, 54, 0.14);
   }
   .trust-badge {
     flex: none;
-    width: 1.65rem;
-    height: 1.65rem;
+    width: 2.1rem;
+    height: 2.1rem;
     margin-top: 0.05rem;
   }
   .trust-badge svg {
-    width: 0.8rem;
-    height: 0.8rem;
+    width: 1rem;
+    height: 1rem;
   }
   /* The copy column sits to the right of the icon, title stacked over body */
   .trust-cell-copy {
@@ -2682,12 +2995,12 @@ section[id] {
      step down, to match the tighter rows. */
   .trust-cell-title {
     margin-top: 0;
-    font-size: 12.5px;
+    font-size: 13.5px;
   }
   .trust-cell-body {
-    margin-top: 0.1rem;
-    font-size: 11.5px;
-    line-height: 1.42;
+    margin-top: 0.2rem;
+    font-size: 12.5px;
+    line-height: 1.45;
   }
   .trust-marks {
     justify-content: flex-start;
@@ -2925,10 +3238,28 @@ section[id] {
     font-size: 12px;
     letter-spacing: 0.14em;
   }
-  /* The oval CTA was 11.5px in a 40px box */
-  .wt-cta {
-    padding: 0.85rem 1.5rem;
+  /* Measured across 320-430px: these were still landing at 10-11px, under the
+     12px floor the rest of this block sets. They are set here rather than at
+     their own rules because only the phone layout shrinks them. */
+  .trust-strip-title {
     font-size: 12.5px;
+  }
+  .wt-body {
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  /* The CTA pill is dropped on phones. This was measured, not guessed: the card
+     is a PILL (border-radius:999px), so the constraint is the ellipse at the
+     pill's own height, not the card's box width. On a 190px-wide card the curve
+     has closed to ~117px where the pill sits, and the shortest label still
+     needs ~141px. Sweeping the font size showed the pill only fits at 8px —
+     below reading size, and with a tap target no finger should be asked for.
+
+     Nothing becomes unreachable: each card's link duplicates a destination the
+     page already offers, so on a phone the four ovals read as statements and
+     the copy gets the room the pill was taking. Desktop and tablet keep it. */
+  .wt-cta {
+    display: none;
   }
   /* .trust-cell-body deliberately NOT in this group. It used to be lifted to
      14.5px with the other body copy, but it lives in a compact icon-left row
@@ -3014,6 +3345,19 @@ section[id] {
     min-height: 44px;
     min-width: 40px;
   }
+  /* Contact's controls measured 38-43px tall — close enough to look right, but
+     under a finger. The inline phone/email links are the worst of them at 20px:
+     they are the section's primary action on a phone, where tapping a number is
+     how people actually make contact. */
+  .contact-submit,
+  .contact-map-cta {
+    min-height: 44px;
+  }
+  .contact-row-value {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
 }
 
 /* ===============================================================
@@ -3045,4 +3389,491 @@ section[id] {
    rest of the page, so they take the same gutter on a wider measure. */
 .acti-shell--wide {
   --shell-max: 1520px;
+}
+
+/* ===============================================================
+   FOOTER CURVE — the sweep that carries cream into the ink footer
+
+   The footer used to begin on a dead straight line: cream Milestones
+   above, #17110d below, butted together. Every other junction on the
+   page is either feathered (.acti-seam) or cut by an arc (the
+   Mission/Vision cards), so the footer was the one hard edge left.
+
+   The arc is an inline SVG in ActiproFooter.jsx rather than a CSS
+   shape, for the same reason .mv-stroke is: clip-path: path() takes
+   absolute pixels and cannot track a fluid width, whereas a viewBox
+   with preserveAspectRatio="none" stretches for free.
+
+   .af-curve sits ABOVE the footer's own padding, in the flow, so it
+   pushes the content down instead of overlapping it — the copy never
+   ends up underneath the sweep however narrow the viewport gets.
+================================================================*/
+.af-curve {
+  display: block;
+  width: 100%;
+  /* Shallow on a phone, deeper on a wide screen: the same arc scaled to
+     a 1440px width would be a barely-visible sliver, and at 24vw on a
+     phone it would eat half the screen before the footer starts. */
+  height: clamp(2.5rem, 6vw, 5.5rem);
+  /* The SVG carries the ink fill, so it must sit flush against the
+     footer body below it — any gap shows as a cream stripe. */
+  margin-bottom: -1px;
+  /* It is decoration: the cream above and the ink below already tell
+     the reader where the footer starts. */
+  pointer-events: none;
+}
+
+/* ===============================================================
+   CONTACT — "Contact Us", the closing section
+
+   The ground is a supplied plate (public/contact/contact.webp, master
+   PNG alongside it) that already contains the leaf shadows, the Gold
+   bottle with its splash and sunflowers, and the wave along the foot.
+   Nothing here re-draws any of that; the layout's job is to keep the
+   plate's empty middle clear, because that is where the copy lands.
+
+   The image is the section's BACKGROUND, not a decorative overlay:
+   .contact-bg is absolutely positioned at z-index -1 inside an
+   `isolation: isolate` section, so it can never escape over the header
+   or the footer's arc however tall the cards get.
+================================================================*/
+.contact-scene {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(3rem, 6vw, 5.5rem) 0 clamp(3rem, 5vw, 4.5rem);
+  /* Behind the plate, and what the plate's own corners fade into. Matching
+     the page rather than inventing a paler ground keeps the join with the
+     section above invisible. */
+  background: var(--color-acti-cream);
+}
+
+.contact-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  /* cover, not contain: the plate is 4:3 and the section is taller than
+     that once three cards are in it, so contain would letterbox bare
+     cream above and below the artwork. */
+  object-fit: cover;
+  object-position: center top;
+}
+
+.contact-inner {
+  position: relative;
+}
+
+/* --- Heading ------------------------------------------------------- */
+.contact-head {
+  text-align: center;
+  /* The plate puts the bottle top-right and leaves top-left. The heading
+     sits between them, so it is held to a narrow measure and centred
+     rather than running the full shell width into the artwork. */
+  max-width: 46rem;
+  margin-inline: auto;
+}
+
+.contact-title {
+  /* Georgia, as every other display heading on the site (.trust-title,
+     .mv-title and the rest) — the reference's "Contact Us" is a serif too. */
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  line-height: 1.05;
+  font-weight: 700;
+  color: var(--color-acti-red);
+}
+
+.contact-sub {
+  margin-top: 0.9rem;
+  font-size: clamp(0.95rem, 1.4vw, 1.05rem);
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--color-acti-ink) 62%, transparent);
+}
+
+/* --- The three cards ----------------------------------------------- */
+/* Form / details / map. The form is widest because it holds five inputs
+   and a textarea; the other two are content-sized. On tablet the map
+   drops to a full-width row under the other two, and on phone all three
+   stack in source order. */
+.contact-grid {
+  margin-top: clamp(2rem, 4vw, 3.25rem);
+  display: grid;
+  grid-template-columns: 1.15fr 1fr 1fr;
+  gap: clamp(1rem, 2vw, 1.5rem);
+  align-items: start;
+}
+
+.contact-card {
+  border-radius: 18px;
+  padding: clamp(1.1rem, 2vw, 1.6rem);
+  /* Near-opaque, like .trust-panel: the plate's wave and leaves run under
+     the cards at the section's edges, and at anything below ~0.9 the
+     form's placeholder text picked up the artwork behind it. */
+  background: rgba(255, 253, 248, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  /* No border — a hairline read as an outline against the plate. The
+     shadow alone lifts the card, same call as the trust panel. */
+  box-shadow: 0 22px 46px -28px rgba(90, 62, 30, 0.42);
+}
+
+.contact-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-acti-ink);
+}
+
+/* --- Card 1: the form ---------------------------------------------- */
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.contact-field {
+  display: block;
+}
+
+.contact-field > span {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--color-acti-ink) 62%, transparent);
+}
+
+.contact-field input,
+.contact-field textarea,
+.contact-field select {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--color-acti-ink) 14%, transparent);
+  background: #fff;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--color-acti-ink);
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.contact-field textarea {
+  resize: vertical;
+  min-height: 5.5rem;
+}
+
+.contact-field input::placeholder,
+.contact-field textarea::placeholder {
+  color: color-mix(in srgb, var(--color-acti-ink) 32%, transparent);
+}
+
+/* A ring as well as a border colour: the 1px border alone was not a
+   visible enough focus target on the cream card for keyboard users. */
+.contact-field input:focus,
+.contact-field textarea:focus {
+  border-color: var(--color-acti-orange);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-acti-orange) 18%, transparent);
+}
+
+.contact-submit {
+  margin-top: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  border-radius: 10px;
+  padding: 0.7rem 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+  /* The reference's button is a horizontal red-to-gold sweep, which is the
+     same pair the brand uses on the pack. */
+  background: linear-gradient(90deg, var(--color-acti-red), #e8722a);
+  box-shadow: 0 12px 24px -14px rgba(193, 18, 31, 0.7);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.contact-submit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 28px -14px rgba(193, 18, 31, 0.75);
+}
+
+/* --- Card 2: the details ------------------------------------------- */
+.contact-rows {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.contact-rows > li {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.contact-row-badge {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-acti-sun) 22%, transparent);
+  color: var(--color-acti-orange);
+}
+
+.contact-row-copy {
+  min-width: 0;
+}
+
+.contact-row-label {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--color-acti-ink) 55%, transparent);
+}
+
+.contact-row-value {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--color-acti-red);
+  /* The address is long and unbroken in places; without this it pushed the
+     card wider than its grid track on narrow screens. */
+  overflow-wrap: anywhere;
+}
+
+a.contact-row-value:hover {
+  color: var(--color-acti-orange);
+}
+
+.contact-row-note {
+  margin-top: 0.2rem;
+  /* 0.75rem = 12px, the floor used across the phone layout. 0.72 landed at
+     11.5px, which is under it. */
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--color-acti-ink) 48%, transparent);
+}
+
+/* --- Card 3: the map ----------------------------------------------- */
+.contact-map {
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-map-figure {
+  display: block;
+  width: 100%;
+  /* Height-capped rather than width-driven: the outline is portrait, so a
+     100%-width map in a wide card would run taller than the two cards
+     beside it and break the row's top alignment. */
+  max-height: 15rem;
+  margin: 0.9rem auto 0;
+  flex: 1;
+}
+
+.contact-map-cta {
+  margin-top: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-acti-sun) 70%, transparent);
+  padding: 0.55rem 1rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-acti-red);
+  background: color-mix(in srgb, var(--color-acti-sun) 14%, transparent);
+  transition: background-color 0.18s ease;
+}
+
+.contact-map-cta:hover {
+  background: color-mix(in srgb, var(--color-acti-sun) 26%, transparent);
+}
+
+/* --- Follow us ------------------------------------------------------ */
+.contact-social {
+  margin-top: clamp(1rem, 2vw, 1.5rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: clamp(1rem, 3vw, 2.5rem);
+  align-items: center;
+  border-radius: 18px;
+  padding: clamp(1rem, 2vw, 1.4rem) clamp(1.1rem, 2.5vw, 1.8rem);
+  background: rgba(255, 253, 248, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 22px 46px -28px rgba(90, 62, 30, 0.42);
+}
+
+.contact-social-copy p {
+  margin-top: 0.3rem;
+  font-size: 0.8rem;
+  color: color-mix(in srgb, var(--color-acti-ink) 55%, transparent);
+}
+
+.contact-social-row {
+  display: flex;
+  gap: clamp(0.75rem, 2vw, 1.75rem);
+}
+
+.contact-social-row a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--color-acti-ink) 60%, transparent);
+}
+
+.contact-social-badge {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-acti-sun) 20%, transparent);
+  color: var(--color-acti-red);
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.contact-social-row a:hover .contact-social-badge {
+  background: color-mix(in srgb, var(--color-acti-sun) 40%, transparent);
+  transform: translateY(-2px);
+}
+
+/* --- Tablet: the map drops to its own full-width row ---------------- */
+@media (max-width: 1023px) {
+  .contact-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .contact-map {
+    grid-column: 1 / -1;
+  }
+  /* Centred and capped in a full-width card, rather than stretching to a
+     700px-tall map. */
+  .contact-map-figure {
+    max-height: 13rem;
+  }
+}
+
+/* --- Phone: single column ------------------------------------------ */
+@media (max-width: 639px) {
+  .contact-scene {
+    padding: clamp(2.25rem, 8vw, 3rem) 0 clamp(2rem, 6vw, 2.75rem);
+  }
+  /* The plate is a 4:3 landscape. Cover-fitting it into a tall phone
+     section renders it far wider than the viewport and crops to the middle
+     — which is the empty cream field, so the bottle and the leaves both
+     disappear and the section reads as plain cream. Anchoring right-top
+     keeps the bottle, the one part of the artwork worth keeping at this
+     width. */
+  .contact-bg {
+    object-position: 78% top;
+  }
+  .contact-grid {
+    grid-template-columns: 1fr;
+  }
+  .contact-social {
+    /* The label row cannot sit beside the copy at 390px — four badges plus
+       their words need the full width. */
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    text-align: center;
+  }
+  .contact-social-row {
+    justify-content: space-between;
+  }
+}
+
+/* --- /contact as a page --------------------------------------------
+   ActiproSite's hero is designed to run UNDER the fixed bar, so that page
+   needs no clearance. This one starts with a heading, which the bar would
+   sit on top of — hence a reserved strip the height of the header. It is
+   on the page wrapper rather than on .contact-scene so the section stays
+   reusable if it is ever dropped back into a scrolling page.
+
+   The clearance is padding on the SECTION, not on this wrapper: the plate
+   is .contact-scene's own background, so wrapper padding would push the
+   image down and leave a band above it. The image's top edge is not one
+   flat colour either (pale at the left, warm at the right), so painting a
+   band to match is not possible — it has to be the artwork itself that
+   runs up behind the bar. */
+
+
+/* The footer's curve is a shape cut out of the ink, so whatever sits BEHIND
+   it shows through the negative space above the arc. On the landing page
+   that is page cream and the join is invisible. Here the section above ends
+   in the plate's artwork, so the curve's negative space was showing a flat
+   cream band between the plate and the ink — the gap in the screenshot.
+
+   Pulling the curve up by its own height makes it overlap the section
+   instead of following it, so the plate runs behind the arc and the two
+   meet with no band. The section's padding-bottom (below) replaces the
+   space the negative margin removes, so no content is covered. */
+.contact-page .af-curve {
+  position: relative;
+  z-index: 1;
+  margin-top: calc(-1 * clamp(2.5rem, 6vw, 5.5rem));
+}
+
+/* Both ends of the section, set together.
+
+   padding-top is the header clearance described above — on the section, so
+   the plate runs up behind the fixed bar rather than starting below it.
+
+   padding-bottom is the room the curve overlaps into. Without it the arc
+   would cut across the social row instead of across empty plate. */
+.contact-page .contact-scene {
+  padding-top: clamp(7rem, 13vw, 9rem);
+  padding-bottom: clamp(5rem, 10vw, 8rem);
+}
+
+/* --- The header on /contact -----------------------------------------
+   The bar's colours are all driven by --acti-tone, which Hero.jsx writes
+   on every scroll frame: 0 = white chrome over the dark hero footage,
+   1 = ink chrome over cream. This page has no hero, so nothing ever
+   writes it and it sat at the :root default of 0 — white text on a cream
+   bar, which is why the nav was unreadable in the screenshot.
+
+   Pinning it to 1 fixes the whole set in one line: .acti-tone-ink resolves
+   to #17110d, the phone icon's border darkens to match, and the Enquire
+   pill goes to brand red on white instead of gold on ink.
+
+   The bar's own cream fill and hairline are then removed, so the plate's
+   artwork runs up behind the nav rather than being cut off by a solid
+   band across the top. The frost stays: it is what keeps the nav legible
+   where the bottle passes underneath it.
+   ------------------------------------------------------------------- */
+.contact-page .acti-header {
+  --acti-tone: 1;
+  /* No solid cream band and no hairline: the plate's artwork runs up behind
+     the nav instead of being cut off by a bar across the top.
+
+     Not fully transparent, though — a whisper of cream plus the blur is
+     what keeps the ink nav legible where the bottle and the oil splash pass
+     underneath it. At 0.35 it reads as glass rather than as a band. The
+     frost is unconditional here because that ground is always present,
+     unlike on the landing page where it has to wait for the scrub. */
+  background-color: rgb(255 248 238 / 0.35);
+  box-shadow: none;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* The open mobile menu still needs a solid bar — its panel below is opaque
+   cream, and a translucent bar above an opaque panel reads as a mistake. */
+.contact-page .acti-header[data-solid='true'] {
+  background-color: rgb(255 248 238 / 0.96);
 }

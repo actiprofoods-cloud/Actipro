@@ -3,7 +3,7 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import HeroProducts from './HeroProducts'
 import { ArrowRightIcon } from './icons'
-import { FIRST_SRC } from './kitchenFrames'
+import { firstSrcFor, KITCHEN_MOBILE_QUERY } from './kitchenFrames'
 import { setSceneTone } from './sceneTone'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -53,6 +53,12 @@ export default function Hero() {
 
   const [reduced, setReduced] = useState(false)
   const [phone, setPhone] = useState(false)
+  /* Separate from `phone` on purpose. `phone` (767px) picks the hero FOOTAGE;
+     this one picks the cabinet PLATE, and it has to switch at exactly the
+     query KitchenReveal uses to pick its frame set (639px). When the two were
+     the same flag, viewports between 640-767px dissolved into the portrait
+     cabinet and then scrubbed the landscape one. */
+  const [cabinetMobile, setCabinetMobile] = useState(false)
 
   /*
    * The hero footage is shot twice: hero.mp4 is 1280x720 landscape, mobile.mp4
@@ -62,6 +68,14 @@ export default function Hero() {
    *
    * 767px matches the phone breakpoint used elsewhere (see Milestones.jsx).
    */
+  useEffect(() => {
+    const media = window.matchMedia(KITCHEN_MOBILE_QUERY)
+    const apply = () => setCabinetMobile(media.matches)
+    apply()
+    media.addEventListener('change', apply)
+    return () => media.removeEventListener('change', apply)
+  }, [])
+
   useEffect(() => {
     const media = window.matchMedia('(max-width: 767px)')
     const apply = () => setPhone(media.matches)
@@ -172,7 +186,12 @@ export default function Hero() {
     // `phone` is a dependency because swapping the source remounts <video>, and
     // the timeline captured the OLD node's opacity tween. Without this the hero
     // footage would never fade out after a breakpoint cross.
-  }, [reduced, phone])
+    //
+    // `cabinetMobile` is here for exactly the same reason: it keys the plate
+    // <img>, so crossing 639px hands us a new node and the tween above would
+    // otherwise still be driving the detached one — the dissolve would fade
+    // in nothing and the hero would cut straight to the section.
+  }, [reduced, phone, cabinetMobile])
 
   return (
     // The kitchen underlaps this section's last viewport, so the dark ground
@@ -187,11 +206,15 @@ export default function Hero() {
         ref={stageRef}
         className="sticky top-0 isolate flex h-svh flex-col overflow-hidden bg-acti-ink"
       >
-        {/* Cabinet frame 45, pre-warmed underneath so the dissolve has somewhere to go */}
+        {/* The cabinet's first frame, pre-warmed underneath so the dissolve has
+            somewhere to go. Whichever set KitchenReveal is about to scrub —
+            landscape or portrait — so the two never show different pictures
+            across the handoff. */}
         {!reduced && (
           <img
+            key={cabinetMobile ? 'mobile' : 'desktop'}
             ref={plateRef}
-            src={FIRST_SRC}
+            src={firstSrcFor(cabinetMobile)}
             alt=""
             aria-hidden="true"
             fetchPriority="low"
@@ -248,7 +271,7 @@ export default function Hero() {
               so the two now get the full measure in turn. */}
           <div className="flex flex-col gap-10 sm:flex-row sm:items-end sm:justify-between max-sm:gap-5">
             <div ref={copyRef} className="max-w-2xl max-sm:min-w-0">
-              <p className="text-[12px] font-semibold uppercase sm:text-[11px] tracking-[0.24em] text-white/60 max-sm:text-[10px] max-sm:leading-[1.5]">
+              <p className="text-[12px] font-semibold uppercase sm:text-[11px] tracking-[0.24em] text-white/60 max-sm:text-[11px] max-sm:leading-[1.5]">
                 Lite hai. Right hai.
               </p>
 
@@ -263,13 +286,13 @@ export default function Hero() {
               <div className="mt-8 flex flex-wrap items-center gap-4 max-sm:mt-5 max-sm:gap-3">
                 <a
                   href="#range"
-                  className="rounded-full bg-acti-sun px-9 py-3.5 text-[12px] font-bold uppercase tracking-[0.18em] text-acti-ink transition-colors hover:bg-acti-orange hover:text-white max-sm:px-7 max-sm:py-3 max-sm:text-[11px]"
+                  className="acti-tap inline-flex items-center justify-center rounded-full bg-acti-sun px-9 py-3.5 text-[12px] font-bold uppercase tracking-[0.18em] text-acti-ink transition-colors hover:bg-acti-orange hover:text-white max-sm:px-7 max-sm:py-3"
                 >
                   See the range
                 </a>
                 <a
                   href="#contact"
-                  className="acti-tap inline-flex items-center gap-2 py-3 text-[12px] font-bold uppercase tracking-[0.18em] text-white underline-offset-8 hover:underline max-sm:py-1 max-sm:text-[11px] max-sm:whitespace-nowrap"
+                  className="acti-tap inline-flex items-center gap-2 py-3 text-[12px] font-bold uppercase tracking-[0.18em] text-white underline-offset-8 hover:underline max-sm:whitespace-nowrap"
                 >
                   Become a distributor
                   <ArrowRightIcon className="h-4 w-4 shrink-0" />
