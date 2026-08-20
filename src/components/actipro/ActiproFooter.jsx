@@ -99,6 +99,11 @@ export default function ActiproFooter() {
                 </Link>
               </li>
               <li>
+                <Link to="/healthy-tips" className="acti-tap inline-flex items-center py-2 hover:text-white">
+                  Healthy tips
+                </Link>
+              </li>
+              <li>
                 <Link to="/contact" className="acti-tap inline-flex items-center py-2 hover:text-white">
                   Contact us
                 </Link>

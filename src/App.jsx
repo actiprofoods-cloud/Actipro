@@ -5,6 +5,7 @@ import Actipro from './components/Actipro'
 import Footer from './components/Footer'
 import ActiproSite from './pages/ActiproSite'
 import ContactPage from './pages/ContactPage'
+import HealthyTipsPage from './pages/HealthyTipsPage'
 
 function MadhuriLayout() {
   return (
@@ -28,6 +29,10 @@ function App() {
           reuses the Actipro header and footer, so it sits outside
           MadhuriLayout (which carries the OLDER site's chrome). */}
       <Route path="/contact" element={<ContactPage />} />
+
+      {/* Healthy Tips — a content page, same chrome as /contact and outside
+          MadhuriLayout for the same reason. */}
+      <Route path="/healthy-tips" element={<HealthyTipsPage />} />
 
       {/* Older pages, kept together under /post-work */}
       <Route path="/our-plant" element={<MadhuriLayout />}>

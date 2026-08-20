@@ -233,8 +233,15 @@ export default function ActiproHeader() {
               </a>
             ))}
 
-            {/* Contact is a ROUTE, not a section, so it is a <Link> rather
-                than one of the hash anchors above. */}
+            {/* Healthy Tips and Contact are ROUTES, not sections, so they are
+                <Link>s rather than the hash anchors above. */}
+            <Link
+              to="/healthy-tips"
+              className="acti-tone-ink text-[13px] font-semibold uppercase tracking-[0.1em] transition-opacity hover:opacity-60"
+            >
+              Healthy Tips
+            </Link>
+
             <Link
               to="/contact"
               className="acti-tone-ink text-[13px] font-semibold uppercase tracking-[0.1em] transition-opacity hover:opacity-60"
@@ -286,6 +293,15 @@ export default function ActiproHeader() {
                 </a>
               </li>
             ))}
+            <li>
+              <Link
+                to="/healthy-tips"
+                onClick={() => setOpen(false)}
+                className="block border-b border-acti-ink/10 py-3 text-[13px] font-semibold uppercase tracking-[0.1em] text-acti-ink"
+              >
+                Healthy Tips
+              </Link>
+            </li>
             <li>
               <Link
                 to="/contact"
