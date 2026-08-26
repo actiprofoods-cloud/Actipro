@@ -15,22 +15,23 @@ import { resetSceneTone } from '../components/actipro/sceneTone'
 gsap.registerPlugin(ScrollTrigger)
 
 /*
- * Page order — the two cinematic scenes first, then the argument, then proof:
+ * Page order — the hero, then the range, then the argument, then proof:
  *
- *   Hero           #top       oil pour, then the dissolve out       (scrubbed)
- *   KitchenReveal  #range     the cabinet, opened by the scroll     (scrubbed)
- *   TrustSection   #rooted    "Trust in every drop" — four pillars  (static)
- *   WhyTrust       #trust     "Made for real kitchens"              (pinned)
- *   MissionVision  #purpose   mission & vision cards                (static)
- *   Milestones     #mission   "What we have built so far"           (scrubbed)
+ *   Hero            #top      oil pour, then the dissolve           (scrubbed)
+ *   KitchenReveal   #range    cabinet doors opening, canvas frames  (scrubbed)
+ *   TrustSection    #rooted   "Trust in every drop" — four pillars  (static)
+ *   WhyTrust        #trust    "Made for real kitchens"              (pinned)
+ *   MissionVision   #purpose  mission & vision cards                (static)
+ *   Milestones      #mission  "What we have built so far"           (scrubbed)
  *
  * Note the ids do not match the component names — #trust belongs to WhyTrust and
  * #mission to Milestones, both predating the sections that read like their
  * owners. Check the component before wiring an anchor to either.
  *
- * The older sections (Ticker, Why, Products, Nutrition, Process, Kitchen,
- * Reviews, Faq) are unmounted, not deleted — their files are still under
- * src/components/actipro/ ready to be slotted back in.
+ * The older sections (Ticker, Why, Products, ProductShowcase, Nutrition,
+ * Process, Kitchen, KitchenDrawer, LayeredPurity, Reviews, Faq) are unmounted,
+ * not deleted — their files are still under src/components/actipro/ ready to
+ * be slotted back in.
  *
  * Contact is NOT among them: it is its own route now (/contact, see
  * src/pages/ContactPage.jsx), not a section of this page. The header's

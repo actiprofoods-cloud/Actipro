@@ -2,7 +2,7 @@
  * One shared "which scene are we in" value, 0 → 1.
  *
  *   0 = Scene 01, the dark hero over the oil-pour footage
- *   1 = Scene 02, the bright cream kitchen
+ *   1 = the bright cream page below it
  *
  * Hero.jsx writes it every scroll frame; the header reads it purely through
  * CSS (--acti-tone), so a 60fps scrub never re-renders a single component.

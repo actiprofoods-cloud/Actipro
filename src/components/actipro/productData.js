@@ -1,51 +1,57 @@
-// Every claim below is read off the actual pack artwork in /public/products.
+// Every claim below is read off the actual pack artwork in /public/product.
+//
+// All four are transparent-background WebP bottle shots (see the note in
+// Hero.jsx / .hero-bottle in index.css). They replaced the old flat pouch
+// JPEGs, which carried a baked-in white studio background — that white
+// rectangle was visible as a box around the pack anywhere the card sat on a
+// dark ground, and it made the 3D treatment impossible.
+//
+// The range is now uniformly "Madhuri Actipro": the artwork carries the Madhuri
+// roundel above the Actipro wordmark on every bottle, so the old Actipro /
+// Madhuri brand split no longer matches what is printed on the pack.
 export const PRODUCTS = [
   {
     id: 'actipro-sunflower',
-    brand: 'Actipro',
+    brand: 'Madhuri Actipro',
     name: 'Refined Sunflower Oil',
     tagline: 'Lite hai. Right hai.',
-    format: 'Pouch',
-    image: '/products/actipro-sunflower.jpeg',
+    format: 'Bottle',
+    image: '/product/actipro-sunflower.webp',
     blurb:
-      'The everyday light oil — refined sunflower, fortified with Vitamin A & D and carrying the +F mark.',
-    points: ['Fortified with Vitamin A & D (+F)', 'Light body, neutral taste', '100% vegetarian'],
+      'The everyday light oil — refined sunflower, rich in Vitamin E and light on the stomach.',
+    points: ['Rich in Vitamin E', 'Light body, neutral taste', '100% vegetarian'],
   },
   {
-    id: 'actipro-gold',
-    brand: 'Actipro Gold',
-    name: 'Multi-Source Edible Oil',
-    tagline: 'Rich in Omega 3 & Oryzanol',
-    format: '1 L Pouch',
-    image: '/products/actipro-gold.jpg',
-    blurb:
-      'A scientifically balanced blend of 80% refined soyabean oil and 20% refined rice bran oil.',
-    points: [
-      '80% soyabean + 20% rice bran',
-      'Oryzanol with the lightness of sunflower',
-      'Net vol. 1 L',
-    ],
-  },
-  {
-    id: 'madhuri-groundnut',
-    brand: 'Madhuri',
-    name: 'Cold Pressed Groundnut Oil',
-    tagline: 'Non-refined, ghani fresh',
-    format: 'Pouch',
-    image: '/products/madhuri-groundnut.jpeg',
-    blurb:
-      'Cold pressed and left non-refined, so the natural aroma and nutty flavour of groundnut stay in.',
-    points: ['Cold pressed, non-refined', 'Full groundnut aroma', '100% vegetarian'],
-  },
-  {
-    id: 'madhuri-mustard',
-    brand: 'Madhuri',
+    id: 'actipro-mustard',
+    brand: 'Madhuri Actipro',
     name: 'Kachi Ghani Mustard Oil',
-    tagline: 'Sharp, traditional, pure',
-    format: 'Jar',
-    image: '/products/madhuri-mustard.jpeg',
+    tagline: 'Strong aroma, naturally pure',
+    format: 'Bottle',
+    image: '/product/actipro-mustard.webp',
     blurb:
       'Kachi ghani pressed mustard oil with the sharp pungency that pickles, sarson and fried food need.',
-    points: ['Kachi ghani pressed', 'Strong natural pungency', '100% vegetarian'],
+    points: ['Kachi ghani pressed', 'Rich in Omega 3', 'Naturally pure'],
+  },
+  {
+    id: 'actipro-groundnut',
+    brand: 'Madhuri Actipro',
+    name: 'Refined Groundnut Oil',
+    tagline: 'Rich taste, healthy choice',
+    format: 'Bottle',
+    image: '/product/actipro-groundnut.webp',
+    blurb:
+      'Refined groundnut oil that keeps the nutty character the grain is prized for, without the heaviness.',
+    points: ['Good for heart', 'Rich in Vitamin E', 'Natural goodness'],
+  },
+  {
+    id: 'actipro-ricebran',
+    brand: 'Madhuri Actipro',
+    name: 'Rice Bran Oil',
+    tagline: 'Heart healthy choice',
+    format: 'Bottle',
+    image: '/product/actipro-ricebran.webp',
+    blurb:
+      'Physically refined rice bran oil with Oryzanol — the lightest everyday oil in the range.',
+    points: ['With Oryzanol', 'Rich in antioxidants', 'Light & nutritious'],
   },
 ]

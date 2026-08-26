@@ -1,6 +1,48 @@
 @import "tailwindcss";
 
+/* Self-hosted, so the type never depends on a third-party CDN being reachable.
+   Fraunces ships an OPTICAL SIZE axis and this is the build that carries it —
+   the display cuts tighten their spacing and thin their hairlines as the size
+   grows, which is what stops the headline reading like a small font scaled up.
+   Inter is weight-only; it is doing the small-caps work where an opsz axis
+   would buy nothing. */
+@import "@fontsource-variable/fraunces/opsz.css";
+@import "@fontsource-variable/inter";
+
 @theme {
+  /* --- Type ---------------------------------------------------------
+     Fraunces for display, Inter for everything else. Georgia and the
+     system sans stay in the stacks as the swap fallbacks, so a failed
+     font load degrades to what the site used to look like rather than
+     to Times. */
+  --font-serif: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* --- Hero type scale ----------------------------------------------
+     One ratio, so every size in the hero is a step on the same ladder
+     rather than a number picked per element. Steps are ~1.25 (major
+     third) from a 16px base, rounded to whole px.
+
+     Before this there were SIX different small-caps sizes in the hero
+     (9/10/11/12/13px) and five tracking values doing the same job, and
+     the eyebrow was text-[12px] sm:text-[11px] — it got SMALLER as the
+     viewport grew. That inconsistency is what read as unrefined.
+
+     --fs-eyebrow  the uppercase micro-labels (eyebrow, buttons, meta)
+     --fs-body     supporting sentences
+     --fs-lede     the pack name in the showcase
+     --fs-display  the headline
+
+     Uppercase tracking is bound to the size it belongs with: small caps
+     need air, display sizes need none. Two values, not five. */
+  --fs-eyebrow: 0.75rem; /* 12px */
+  --fs-body: 0.9375rem; /* 15px */
+  --fs-lede: 1.5rem; /* 24px */
+  --fs-display: 2.5rem; /* 40px — the phone step; scales up per breakpoint */
+
+  --tracking-caps: 0.18em;
+  --tracking-display: -0.015em;
+
   --color-acti-orange: #e8442a;
   --color-acti-orange-dark: #c0301b;
   --color-acti-green: #159b49;
@@ -32,6 +74,129 @@ html.lenis body {
 
 html:not(.lenis) {
   scroll-behavior: smooth;
+}
+
+/* Inter as the document face. Everything that is not explicitly display type
+   inherits from here, so the small caps and body copy stop falling back to
+   whatever sans the browser happened to default to. */
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- Hero type -----------------------------------------------------
+   The three classes below are the whole hero scale. Each one binds the
+   size, weight, tracking and leading that belong TOGETHER, so a size can
+   no longer drift away from the spacing it was designed with — which is
+   how the hero ended up with six small-caps sizes and five trackings.
+
+   Sizes step up at the breakpoints, never down. (The eyebrow used to be
+   text-[12px] sm:text-[11px], i.e. smaller on a bigger screen.) */
+
+/* Uppercase micro-label: eyebrow, buttons, pack meta. One size, one
+   tracking, everywhere in the hero. Letterspacing this wide needs the
+   extra weight or it reads as grey mush over the video. */
+.hero-eyebrow {
+  font-family: var(--font-sans);
+  font-size: var(--fs-eyebrow);
+  font-weight: 600;
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  /* Optical alignment: a letterspaced run carries a trailing space on its
+     last glyph, which pushes the whole line visually off the left margin. */
+  text-indent: calc(var(--tracking-caps) * -0.5);
+}
+
+/* The same trailing letter-space, seen from the other end. Where the run is
+   RIGHT-aligned (the hero showcase's "FROM OUR RANGE" and the product name
+   under it), that space sits between the last glyph and the margin, so the
+   text reads as overhanging its column by ~2px and the label looked clipped
+   against the screen edge. Pulled back by the same half-step the indent uses.
+   Scoped to the right-aligned block so the left-aligned eyebrows are
+   untouched. */
+.hero-showcase .hero-eyebrow {
+  /* padding, not margin: the element is full-width inside a text-right block,
+     so its BOX already ends at the column edge — shrinking the box with a
+     negative margin moves the box, and the glyphs follow it right back. What
+     has to move is the text's own right edge, which is what padding does. */
+  padding-right: calc(var(--tracking-caps) * 0.5);
+  /* The indent above is for left-aligned runs; here it would shift the text
+     the wrong way. */
+  text-indent: 0;
+}
+
+/* The optical indent above assumes a LEFT-aligned line. The showcase column is
+   right-aligned, where the same correction pushes the text further from the
+   gutter instead of tidying it — there the trailing letterspace needs removing
+   from the right edge, which is what the negative margin does. */
+.text-right .hero-eyebrow,
+.hero-showcase .hero-eyebrow {
+  text-indent: 0;
+  margin-right: calc(var(--tracking-caps) * -1);
+}
+
+/* Buttons and links carry the same size and tracking as the eyebrow, but a
+   heavier weight (they are actions, not labels) and NO optical indent — the
+   negative text-indent above is a left-margin correction, and on centred
+   button text it would just shift the label off-centre inside its pill. */
+.hero-eyebrow.hero-cta-primary,
+a.hero-eyebrow {
+  font-weight: 700;
+  text-indent: 0;
+}
+
+/* The headline. Fraunces' optical-size axis is pinned near the top of its
+   range because this is display type — at opsz 96 the hairlines thin and
+   the spacing closes up, which is what large text is supposed to do.
+   Negative tracking for the same reason: default spacing is drawn for
+   paragraph sizes and looks loose at 40px+. */
+.hero-display {
+  font-family: var(--font-serif);
+  font-variation-settings: 'opsz' 96, 'SOFT' 0, 'WONK' 0;
+  font-weight: 500;
+  font-size: var(--fs-display);
+  line-height: 1.08;
+  letter-spacing: var(--tracking-display);
+}
+
+@media (min-width: 640px) {
+  .hero-display {
+    font-size: 3.5rem; /* 56px */
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-display {
+    font-size: 4.25rem; /* 68px */
+  }
+}
+
+/* The pack name in the right-hand showcase — display face, but at a size
+   that sits UNDER the headline in the hierarchy rather than competing.
+   Lower opsz than .hero-display because it is genuinely smaller type. */
+.hero-lede {
+  font-family: var(--font-serif);
+  font-variation-settings: 'opsz' 48;
+  font-weight: 500;
+  font-size: var(--fs-lede);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+@media (min-width: 640px) {
+  .hero-lede {
+    font-size: 1.875rem; /* 30px */
+  }
+}
+
+/* Supporting sentence under the pack name. */
+.hero-body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  letter-spacing: 0;
 }
 
 /* Anchor targets sit below the sticky Actipro header */
@@ -69,13 +234,12 @@ section[id] {
 }
 
 /* ===============================================================
-   SCENE 01 → SCENE 02
-   Hero.jsx · KitchenReveal.jsx · ActiproHeader.jsx
+   SCENE 01 — Hero.jsx · ActiproHeader.jsx
 
    --acti-tone is written by the hero's ScrollTrigger on every scroll
-   frame: 0 = dark hero over the oil pour, 1 = bright cream kitchen.
-   The header derives all of its colours from it, so a 60fps scrub
-   costs zero React renders.
+   frame: 0 = dark hero over the oil pour, 1 = the bright cream page
+   below. The header derives all of its colours from it, so a 60fps
+   scrub costs zero React renders.
 ================================================================*/
 :root {
   --acti-tone: 0;
@@ -97,9 +261,12 @@ section[id] {
    the instant the hero unpins, and Hero.jsx retires its stage at that point. */
 .kitchen-scene {
   margin-top: -100svh;
-  /* 210vh gives a 110vh runway on a phone. The swing now starts almost
-     immediately (see FRAME_RAMP), so this no longer has to absorb a long
-     lead-in of identical shut frames. */
+  /* The runway is sized against the FRAME COUNT: pinned distance is
+     (height - 100svh), and the set is 67 frames, so this gives ~11px of
+     scroll per frame on a phone. The window that feels right is roughly
+     8-18px/frame — below ~6 the sequence outruns the scroll and frames get
+     skipped (visible stutter), far above ~20 the scene drags. Re-check this
+     number whenever the frame range in kitchenFrames.js changes. */
   height: 190vh;
 }
 
@@ -108,9 +275,8 @@ section[id] {
     --hero-exit: 90vh;
   }
   .kitchen-scene {
-    /* Was 300vh, which was sized around ~720px of dead scroll before the doors
-       moved. With the range starting at the swing, 220vh covers the whole
-       open-and-settle with room to breathe. */
+    /* Same reasoning as the phone value above: 67 frames over a 900px-tall
+       viewport gives ~16px/frame here, inside the 8-18 window. */
     height: 220vh;
   }
 }
@@ -143,8 +309,40 @@ section[id] {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  /* equivalent of the old brightness(0.45), as a composite instead of a filter */
-  background: rgba(9, 6, 3, 0.55);
+  /*
+   * DUSK, not night.
+   *
+   * This was a flat rgba(9, 6, 3, 0.55) — a neutral near-black that read as a
+   * cinema grade and drained the warmth out of a kitchen shot. It is now a
+   * two-part wash in the same single composite (still no filter — see the note
+   * on .hero-video, the cost rule has not changed):
+   *
+   *   1. a low amber pool rising from the floor of the frame, which is where
+   *      the pour and the counter sit, so the warmth lands on the subject;
+   *   2. a muted olive-brown veil over the whole frame that knocks the footage
+   *      back WITHOUT going neutral — it is desaturating toward yellow rather
+   *      than toward grey, which is what "dull" means here.
+   *
+   * Opacity is a touch lower than 0.55 overall because the warm tint carries
+   * some of the knock-back on its own; the headline still clears contrast
+   * against it (checked against the brightest frame of the loop).
+   */
+  background:
+    radial-gradient(120% 78% at 50% 108%, rgba(198, 132, 34, 0.34), transparent 68%),
+    linear-gradient(180deg, rgba(48, 34, 12, 0.5) 0%, rgba(38, 27, 10, 0.52) 100%);
+}
+
+/* The amber wash that bridges hero black → page cream. It peaks in the
+   middle of the exit and is gone by the time the stage has faded. */
+.hero-warm {
+  background:
+    radial-gradient(78% 62% at 50% 88%, rgba(245, 179, 1, 0.2), transparent 72%),
+    linear-gradient(
+      180deg,
+      rgba(58, 30, 12, 0) 0%,
+      rgba(140, 74, 24, 0.2) 58%,
+      rgba(198, 124, 44, 0.28) 100%
+    );
 }
 
 /* Same reasoning as .hero-video: no filter on the plate, which is a full-bleed
@@ -160,36 +358,175 @@ section[id] {
   filter: brightness(0.92) contrast(1.05) saturate(0.88) sepia(0.05);
 }
 
-/* The amber wash that bridges hero black → kitchen cream. It peaks in
-   the middle of the dissolve and is gone by the time the cabinet lands. */
-.hero-warm {
-  background:
-    radial-gradient(78% 62% at 50% 88%, rgba(245, 179, 1, 0.2), transparent 72%),
-    linear-gradient(
-      180deg,
-      rgba(58, 30, 12, 0) 0%,
-      rgba(140, 74, 24, 0.2) 58%,
-      rgba(198, 124, 44, 0.28) 100%
-    );
-}
-
 /* --- Kitchen scrim -------------------------------------------------
    Weighted to the counter and the bottom-left corner where the copy
    sits, so the cabinet and the packs themselves stay ungraded. */
+/* Intentionally empty — the scrim was removed by request.
+ *
+ * It used to darken the foot of the frame (to 74% ink) so the white payoff
+ * copy would read over the counter. The counter behind that copy measures
+ * ~154 luma, so with no scrim the headline sits at 2.81:1 against it, under
+ * the 3.0:1 WCAG AA floor for large text. Restore a gradient here (about 30%
+ * gets it back to 4.8:1) if that copy ever becomes hard to read.
+ *
+ * The element is left in the markup so this is a one-rule change either way. */
 .kitchen-scrim {
-  background:
-    linear-gradient(
-      180deg,
-      rgba(28, 16, 7, 0) 58%,
-      rgba(28, 16, 7, 0.5) 84%,
-      rgba(20, 11, 5, 0.74) 100%
-    ),
-    radial-gradient(56% 44% at 20% 94%, rgba(24, 13, 6, 0.6), transparent 72%);
+  background: none;
+}
+
+/*
+ * Kitchen -> Trust was the harshest join on the page: a nearly black cabinet
+ * frame butting straight onto the bright section beneath.
+ *
+ * It cannot be solved from the section below. The kitchen's stage is
+ * overflow:hidden and #range carries z-index:0 (a real stacking context, from
+ * the hero/kitchen overlap fix), so a veil placed above the boundary is both
+ * clipped and painted over. The dissolve has to be inside the stage — hence
+ * .kitchen-tail, rendered as the last layer of KitchenReveal's sticky stage.
+ */
+.kitchen-tail {
+  height: calc(var(--seam) * 1.5);
+  z-index: 3;
+  background: linear-gradient(
+    to bottom,
+    transparent 0,
+    color-mix(in srgb, var(--color-acti-cream) 45%, transparent) 46%,
+    color-mix(in srgb, var(--color-acti-cream) 88%, transparent) 78%,
+    var(--color-acti-cream) 100%
+  );
+}
+
+/* ===============================================================
+   HERO BOTTLE — the 3D packshot (HeroProducts.jsx)
+
+   The card used to show a flat pouch JPEG with a baked-in white studio
+   background, which rendered as a visible white BOX over the footage. The
+   packs are now transparent WebP bottle shots, so the pack can be lit and
+   seated by CSS instead of sitting in a rectangle.
+
+   There is no 3D model here and none is needed. What sells depth is the
+   combination of four cues, all cheap:
+
+     1. a contact shadow on the ground, so the bottle stands rather than floats
+     2. a specular sweep down the glass, which MOVES as the bottle tilts
+     3. a layered drop-shadow that shifts with the lean
+     4. a parallax tilt following the pointer (Hero writes --bx/--by)
+
+   Everything animates transform/opacity only — no layout, no paint of the
+   image itself — so the hero stays at 60fps alongside the video.
+   =============================================================== */
+.hero-bottle {
+  position: relative;
+  display: block;
+  /* The stage. 1200px reads as a long lens: the tilt stays a lean rather than
+     becoming a fisheye swing. */
+  perspective: 1200px;
+  perspective-origin: 50% 45%;
+}
+
+.hero-bottle-inner {
+  position: relative;
+  transform-style: preserve-3d;
+  /* --bx/--by are -1..1, written by the pointer handler in HeroProducts.
+     Default 0 = dead centre, so the bottle is upright before any interaction
+     and on every touch device. */
+  transform: rotateY(calc(var(--bx, 0) * 9deg)) rotateX(calc(var(--by, 0) * -6deg));
+  /* Snappy toward the cursor, slow on release — the asymmetry is what makes it
+     feel weighted rather than elastic. */
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: bottle-float 6s ease-in-out infinite;
+}
+
+/* A slow bob under the tilt. Applied to the wrapper rather than the same
+   element as the rotation so the two never fight over `transform`. */
+@keyframes bottle-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -7px; }
+}
+
+.hero-bottle img {
+  display: block;
+  /* The STAGE is the sized box (a height class on .hero-bottle) and the pack
+     fits itself into it. This was `width:100%; height:auto`, which sized the
+     image from the column instead and rendered it at its full 1200px natural
+     height — the bottle overflowed the card and pushed the product copy off
+     the screen. Height-led with an auto width is the right way round for a
+     portrait pack in a height-constrained slot. */
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  /* The pack's own depth shadow. Offset opposite the lean, so leaning left
+     throws the shadow right — the single strongest cue that it is an object
+     and not a sticker. */
+  filter:
+    drop-shadow(calc(var(--bx, 0) * -10px) 10px 14px rgba(24, 14, 4, 0.42))
+    drop-shadow(calc(var(--bx, 0) * -3px) 3px 4px rgba(24, 14, 4, 0.3));
+  transition: filter 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The specular sweep — a soft band of light down the glass. Masked to the
+   image's own alpha so it only ever lights the BOTTLE, never the empty corners
+   of the box, which is what separates this from a generic gradient overlay. */
+.hero-bottle-gloss {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.28) 46%,
+    rgba(255, 255, 255, 0.06) 56%,
+    transparent 68%
+  );
+  -webkit-mask-image: var(--bottle-mask);
+  mask-image: var(--bottle-mask);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  /* Travels across the glass as the bottle turns. */
+  transform: translateX(calc(var(--bx, 0) * 26px));
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  opacity: 0.85;
+}
+
+/* The contact shadow. An ellipse on the ground, squashed flat by the same
+   perspective the bottle is in, so it reads as lying on a surface. It tightens
+   and darkens as the bottle floats down, which is what ties the bob to a real
+   ground plane instead of looking like a drifting cutout. */
+.hero-bottle-ground {
+  position: absolute;
+  left: 50%;
+  bottom: -2.5%;
+  width: 62%;
+  height: 4.5%;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(20, 12, 3, 0.5), transparent 72%);
+  filter: blur(7px);
+  animation: bottle-ground 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes bottle-ground {
+  0%, 100% { opacity: 0.75; scale: 1 1; }
+  50% { opacity: 0.5; scale: 0.9 1; }
+}
+
+/* Motion is decoration here: the pack must still be legible without it. The
+   tilt is driven by a custom property that simply never changes, so only the
+   idle animations need switching off. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-bottle-inner,
+  .hero-bottle-ground {
+    animation: none;
+  }
 }
 
 /* --- Header, driven entirely by --acti-tone ------------------------
    Transparent over the dark hero, fading to a blurred cream bar as the
-   kitchen arrives. The contents (logo, nav, buttons) ride the same
+   page below arrives. The contents (logo, nav, buttons) ride the same
    variable, flipping white → ink to stay readable against each. */
 .acti-header {
   background-color: rgb(255 248 238 / calc(var(--acti-tone) * 0.92));
@@ -261,17 +598,32 @@ section[id] {
   );
 }
 
-/* Oil gold over the hero → Actipro red over the kitchen */
+/* Oil gold over the hero → Actipro red over the page below */
 .acti-tone-cta {
   background-color: color-mix(in srgb, #c1121f calc(var(--acti-tone) * 100%), #f5b301);
   color: color-mix(in srgb, #ffffff calc(var(--acti-tone) * 100%), #17110d);
 }
 
-.acti-logo-light {
-  opacity: var(--acti-tone);
-}
-.acti-logo-dark {
-  opacity: calc(1 - var(--acti-tone));
+/* The logo is ONE full-colour print at every scene tone (see ActiproHeader).
+   The old pair crossfaded a colour copy against a `brightness-0 invert` copy,
+   which meant the mark was a flat white silhouette for the whole of the hero.
+
+   Contrast over the footage now comes from a drop-shadow rather than from
+   throwing the artwork away. The shadow is strongest at tone 0 (over the dark
+   video, where the red wordmark needs separating from the grade) and fades out
+   as the cream page arrives beneath it, since ink-on-cream needs no halo. */
+.acti-logo {
+  /* Three passes rather than two. The mark's baseline strap ("REFINED SUNFLOWER
+     OIL") is thin dark-grey type, and against the warmed dusk grade it was
+     close to invisible — the old two-pass shadow carried the red wordmark but
+     not the strap. A tight, nearly-opaque first pass hugs those thin letters
+     and separates them; the two softer passes seat the whole mark on the
+     footage. All three fade to nothing as --acti-tone reaches the cream page,
+     where the artwork needs no halo at all. */
+  filter:
+    drop-shadow(0 0 1px rgba(0, 0, 0, calc(0.72 - var(--acti-tone) * 0.72)))
+    drop-shadow(0 1px 2px rgba(0, 0, 0, calc(0.6 - var(--acti-tone) * 0.6)))
+    drop-shadow(0 4px 14px rgba(0, 0, 0, calc(0.45 - var(--acti-tone) * 0.45)));
 }
 
 /* ===============================================================
@@ -2519,8 +2871,7 @@ section[id] {
   .acti-tone-ink,
   .acti-tone-border,
   .acti-tone-cta,
-  .acti-logo-light,
-  .acti-logo-dark {
+  .acti-logo {
     transition:
       background-color 0.3s linear,
       border-color 0.3s linear,
@@ -2575,99 +2926,82 @@ section[id] {
 }
 
 /* ===============================================================
-   ROOTED IN TRUST — TrustSection.jsx
+   OUR RANGE — ProductShowcase.jsx
 
-   Full-bleed photographic scene, centred heading, one translucent
-   panel of four pillars, then a strip of secondary assurances.
+   Copy column on the left (name at the top, description and the pack
+   strip at the foot), one large pack on the right. The strip shows a
+   sliding window of three packs; the leftmost is the active one.
 
-   Images come from public/build/ (upload artefacts) resized into
-   public/rooted/ as WebP. To regenerate the background after replacing
-   anything in build/:
-
-     python - <<'EOF'
-     from PIL import Image
-     JOBS = [("bg (2).png","scene",1800,0), ("9.png","bottle",620,0),
-             ("3 (3).png","droplet",360,1), ("4 (2).png","wave",1000,1)]
-     for src,name,tw,keep in JOBS:
-         im = Image.open(f"public/build/{src}")
-         a  = im.mode in ("RGBA","LA") and keep
-         im = im.convert("RGBA" if a else "RGB")
-         im.resize((tw, round(im.height*tw/im.width)), Image.LANCZOS)\
-           .save(f"public/rooted/{name}.webp","WEBP",quality=82,method=6)
-     EOF
-
-   The four pillar cards are separate: their sources are already small
-   (~440x175), so they are re-encoded at native size — upscaling would
-   only add bytes, not detail. 32 KB for all four.
-
-     python - <<'EOF'
-     from PIL import Image
-     CARDS = [("traceability_farm_exact (1).png","farm"),
-              ("certifications_exact.png","certs"),
-              ("small_batch_factory_exact.png","batch"),
-              ("purity_oil_ripple_exact.png","ripple")]
-     for src,name in CARDS:
-         Image.open(f"public/build/{src}").convert("RGB")\
-           .save(f"public/rooted/{name}.webp","WEBP",quality=86,method=6)
-     EOF
+   Nothing here is scroll-driven. The section arrives once (data-in,
+   set by an IntersectionObserver) and the pack rotates on a timer.
 ================================================================*/
-.trust-scene {
+.ps-scene {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  padding: clamp(3rem, 6vw, 5.5rem) 0 clamp(2.5rem, 4vw, 4rem);
-  /* Matches the page rather than setting a paler ground of its own, which read
-     as a step against the cream on either side — the photo carries the warmth. */
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  padding-block: clamp(3.5rem, 8vh, 7rem);
   background: var(--color-acti-cream);
-  /* Top edge only. Above is the dark cabinet, which genuinely needs the
-     dissolve; below is WhyTrust, already cream — so a bottom seam blends
-     nothing and only washes a pale band over the foot of the pillar cards. */
+  /* TrustSection below is cream too, so a bottom seam blends nothing and
+     only washes a pale band over the pack strip. The top edge keeps its
+     seam — that is the junction with the dark hero. */
   --seam-bottom: 0px;
 }
 
-.trust-scene > picture {
-  display: contents;
-}
-
-.trust-bg {
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-}
-
-/* The scene's middle is already pale, but the copy needs a guaranteed floor */
-.trust-veil {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background:
-    radial-gradient(58% 46% at 50% 30%, rgba(255, 250, 240, 0.82), transparent 74%),
-    linear-gradient(180deg, rgba(255, 250, 240, 0.42) 0%, rgba(250, 242, 228, 0.2) 55%, rgba(246, 235, 216, 0.5) 100%);
-}
-
-.trust-inner {
+.ps-inner {
   position: relative;
-  margin: 0 auto;
-  /* Same measure and gutter as .acti-shell, so the trust panel's edges line up
-     with Mission, Milestones and the footer instead of sitting 40px inboard. */
-  max-width: calc(var(--shell-max) + var(--shell-gutter) * 2);
-  padding-inline: var(--shell-gutter);
-}
-
-/* --- Heading ------------------------------------------------------- */
-.trust-head {
-  text-align: center;
-}
-
-.trust-eyebrow {
-  margin-top: 0.75rem;
-  display: inline-flex;
+  z-index: 1;
+  display: grid;
+  gap: clamp(2rem, 5vw, 4rem);
   align-items: center;
-  gap: 0.9rem;
+  width: 100%;
+}
+
+@media (min-width: 900px) {
+  .ps-inner {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  }
+}
+
+/* The whole block lifts in once. Transition rather than @keyframes: it is
+   toggled by an attribute, so there is no remount to restart an animation. */
+.ps-copy,
+.ps-stage {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.7s ease-out,
+    transform 0.7s ease-out;
+}
+.ps-scene[data-in='true'] .ps-copy,
+.ps-scene[data-in='true'] .ps-stage {
+  opacity: 1;
+  transform: none;
+}
+/* The pack follows the copy in, so the two do not arrive as one slab. */
+.ps-stage {
+  transition-delay: 0.12s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-copy,
+  .ps-stage {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* --- Copy column ---------------------------------------------------- */
+.ps-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ps-eyebrow {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.26em;
@@ -2675,407 +3009,717 @@ section[id] {
   color: color-mix(in srgb, var(--color-acti-ink) 52%, transparent);
 }
 
-.trust-rule {
-  display: block;
-  width: clamp(34px, 6vw, 74px);
-  height: 1px;
-  background: color-mix(in srgb, var(--color-acti-sun) 65%, transparent);
-}
-
-.trust-title {
-  margin-top: 0.5rem;
+.ps-title {
+  margin-top: 0.75rem;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(2.1rem, 5vw, 3.4rem);
-  line-height: 1.1;
+  font-size: clamp(2.4rem, 6vw, 4.25rem);
+  line-height: 1.05;
   color: #3d3020;
 }
-.trust-title em {
-  font-style: normal;
-  color: var(--color-acti-sun);
-}
 
-.trust-sub {
+.ps-name {
   margin-top: 0.5rem;
-  font-size: 13.5px;
-  letter-spacing: 0.02em;
-  color: color-mix(in srgb, var(--color-acti-ink) 60%, transparent);
+  font-size: clamp(12px, 1.4vw, 14px);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-acti-orange);
 }
 
-/* --- The pillar panel ---------------------------------------------- */
-/*
- * The right edge is a straight edge, matching the other three sides.
- *
- * It previously carried a concave radial mask so the panel appeared to curve
- * around the bottle standing behind it. Removed on request — the sweep read as
- * an unexplained fade on the fourth column rather than as a shaped edge.
- */
-.trust-panel {
-  margin-top: clamp(1.75rem, 3vw, 2.75rem);
-  border-radius: 20px;
-  /* Opaque enough that the bottle behind never reads through a cell — at 0.66
-     it showed straight through the fourth column. */
-  background: rgba(255, 252, 245, 0.93);
-  /* The panel is 93% opaque, so the blur behind it is barely perceptible —
-     6px composites meaningfully cheaper over the full-bleed scene photo. */
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  /* No border. A white hairline read as a hard outline against the
-     photographic scene rather than as a lifted card edge — the shadow alone
-     separates the panel from the background. */
-  box-shadow: 0 24px 50px -30px rgba(90, 62, 30, 0.35);
-  overflow: hidden;
+/* Pushed to the foot of the column, so the name sits high and the detail
+   sits low — the strip then follows it. */
+.ps-body {
+  margin-top: auto;
+  padding-top: clamp(1.5rem, 4vh, 2.75rem);
+  max-width: 46ch;
 }
 
-.trust-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+.ps-blurb {
+  font-size: clamp(14px, 1.5vw, 15.5px);
+  line-height: 1.65;
+  color: color-mix(in srgb, var(--color-acti-ink) 70%, transparent);
 }
 
-.trust-cell {
-  /* Shared with .trust-figure, which cancels this padding with a negative
-     margin so its picture reaches the cell's edges. Change it in one place. */
-  --trust-cell-pad: 1.15rem;
+.ps-points {
+  margin-top: 0.9rem;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 1.75rem var(--trust-cell-pad) 0;
-  /* hairline dividers, as in the reference */
-  border-left: 1px solid rgba(120, 92, 54, 0.14);
-  overflow: hidden;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.75rem;
+  font-size: 12.5px;
+  color: color-mix(in srgb, var(--color-acti-ink) 55%, transparent);
 }
-.trust-cell:first-child {
-  border-left: 0;
-}
-
-.trust-badge {
+.ps-points li {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 999px;
-  color: var(--color-acti-sun);
+  gap: 0.4rem;
   border: 1px solid color-mix(in srgb, var(--color-acti-sun) 45%, transparent);
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
   background: rgba(255, 255, 255, 0.6);
 }
 
-.trust-cell-copy {
-  width: 100%;
+/* --- Pack strip ----------------------------------------------------- */
+.ps-strip {
+  margin-top: clamp(1.5rem, 4vh, 2.5rem);
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 3vw, 1.75rem);
+  flex-wrap: wrap;
 }
 
-.trust-cell-title {
-  margin-top: 1rem;
-  font-size: 14.5px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  color: #3d3020;
+.ps-thumbs {
+  display: flex;
+  gap: 0.75rem;
 }
 
-.trust-cell-body {
-  margin-top: 0.5rem;
-  font-size: 12.5px;
-  line-height: 1.65;
-  color: color-mix(in srgb, var(--color-acti-ink) 62%, transparent);
-}
-
-/* Each cell's picture bleeds to the bottom corners of its column, as in the
-   reference — no inset, no rounded top, so the four images read as one band
-   across the foot of the panel. The negative margins cancel .trust-cell's
-   padding; the cell itself clips them back to the panel's rounded corners. */
-/* Sides only. The cell has left/right padding for the picture to cancel, but
-   its bottom padding is already 0 — a negative bottom margin here had nothing
-   to pull back against, so it hung the image ~18px BELOW the panel, past the
-   cream that is meant to sit behind it. That overhang is what read as the
-   picture fading out at the bottom; it was actually the panel ending. */
-.trust-figure {
-  margin: auto calc(var(--trust-cell-pad) * -1) 0;
-  width: auto;
-  height: 8.5rem;
+.ps-thumb {
+  display: block;
+  width: clamp(64px, 9vw, 92px);
+  aspect-ratio: 1;
+  border-radius: 14px;
   overflow: hidden;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid color-mix(in srgb, var(--color-acti-ink) 10%, transparent);
+  box-shadow: 0 10px 22px -16px rgba(90, 62, 30, 0.5);
+  transition:
+    transform 0.4s ease,
+    box-shadow 0.4s ease,
+    border-color 0.4s ease;
 }
-
-/*
- * The picture dissolves in from its top edge rather than starting on a hard
- * line across the card. A mask is used, not a cream gradient laid on top: the
- * panel behind is translucent (rgba + backdrop-blur), so an opaque overlay
- * would paint a lighter bar over it and read as a band of its own. Masking
- * removes the pixels instead, letting the real card show through.
- *
- * --trust-fade is the depth of that dissolve; raise it for a longer fade.
- */
-.trust-figure img {
-  --trust-fade: 42%;
+.ps-thumb img {
   width: 100%;
   height: 100%;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--trust-fade));
-  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--trust-fade));
-}
-.trust-figure[data-fit='cover'] img {
-  object-fit: cover;
-}
-/* The marks must never be cropped, so this one is contained rather than
-   covered. Its artwork is keyed to transparency (see certs.webp), so there is no
-   plate to hide and it can take the same dissolve as the other three — the
-   shorter 18% fade was only there to keep the old opaque plate's top edge from
-   being eaten, and it left the plate reading as a hard band. */
-.trust-figure[data-fit='contain'] {
-  /* Contained artwork does not fill the 8.5rem band, so it is padded down to
-     sit on the same baseline as the covered pictures instead of floating. */
-  padding: 0 0.4rem;
-}
-.trust-figure[data-fit='contain'] img {
   object-fit: contain;
-  object-position: bottom center;
+  padding: 0.4rem;
+}
+.ps-thumb:hover {
+  transform: translateY(-3px);
+}
+/* The active pack is the one the big stage is showing — lifted and ringed
+   so the strip reads as a position indicator, not four equal buttons. */
+.ps-thumb[data-active='true'] {
+  transform: translateY(-8px);
+  border-color: var(--color-acti-sun);
+  box-shadow: 0 18px 30px -18px rgba(90, 62, 30, 0.65);
 }
 
-/* --- Bottom assurance strip ---------------------------------------- */
-.trust-strip {
-  margin-top: clamp(1.25rem, 2.5vw, 2rem);
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-  border-radius: 999px;
-  padding: 1rem clamp(1rem, 3vw, 2rem);
-  background: rgba(61, 48, 32, 0.82);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-.trust-strip > li {
+.ps-nav {
   display: flex;
-  align-items: flex-start;
-  gap: 0.65rem;
-  padding: 0 clamp(0.5rem, 1.5vw, 1.25rem);
-  border-left: 1px solid rgba(255, 255, 255, 0.14);
+  gap: 0.6rem;
 }
-.trust-strip > li:first-child {
-  border-left: 0;
+.ps-nav button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  color: var(--color-acti-ink);
+  border: 1px solid color-mix(in srgb, var(--color-acti-ink) 18%, transparent);
+  background: rgba(255, 255, 255, 0.7);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
+}
+.ps-nav button:hover {
+  color: var(--color-acti-ink);
+  background: var(--color-acti-sun);
+  border-color: var(--color-acti-sun);
 }
 
-
-.trust-strip-title {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: #fdf6ea;
+/* --- The pack on the right ------------------------------------------ */
+.ps-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
 }
-.trust-strip-body {
-  margin-top: 0.15rem;
+
+.ps-pack {
+  width: 100%;
+  max-height: 62svh;
+  object-fit: contain;
+  filter: drop-shadow(0 30px 45px rgba(90, 62, 30, 0.28));
+}
+
+@media (max-width: 899px) {
+  /* Pack first, copy under it: on a narrow column the photo is the thing
+     that identifies the product, and leading with type buries it. */
+  .ps-stage {
+    order: -1;
+  }
+  .ps-pack {
+    max-height: 40svh;
+  }
+  .ps-body {
+    margin-top: 1.5rem;
+  }
+}
+
+/* ===============================================================
+   LAYERED PURITY — LayeredPurity.jsx
+
+   Replaces the old four-pillar "Rooted in trust" panel. Three columns on
+   desktop: heading (35%), a fanned card deck, and a step list panel (42%).
+
+   The deck is the piece worth reading carefully. Cards never reorder in the
+   DOM — React writes a --depth on each one (0 = front, then 1, 2, 3 going
+   back) and every visual difference between deck positions is computed from
+   that single number:
+
+     translate  --depth * 26px right, * -10px up
+     scale      0.96 ^ --depth        (compounding, so the deck recedes)
+     rotate     --depth * 1.5deg
+     opacity    1 → 0.7 → 0.5 → 0.35  (a linear ramp off --depth)
+
+   That keeps the transition to `transform` and `opacity` only, which is what
+   makes the reshuffle cheap: no width, no top, no z-index animation, nothing
+   the compositor has to re-layout. z-index does change, but discretely and
+   without a transition, so it snaps at frame 0 and the movement covers it.
+
+   The palette is the brief's, not the page's --color-acti-* tokens: this
+   section is deliberately cooler and greener than the orange/sun house style,
+   which is what makes it read as the "proof" beat of the page.
+================================================================*/
+.lp-scene {
+  --lp-ground: #f8f5ee;
+  --lp-ink: #243024;
+  --lp-olive: #7c8570;
+  --lp-muted: #6b6b60;
+  --lp-sage: #9aa38f;
+  --lp-gold: #c4a24a;
+  --lp-hair: #e7e2d6;
+  --lp-surface: rgba(253, 251, 245, 0.82);
+
+  /* One easing for the whole section, so the deck, the rows and the connector
+     all settle on the same clock. */
+  --lp-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --lp-dur: 500ms;
+
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--lp-ground);
+  padding: clamp(3rem, 5vw, 5rem) clamp(1.25rem, 5vw, 4rem);
+}
+
+/* The soft cream glow sitting behind the deck. */
+.lp-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    52% 58% at 46% 48%,
+    rgba(255, 252, 243, 0.95) 0%,
+    rgba(250, 246, 235, 0.55) 45%,
+    transparent 78%
+  );
+}
+
+.lp-leaf {
+  position: absolute;
+  /* Fully inside the section. It used to sit at a negative top, and with
+     .lp-scene clipping its overflow the spray was cut into a shape that read
+     as a smudge rather than leaves. */
+  /* Above the deck's right edge and clear of the step panel. Anchored to the
+     panel's left edge rather than the section's right, because at the section
+     edge the sprig lands behind the panel and only a corner of it shows. */
+  top: clamp(0.5rem, 2vw, 1.5rem);
+  right: clamp(19rem, 34vw, 33rem);
+  z-index: 0;
+  width: clamp(96px, 10vw, 150px);
+  height: auto;
+  color: #6f7d5c;
+  opacity: 0.3;
+  /* The sprig is already drawn arcing from its top-right corner down into the
+     section, so it needs no mirroring — just a slight tilt off true. */
+  transform: rotate(6deg);
+  pointer-events: none;
+}
+
+.lp-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  /* heading | deck | steps. The deck column is the flexible one — it is the
+     only thing here that can absorb width without reflowing type. */
+  grid-template-columns: minmax(220px, 0.8fr) minmax(280px, 1fr) minmax(320px, 1.05fr);
+  align-items: center;
+  gap: clamp(1.5rem, 3vw, 3rem);
+  max-width: 80rem;
+  margin-inline: auto;
+}
+
+/* --- Left: heading ------------------------------------------------- */
+.lp-eyebrow {
+  font-family: var(--font-sans);
   font-size: 11px;
-  line-height: 1.5;
-  color: rgba(253, 246, 234, 0.62);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--lp-olive);
 }
 
-/* --- Tablet: 2 x 2 ------------------------------------------------- */
+.lp-title {
+  margin-top: 0.85rem;
+  font-family: var(--font-serif);
+  font-size: clamp(2.25rem, 4vw, 3.25rem);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  color: var(--lp-ink);
+}
+
+.lp-sub {
+  margin-top: 1rem;
+  max-width: 260px;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--lp-muted);
+}
+
+/* --- Middle: the deck ---------------------------------------------- */
+.lp-deck {
+  position: relative;
+  /* The stack is absolutely positioned inside this box, so the box needs its
+     own height — aspect-ratio gives it one that tracks the column width
+     instead of a fixed px height that would break at every breakpoint. */
+  aspect-ratio: 300 / 340;
+  width: 100%;
+  max-width: 300px;
+  /* Not centred: the fan spills ~100px to the right, so the box is pushed left
+     inside its column to keep that spill off the step panel. */
+  margin-right: auto;
+  overflow: visible;
+}
+
+.lp-card {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  transform-origin: 20% 80%;
+  will-change: transform, opacity;
+  transition:
+    transform var(--lp-dur) var(--lp-ease),
+    opacity var(--lp-dur) var(--lp-ease);
+
+  /* Everything below is derived from --depth. calc() cannot do pow(), so the
+     0.96^depth recession is written as a subtraction — over four cards the
+     difference from a true power is under half a percent.
+
+     The X offset is the brief's 26px scaled up to 34px. At 26px, against a
+     ground this close in value to the glass, the three back cards landed
+     almost entirely behind the front one and the fan did not read as a fan —
+     it looked like a single card with a slightly soft edge. 34px clears the
+     front card's shadow and each layer stays visible. */
+  transform: translate(calc(var(--depth) * 34px), calc(var(--depth) * -10px))
+    scale(calc(1 - var(--depth) * 0.04)) rotate(calc(var(--depth) * 1.5deg));
+  opacity: calc(1 - var(--depth) * 0.2);
+
+  /* The frosted tint every card behind the front one wears. Sage over cream,
+     and opaque enough to hold an edge against the section ground — at 0.55 the
+     card read as a faint smudge rather than a pane of glass. The front card
+     overrides all of this to a plain photo surface. */
+  background: linear-gradient(150deg, rgba(213, 218, 196, 0.96), rgba(236, 232, 216, 0.92));
+  backdrop-filter: blur(6px);
+  /* The layer edge. The tint sits only a few points off the section ground, so
+     an outline is what actually separates one pane from the next — a sage
+     hairline plus a shadow tight enough to read as a lip, not a halo. */
+  border: 1px solid rgba(150, 162, 130, 0.5);
+  box-shadow:
+    -6px 0 12px -6px rgba(40, 50, 35, 0.18),
+    0 12px 26px rgba(40, 50, 35, 0.1);
+}
+
+/* Backs of the deck are glass, not photographs — the picture would fight the
+   front card for attention through the transparency. */
+.lp-card:not([data-front]) img {
+  opacity: 0;
+}
+
+.lp-card[data-front] {
+  background: #efe9dc;
+  backdrop-filter: none;
+  border-color: transparent;
+  box-shadow: 0 20px 40px rgba(40, 50, 35, 0.18);
+}
+
+.lp-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  /* Cross-fade as a card comes forward, so the photo arrives with the move
+     rather than popping in at the end of it. */
+  transition: opacity var(--lp-dur) var(--lp-ease);
+}
+
+/* Inner hairline, kept on a pseudo-element so it sits above the photo. */
+.lp-card[data-front]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  pointer-events: none;
+}
+
+/* The connector: a gold hairline leaving the front card's right edge, with a
+   dot where it lands. It is decorative and approximate by design — pointing at
+   the panel, not measured to the pixel of a row.
+
+   It starts past the fan (100% + the deepest card's 3 x 34px offset) so the
+   line emerges from the far edge of the stack rather than from underneath it. */
+.lp-connector {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 102px);
+  width: clamp(1rem, 3vw, 2.25rem);
+  height: 1px;
+  background: var(--lp-gold);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.lp-connector::after {
+  content: '';
+  position: absolute;
+  right: -3px;
+  top: -2.5px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--lp-gold);
+}
+
+/* --- Right: the step list ------------------------------------------ */
+.lp-panel {
+  border-radius: 20px;
+  background: var(--lp-surface);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 18px 44px rgba(40, 50, 35, 0.1);
+  padding: 0.5rem clamp(1rem, 2vw, 1.75rem);
+}
+
+.lp-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lp-steps > li + li {
+  border-top: 1px solid var(--lp-hair);
+}
+
+.lp-step {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 0.9rem;
+  width: 100%;
+  padding: 22px 0.75rem 22px 1rem;
+  text-align: left;
+  background: transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background var(--lp-dur) var(--lp-ease);
+}
+
+/* The gold accent bar on the active row. On a pseudo-element so no border
+   appears and disappears, which would shift the row's copy by 3px. */
+.lp-step::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12%;
+  bottom: 12%;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--lp-gold);
+  opacity: 0;
+  transform: scaleY(0.4);
+  transition:
+    opacity var(--lp-dur) var(--lp-ease),
+    transform var(--lp-dur) var(--lp-ease);
+}
+
+.lp-step[aria-selected='true'] {
+  background: rgba(255, 252, 244, 0.9);
+}
+
+.lp-step[aria-selected='true']::before {
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+.lp-step:focus-visible {
+  outline: 2px solid var(--lp-gold);
+  outline-offset: -2px;
+}
+
+.lp-step-num {
+  position: relative;
+  flex: none;
+  font-family: var(--font-serif);
+  font-size: 18px;
+  color: var(--lp-sage);
+  padding-bottom: 0.35rem;
+  transition: color var(--lp-dur) var(--lp-ease);
+}
+
+/* The 20px rule under each number, turning gold on the active row. */
+.lp-step-num::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 20px;
+  height: 1.5px;
+  background: currentColor;
+  opacity: 0.5;
+  transition: background var(--lp-dur) var(--lp-ease);
+}
+
+.lp-step[aria-selected='true'] .lp-step-num {
+  color: var(--lp-ink);
+}
+
+.lp-step[aria-selected='true'] .lp-step-num::after {
+  background: var(--lp-gold);
+  opacity: 1;
+}
+
+.lp-step-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.lp-step-title {
+  font-family: var(--font-sans);
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--lp-ink);
+}
+
+.lp-step-body {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.45;
+  color: #7a7a6e;
+}
+
+/* The per-row picture is the phone layout's job; the deck covers desktop. */
+.lp-step-figure {
+  display: none;
+}
+
+/* --- Chrome: arrows and dots --------------------------------------- */
+.lp-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  translate: 0 -50%;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #e2ddd0;
+  color: var(--lp-ink);
+  box-shadow: 0 6px 16px rgba(40, 50, 35, 0.1);
+  cursor: pointer;
+  transition:
+    background 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.lp-arrow:hover {
+  background: #fffdf7;
+  box-shadow: 0 8px 20px rgba(40, 50, 35, 0.16);
+}
+
+.lp-arrow:focus-visible {
+  outline: 2px solid var(--lp-gold);
+  outline-offset: 2px;
+}
+
+.lp-arrow svg {
+  width: 18px;
+  height: 18px;
+}
+
+.lp-arrow--prev {
+  left: clamp(0.5rem, 2vw, 1.75rem);
+}
+
+.lp-arrow--next {
+  right: clamp(0.5rem, 2vw, 1.75rem);
+}
+
+.lp-dots {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.lp-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #d6d2c6;
+  cursor: pointer;
+  transition:
+    width var(--lp-dur) var(--lp-ease),
+    background var(--lp-dur) var(--lp-ease);
+}
+
+.lp-dot[data-on] {
+  width: 20px;
+  background: var(--lp-ink);
+}
+
+.lp-dot:focus-visible {
+  outline: 2px solid var(--lp-gold);
+  outline-offset: 3px;
+}
+
+/* --- Tablet: heading above, deck and list side by side -------------- */
 @media (max-width: 1023px) {
-  .trust-grid,
-  .trust-strip {
-    grid-template-columns: repeat(2, 1fr);
+  /* The three-column layout is gone, so there is no panel edge to hang off —
+     back to the section's own corner. */
+  .lp-leaf {
+    right: clamp(1rem, 4vw, 3rem);
   }
-  .trust-cell:nth-child(odd) {
-    border-left: 0;
+  .lp-inner {
+    grid-template-columns: minmax(200px, 0.85fr) minmax(280px, 1fr);
+    align-items: start;
   }
-  .trust-cell:nth-child(n + 3) {
-    border-top: 1px solid rgba(120, 92, 54, 0.14);
+  .lp-head {
+    grid-column: 1 / -1;
+    margin-bottom: 0.5rem;
   }
-  .trust-strip {
-    border-radius: 20px;
-    row-gap: 1rem;
+  .lp-deck {
+    max-width: 240px;
+    align-self: center;
   }
-  .trust-strip > li:nth-child(odd) {
-    border-left: 0;
+  .lp-sub {
+    max-width: 420px;
   }
 }
 
-/* --- Phones: single column, taller pictures ------------------------ */
-@media (max-width: 639px) {
-  /* --- Heading -----------------------------------------------------
-     No phone override existed, so the title was inheriting the desktop
-     clamp's floor of 2.1rem and dominating the section. */
-  .trust-head {
-    padding-inline: 0.5rem;
-  }
-  /* Ink again, inherited from the desktop rules — the ground under the heading
-     went back to cream, so the cream text it used to carry would now be
-     invisible. Only the sizes are set here. */
-  .trust-eyebrow {
-    gap: 0.6rem;
-  }
-  .trust-rule {
-    width: clamp(24px, 7vw, 44px);
-  }
-  .trust-title {
-    margin-top: 0.35rem;
-    font-size: 1.7rem;
-    line-height: 1.14;
-  }
-  .trust-sub {
-    margin-top: 0.35rem;
-    font-size: 12.5px;
-  }
-
-  /* --- The scene sits ABOVE the panel, not behind it ---------------
-     Full-bleed, the portrait crop ran the whole section height and its leaves
-     and bottle collided with the heading and showed through the panel. It is
-     now a top band that fades out before the pillars begin. */
-  /* --- The section keeps its OWN cream ground on phone ---------------
-     It used to paint an ink gradient here so the light panel had something to
-     sit on. That read as a black slab dropped into a cream page — a colour the
-     section does not otherwise own. The photographic scene is the ground now,
-     as on desktop, so the phone matches the reference: warm cream top and
-     bottom, the pour and bottle showing through behind the panel. */
-  .trust-scene {
-    background: var(--color-acti-cream);
-    /* Trimmed: without the four tall pillar photos and with the panel pulled up
-       into the heading, the old desktop-scale padding left a dead cream band
-       above and below. */
-    padding: clamp(2rem, 7vw, 3rem) 0 clamp(1.75rem, 5vw, 2.5rem);
-  }
-
-  .trust-bg {
-    /* Full height again. The portrait crop keeps the pour at the left and the
-       bottle at the right, and the panel sits over its clear middle — which is
-       exactly the reference. No mask: the section is cream on both edges, so
-       the photo has nothing dark to be cut away from. */
-    object-position: center;
-  }
-  /* Lightens, as on desktop. Its only job is a guaranteed floor under the
-     heading so "every drop." never lands on the bottle's neck — stronger than
-     the desktop mix because the phone crop puts the leaves right behind the
-     title, and easing off by the foot so the panel keeps live photo behind it. */
-  .trust-veil {
-    background:
-      radial-gradient(90% 34% at 50% 16%, rgba(255, 250, 240, 0.9), rgba(255, 250, 240, 0.5) 62%, transparent 100%),
-      linear-gradient(
-        180deg,
-        rgba(255, 250, 240, 0.72) 0%,
-        rgba(255, 250, 240, 0.4) 34%,
-        rgba(250, 242, 228, 0.28) 70%,
-        rgba(250, 242, 228, 0.45) 100%
-      );
-  }
-
-  /* --- Phone layout ------------------------------------------------
-     Desktop gives each pillar its own column with a photo underneath. On a
-     phone that stacks into four tall photo blocks and the section runs to
-     several screens, so the pillars become compact icon-left / text-right
-     rows and the per-cell picture is dropped — the scene behind the panel is
-     already carrying the imagery. The assurance strip stays 4-across with the
-     icon above its label, which fits because the labels are two short words. */
-  .trust-grid {
-    grid-template-columns: 1fr;
-  }
-  .trust-panel {
-    /* tighter than full-bleed so the scene reads around it */
-    margin-inline: 0.25rem;
-    /* Pulled up under the heading. With the pillar photos dropped the panel is
-       short, and the desktop clamp's 1.75rem floor left it floating in the
-       middle of the section with cream above and below — the reference has it
-       tucked straight under the subtitle. */
-    margin-top: 1rem;
-    border-radius: 18px;
-    /* A touch more opaque than desktop: the photo runs full height behind it
-       on phone, so the pour and bottle sit directly under the copy. */
-    background: rgba(255, 253, 248, 0.96);
-  }
-  /* Tighter rows: the four pillars were running ~92px each, which is what
-     pushed the strip below the fold. */
-  .trust-cell {
-    /* row, not a centred column */
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 0.85rem;
-    text-align: left;
-    border-left: 0;
-    padding: 0.95rem 1rem;
-  }
-  .trust-cell + .trust-cell {
-    border-top: 1px solid rgba(120, 92, 54, 0.14);
-  }
-  .trust-badge {
-    flex: none;
-    width: 2.1rem;
-    height: 2.1rem;
-    margin-top: 0.05rem;
-  }
-  .trust-badge svg {
-    width: 1rem;
-    height: 1rem;
-  }
-  /* The copy column sits to the right of the icon, title stacked over body */
-  .trust-cell-copy {
-    flex: 1;
-    min-width: 0;
-  }
-  /* Colours are the desktop ink pair — the card stayed light. Only the sizes
-     step down, to match the tighter rows. */
-  .trust-cell-title {
-    margin-top: 0;
-    font-size: 13.5px;
-  }
-  .trust-cell-body {
-    margin-top: 0.2rem;
-    font-size: 12.5px;
-    line-height: 1.45;
-  }
-  .trust-marks {
-    justify-content: flex-start;
-    margin-top: 0.55rem;
-  }
-  /* The pillar photos are what made this section three screens tall */
-  .trust-figure {
-    display: none;
-  }
-
-  /* --- Assurance strip: 4 across, icon over label ------------------ */
-  /* Smaller than it was: this is secondary reassurance sitting under the four
-     pillars, and at 0.9rem padding with 44px icons it was reading as heavy as
-     the panel above it. The icon size is set on the element in
-     TrustSection.jsx (h-11 w-11), so it is overridden here rather than there —
-     desktop still wants the large mark. */
-  .trust-strip {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0;
-    border-radius: 14px;
-    padding: 0.6rem 0.3rem;
-  }
-  /* `> li > svg` rather than a bare descendant: the icon carries Tailwind's
-     h-11/w-11/mt-1 utilities, and those live in a later layer than this
-     stylesheet, so a single-class selector would lose to them. */
-  .trust-strip > li > svg {
-    width: 1.6rem;
-    height: 1.6rem;
-    margin-top: 0;
-  }
-  /* The 1023px block sets border-left:0 on :nth-child(odd) for its 2-up
-     layout. That selector is specificity 0,2,1 and beats a plain
-     `.trust-strip > li` (0,1,1) whatever the order, so child 3 lost its
-     divider — the "missing middle line". Re-assert at equal specificity. */
-  .trust-strip > li:nth-child(odd) {
-    border-left: 1px solid rgba(255, 255, 255, 0.12);
-  }
-  .trust-strip > li:first-child {
-    border-left: 0;
-  }
-  .trust-strip > li {
+/* --- Phones -------------------------------------------------------
+   The fan is dropped entirely: at this width the offsets that make it read as
+   a deck would push the back cards off-screen, and a stack of translucent
+   glass under a photo is not worth a horizontal scrollbar. Instead each row
+   carries its own picture and reveals it when selected, so the section becomes
+   a straightforward image accordion. */
+@media (max-width: 767px) {
+  .lp-scene {
+    padding-inline: 1rem;
+    display: flex;
     flex-direction: column;
     align-items: center;
-    text-align: center;
-    gap: 0.3rem;
-    padding: 0 0.2rem;
-    border-left: 1px solid rgba(255, 255, 255, 0.12);
   }
-  .trust-strip > li:first-child {
-    border-left: 0;
+  .lp-inner {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
   }
-  .trust-strip-title {
-    font-size: 10.5px;
-    line-height: 1.2;
-    letter-spacing: 0;
-  }
-  /* Only the label survives at this width — the sentence would wrap to four
-     lines each and the strip would be taller than the panel above it. */
-  .trust-strip-body {
+  .lp-deck,
+  .lp-connector {
     display: none;
+  }
+  .lp-panel {
+    padding-inline: 0.75rem;
+  }
+  .lp-step {
+    flex-wrap: wrap;
+    padding-block: 18px;
+  }
+  .lp-step-figure {
+    order: 3;
+    flex-basis: 100%;
+    /* Collapsed rows animate on grid-template-rows rather than height, so no
+       max-height guess is needed and the row cannot jump when the image is
+       taller than the guess.
+
+       overflow: hidden is REQUIRED, not tidiness: a 0fr track has zero height
+       but does not clip, so without it every collapsed row painted its photo
+       at full size straight over the rows below. */
+    display: grid;
+    grid-template-rows: 0fr;
+    overflow: hidden;
+    transition: grid-template-rows var(--lp-dur) var(--lp-ease);
+  }
+  .lp-step[aria-selected='true'] .lp-step-figure {
+    grid-template-rows: 1fr;
+    margin-top: 0.9rem;
+  }
+  .lp-step-figure img {
+    min-height: 0;
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 14px;
+  }
+  /* Arrows move below the dots and sit inline rather than pinned to the
+     section's edges, where they would overlap the full-width rows.
+
+     .lp-scene is a column flex container here, so a static arrow would take a
+     row of its own and the pair would stack. order puts them after the dots and
+     a 50% flex-basis with wrapping is not available on a column — so each is
+     given an explicit order and nudged into a single line by negative margins
+     against the shared centre line. Simpler: they are absolutely positioned
+     relative to the section's bottom, side by side around the centre. */
+  .lp-arrow {
+    position: absolute;
+    top: auto;
+    bottom: clamp(1rem, 4vw, 1.75rem);
+    translate: none;
+  }
+  .lp-arrow--prev {
+    left: 50%;
+    margin-left: -3rem;
+  }
+  .lp-arrow--next {
+    right: 50%;
+    margin-right: -3rem;
+  }
+  /* Room under the dots for the arrow row. */
+  .lp-dots {
+    margin-top: 1.5rem;
+    margin-bottom: 3.5rem;
+  }
+  .lp-inner {
+    width: 100%;
+    order: -1;
+  }
+}
+
+/* Reduced motion: the reshuffle becomes a cross-fade. Transforms are frozen at
+   their resting values (so the fan still LOOKS like a fan — it just stops
+   sliding) and only opacity moves. Autoplay is disabled in the component. */
+@media (prefers-reduced-motion: reduce) {
+  .lp-card,
+  .lp-card img,
+  .lp-step,
+  .lp-step::before,
+  .lp-step-num,
+  .lp-step-num::after,
+  .lp-dot,
+  .lp-step-figure {
+    transition-property: opacity;
+    transition-duration: 200ms;
   }
 }
 
@@ -3083,9 +3727,9 @@ section[id] {
    SEAMS — one continuous page, not six slides
 
    Every section used to end on a hard horizontal edge: the ones with
-   full-bleed photography (.ms-scene, .trust-scene) simply stopped, and
-   .trust-scene's base was #f6efe2 against #fff8ee on both sides, so the
-   join read as a colour step too.
+   full-bleed photography (.ms-scene, .lp-scene) simply stopped, and
+   .lp-scene's base (#f8f5ee) sits against #fff8ee on both sides, so the
+   join reads as a colour step too.
 
    The fix is applied once here rather than per section:
 
@@ -3127,7 +3771,7 @@ section[id] {
      section to switch that edge off. */
   /* --seam-color is what the edges feather TO. It defaults to page cream, which
      is what every section on the page sits against — but a section whose own
-     ground is dark (see .trust-scene on phone) has to feather to that ground
+     ground is dark (see .ms-scene on phone) has to feather to that ground
      instead, or the seam paints a cream band across its top and bottom. */
   background:
     linear-gradient(
@@ -3148,43 +3792,552 @@ section[id] {
 
 
 /* The copy has to sit above the veil. Targeted rather than blanket
+   (.acti-seam > *) on purpose: .ms-scene's background layers sit at z-index
+   -2/-1 so the seam can fade them, and promoting every child would drag those
+   back above it and defeat the dissolve. */
+.lp-inner,
+/* ===============================================================
+   ROOTED IN TRUST — TrustSection.jsx
+
+   Full-bleed photographic scene, centred heading, one translucent
+   panel of four pillars, then a strip of secondary assurances.
+
+   Images come from public/build/ (upload artefacts) resized into
+   public/rooted/ as WebP. To regenerate the background after replacing
+   anything in build/:
+
+     python - <<'EOF'
+     from PIL import Image
+     JOBS = [("bg (2).png","scene",1800,0), ("9.png","bottle",620,0),
+             ("3 (3).png","droplet",360,1), ("4 (2).png","wave",1000,1)]
+     for src,name,tw,keep in JOBS:
+         im = Image.open(f"public/build/{src}")
+         a  = im.mode in ("RGBA","LA") and keep
+         im = im.convert("RGBA" if a else "RGB")
+         im.resize((tw, round(im.height*tw/im.width)), Image.LANCZOS)\
+           .save(f"public/rooted/{name}.webp","WEBP",quality=82,method=6)
+     EOF
+
+   The four pillar cards are separate: their sources are already small
+   (~440x175), so they are re-encoded at native size — upscaling would
+   only add bytes, not detail. 32 KB for all four.
+
+     python - <<'EOF'
+     from PIL import Image
+     CARDS = [("traceability_farm_exact (1).png","farm"),
+              ("certifications_exact.png","certs"),
+              ("small_batch_factory_exact.png","batch"),
+              ("purity_oil_ripple_exact.png","ripple")]
+     for src,name in CARDS:
+         Image.open(f"public/build/{src}").convert("RGB")\
+           .save(f"public/rooted/{name}.webp","WEBP",quality=86,method=6)
+     EOF
+================================================================*/
+
+.trust-scene {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(3rem, 6vw, 5.5rem) 0 clamp(2.5rem, 4vw, 4rem);
+  /* Matches the page rather than setting a paler ground of its own, which read
+     as a step against the cream on either side — the photo carries the warmth. */
+  background: var(--color-acti-cream);
+  /* Top edge only. Above is the dark cabinet, which genuinely needs the
+     dissolve; below is WhyTrust, already cream — so a bottom seam blends
+     nothing and only washes a pale band over the foot of the pillar cards. */
+  --seam-bottom: 0px;
+}
+
+.trust-scene > picture {
+  display: contents;
+}
+
+.trust-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* The scene's middle is already pale, but the copy needs a guaranteed floor */
+
+.trust-veil {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(58% 46% at 50% 30%, rgba(255, 250, 240, 0.82), transparent 74%),
+    linear-gradient(180deg, rgba(255, 250, 240, 0.42) 0%, rgba(250, 242, 228, 0.2) 55%, rgba(246, 235, 216, 0.5) 100%);
+}
+
+.trust-inner {
+  position: relative;
+  margin: 0 auto;
+  /* Same measure and gutter as .acti-shell, so the trust panel's edges line up
+     with Mission, Milestones and the footer instead of sitting 40px inboard. */
+  max-width: calc(var(--shell-max) + var(--shell-gutter) * 2);
+  padding-inline: var(--shell-gutter);
+}
+
+/* --- Heading ------------------------------------------------------- */
+
+.trust-head {
+  text-align: center;
+}
+
+.trust-eyebrow {
+  margin-top: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-acti-ink) 52%, transparent);
+}
+
+.trust-rule {
+  display: block;
+  width: clamp(34px, 6vw, 74px);
+  height: 1px;
+  background: color-mix(in srgb, var(--color-acti-sun) 65%, transparent);
+}
+
+.trust-title {
+  margin-top: 0.5rem;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2.1rem, 5vw, 3.4rem);
+  line-height: 1.1;
+  color: #3d3020;
+}
+
+.trust-title em {
+  font-style: normal;
+  color: var(--color-acti-sun);
+}
+
+.trust-sub {
+  margin-top: 0.5rem;
+  font-size: 13.5px;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--color-acti-ink) 60%, transparent);
+}
+
+/*
+ * The right edge is a straight edge, matching the other three sides.
+ *
+ * It previously carried a concave radial mask so the panel appeared to curve
+ * around the bottle standing behind it. Removed on request — the sweep read as
+ * an unexplained fade on the fourth column rather than as a shaped edge.
+ */
+
+.trust-panel {
+  margin-top: clamp(1.75rem, 3vw, 2.75rem);
+  border-radius: 20px;
+  /* Opaque enough that the bottle behind never reads through a cell — at 0.66
+     it showed straight through the fourth column. */
+  background: rgba(255, 252, 245, 0.93);
+  /* The panel is 93% opaque, so the blur behind it is barely perceptible —
+     6px composites meaningfully cheaper over the full-bleed scene photo. */
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 24px 50px -30px rgba(90, 62, 30, 0.35);
+  overflow: hidden;
+}
+
+.trust-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.trust-cell {
+  /* Shared with .trust-figure, which cancels this padding with a negative
+     margin so its picture reaches the cell's edges. Change it in one place. */
+  --trust-cell-pad: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.75rem var(--trust-cell-pad) 0;
+  /* hairline dividers, as in the reference */
+  border-left: 1px solid rgba(120, 92, 54, 0.14);
+  overflow: hidden;
+}
+
+.trust-cell:first-child {
+  border-left: 0;
+}
+
+/* The sweep bites into this column's right edge, so its copy is inset to stay
+   clear of it. Only while the cut is active — the narrow layouts zero it. */
+
+@media (min-width: 1024px) {
+  .trust-cell:last-child {
+      padding-right: calc(var(--trust-cell-pad) + 1.75rem);
+    }
+}
+
+.trust-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  color: var(--color-acti-sun);
+  border: 1px solid color-mix(in srgb, var(--color-acti-sun) 45%, transparent);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.trust-cell-copy {
+  width: 100%;
+}
+
+.trust-cell-title {
+  margin-top: 1rem;
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #3d3020;
+}
+
+.trust-cell-body {
+  margin-top: 0.5rem;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: color-mix(in srgb, var(--color-acti-ink) 62%, transparent);
+}
+
+/* Sides only. The cell has left/right padding for the picture to cancel, but
+   its bottom padding is already 0 — a negative bottom margin here had nothing
+   to pull back against, so it hung the image ~18px BELOW the panel, past the
+   cream that is meant to sit behind it. That overhang is what read as the
+   picture fading out at the bottom; it was actually the panel ending. */
+
+.trust-figure {
+  margin: auto calc(var(--trust-cell-pad) * -1) 0;
+  width: auto;
+  height: 8.5rem;
+  overflow: hidden;
+}
+
+/*
+ * The picture dissolves in from its top edge rather than starting on a hard
+ * line across the card. A mask is used, not a cream gradient laid on top: the
+ * panel behind is translucent (rgba + backdrop-blur), so an opaque overlay
+ * would paint a lighter bar over it and read as a band of its own. Masking
+ * removes the pixels instead, letting the real card show through.
+ *
+ * --trust-fade is the depth of that dissolve; raise it for a longer fade.
+ */
+
+.trust-figure img {
+  --trust-fade: 42%;
+  width: 100%;
+  height: 100%;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--trust-fade));
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--trust-fade));
+}
+
+.trust-figure[data-fit='cover'] img {
+  object-fit: cover;
+}
+
+/* The marks must never be cropped, so this one is contained. It also fades
+   over a shorter distance — the logos sit high in their own artwork, and a
+   42% dissolve eats into the tops of the FSSAI and ISO rings. */
+
+.trust-figure[data-fit='contain'] img {
+  --trust-fade: 18%;
+  object-fit: contain;
+  object-position: bottom center;
+}
+
+/* --- Bottom assurance strip ---------------------------------------- */
+
+.trust-strip {
+  margin-top: clamp(1.25rem, 2.5vw, 2rem);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  border-radius: 999px;
+  padding: 1rem clamp(1rem, 3vw, 2rem);
+  background: rgba(61, 48, 32, 0.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.trust-strip > li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0 clamp(0.5rem, 1.5vw, 1.25rem);
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.trust-strip > li:first-child {
+  border-left: 0;
+}
+
+.trust-strip-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #fdf6ea;
+}
+
+.trust-strip-body {
+  margin-top: 0.15rem;
+  font-size: 11px;
+  line-height: 1.5;
+  color: rgba(253, 246, 234, 0.62);
+}
+
+/* --- Tablet: 2 x 2 ------------------------------------------------- */
+
+@media (max-width: 1023px) {
+  .trust-grid,
+    .trust-strip {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+  .trust-cell:nth-child(odd) {
+      border-left: 0;
+    }
+
+  .trust-cell:nth-child(n + 3) {
+      border-top: 1px solid rgba(120, 92, 54, 0.14);
+    }
+
+  .trust-strip {
+      border-radius: 20px;
+      row-gap: 1rem;
+    }
+
+  .trust-strip > li:nth-child(odd) {
+      border-left: 0;
+    }
+}
+
+/* --- Phones: single column, taller pictures ------------------------ */
+
+@media (max-width: 639px) {
+  /* --- Heading -----------------------------------------------------
+       No phone override existed, so the title was inheriting the desktop
+       clamp's floor of 2.1rem and dominating the section. */
+
+  .trust-head {
+      padding-inline: 0.5rem;
+    }
+
+  .trust-eyebrow {
+      gap: 0.6rem;
+    }
+
+  .trust-rule {
+      width: clamp(24px, 7vw, 44px);
+    }
+
+  .trust-title {
+      margin-top: 0.35rem;
+      font-size: 1.7rem;
+      line-height: 1.14;
+    }
+
+  .trust-sub {
+      margin-top: 0.35rem;
+      font-size: 12.5px;
+    }
+
+  /* --- The scene sits ABOVE the panel, not behind it ---------------
+       Full-bleed, the portrait crop ran the whole section height and its leaves
+       and bottle collided with the heading and showed through the panel. It is
+       now a top band that fades out before the pillars begin. */
+
+  .trust-bg {
+      height: 42%;
+      object-position: center top;
+      /* The crop is a bright, low-contrast plate; knocking it back gives the
+         heading something to sit on and stops the bottle competing with it. */
+      filter: brightness(0.82) contrast(1.06) saturate(1.04);
+      -webkit-mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
+      mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
+    }
+
+  /* The bottle and the pour sit right where the heading does, so the veil
+       needs a firm local floor behind the type — a soft wash left "every drop."
+       reading straight over the bottle's neck. */
+
+  .trust-veil {
+      background:
+        radial-gradient(78% 20% at 50% 14%, rgba(255, 250, 240, 0.82), rgba(255, 250, 240, 0.34) 64%, transparent 100%),
+        linear-gradient(180deg, rgba(255, 250, 240, 0.24) 0%, rgba(255, 248, 238, 0.86) 34%, var(--color-acti-cream) 50%);
+    }
+
+  /* --- Phone layout ------------------------------------------------
+       Desktop gives each pillar its own column with a photo underneath. On a
+       phone that stacks into four tall photo blocks and the section runs to
+       several screens, so the pillars become compact icon-left / text-right
+       rows and the per-cell picture is dropped — the scene behind the panel is
+       already carrying the imagery. The assurance strip stays 4-across with the
+       icon above its label, which fits because the labels are two short words. */
+
+  .trust-grid {
+      grid-template-columns: 1fr;
+    }
+
+  .trust-panel {
+      /* tighter than full-bleed so the scene reads around it */
+      margin-inline: 0.25rem;
+      border-radius: 16px;
+    }
+
+  .trust-cell {
+      /* row, not a centred column */
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 0.65rem;
+      text-align: left;
+      border-left: 0;
+      padding: 0.75rem 0.9rem;
+    }
+
+  .trust-cell + .trust-cell {
+      border-top: 1px solid rgba(120, 92, 54, 0.14);
+    }
+
+  .trust-badge {
+      flex: none;
+      width: 1.9rem;
+      height: 1.9rem;
+      margin-top: 0.05rem;
+    }
+
+  .trust-badge svg {
+      width: 0.9rem;
+      height: 0.9rem;
+    }
+
+  /* The copy column sits to the right of the icon, title stacked over body */
+
+  .trust-cell-copy {
+      flex: 1;
+      min-width: 0;
+    }
+
+  .trust-cell-title {
+      margin-top: 0;
+      font-size: 13px;
+    }
+
+  .trust-cell-body {
+      margin-top: 0.15rem;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+  .trust-marks {
+      justify-content: flex-start;
+      margin-top: 0.55rem;
+    }
+
+  /* The pillar photos are what made this section three screens tall */
+
+  .trust-figure {
+      display: none;
+    }
+
+  /* --- Assurance strip: 4 across, icon over label ------------------ */
+
+  .trust-strip {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      border-radius: 18px;
+      padding: 0.9rem 0.4rem;
+    }
+
+  /* The 1023px block sets border-left:0 on :nth-child(odd) for its 2-up
+       layout. That selector is specificity 0,2,1 and beats a plain
+       `.trust-strip > li` (0,1,1) whatever the order, so child 3 lost its
+       divider — the "missing middle line". Re-assert at equal specificity. */
+
+  .trust-strip > li:nth-child(odd) {
+      border-left: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+  .trust-strip > li:first-child {
+      border-left: 0;
+    }
+
+  .trust-strip > li {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.4rem;
+      padding: 0 0.25rem;
+      border-left: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+  .trust-strip > li:first-child {
+      border-left: 0;
+    }
+
+  .trust-strip-title {
+      font-size: 12px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+  /* Only the label survives at this width — the sentence would wrap to four
+       lines each and the strip would be taller than the panel above it. */
+
+  .trust-strip-body {
+      display: none;
+    }
+}
+
+/* The copy has to sit above the veil. Targeted rather than blanket
    (.acti-seam > *) on purpose: .trust-bg and .trust-veil live at z-index -2/-1
    so the seam can fade them, and promoting every child would drag those back
    above it and defeat the dissolve. */
+
+
+
+@media (max-width: 639px) {
+  /* --- 3. Lift the smallest type -------------------------------- */
+
+  .trust-eyebrow,
+    .wt-eyebrow,
+    .ms-label,
+    .mv-kicker {
+      font-size: 12px;
+    }
+
+  .trust-strip-body,
+    .wt-foot {
+      font-size: 12px;
+      letter-spacing: 0.14em;
+    }
+
+  .trust-cell-body,
+    .ms-body,
+    .mv-text {
+      font-size: 14.5px;
+    }
+
+  /* --- 4. Hold headline contrast against the burnt-in titles ---- */
+}
+
+
 .trust-inner,
 .ms-scene > div {
   position: relative;
   z-index: 1;
 }
-
-/*
- * Kitchen → Trust was the harshest join on the page: a dark, nearly black
- * cabinet frame butting straight onto the bright trust scene. The kitchen is a
- * sticky video stage, so it cannot fade its own tail — the veil goes on the
- * section that follows and reaches back over the edge.
- */
-/*
- * Kitchen -> Trust was the harshest join on the page: a nearly black cabinet
- * frame butting straight onto the bright trust scene.
- *
- * It cannot be solved from the section below. The kitchen's stage is
- * overflow:hidden and #range carries z-index:0 (a real stacking context, from
- * the hero/kitchen overlap fix), so a veil placed above the boundary is both
- * clipped and painted over. The dissolve has to be inside the stage — hence
- * .kitchen-tail, rendered as the last layer of KitchenReveal's sticky stage.
- */
-.kitchen-tail {
-  height: calc(var(--seam) * 1.5);
-  z-index: 3;
-  background: linear-gradient(
-    to bottom,
-    transparent 0,
-    color-mix(in srgb, var(--color-acti-cream) 45%, transparent) 46%,
-    color-mix(in srgb, var(--color-acti-cream) 88%, transparent) 78%,
-    var(--color-acti-cream) 100%
-  );
-}
-
 
 @media (prefers-reduced-motion: reduce) {
   :root {
@@ -3242,22 +4395,15 @@ section[id] {
   }
 
   /* --- 3. Lift the smallest type -------------------------------- */
-  .trust-eyebrow,
+  .lp-eyebrow,
   .wt-eyebrow,
   .ms-label,
   .mv-kicker {
     font-size: 12px;
   }
-  .trust-strip-body,
   .wt-foot {
     font-size: 12px;
     letter-spacing: 0.14em;
-  }
-  /* Measured across 320-430px: these were still landing at 10-11px, under the
-     12px floor the rest of this block sets. They are set here rather than at
-     their own rules because only the phone layout shrinks them. */
-  .trust-strip-title {
-    font-size: 12.5px;
   }
   .wt-body {
     font-size: 12px;
@@ -3276,11 +4422,10 @@ section[id] {
   .wt-cta {
     display: none;
   }
-  /* .trust-cell-body deliberately NOT in this group. It used to be lifted to
-     14.5px with the other body copy, but it lives in a compact icon-left row
-     inside the pillar panel rather than in running text, and at 14.5px the four
-     rows grew tall enough to push the assurance strip off the fold. Its size is
-     set once in the phone block above, next to the row padding it has to sit in. */
+  /* .lp-step-body deliberately NOT in this group: it is a caption under a row
+     title inside the purity panel, not running text, and lifting it to 14.5px
+     makes each row tall enough to push the deck's picture off the fold. Its
+     size is set once at .lp-step-body. */
   .ms-body,
   .mv-text {
     font-size: 14.5px;
@@ -3290,7 +4435,11 @@ section[id] {
   /* Phones need the footage knocked back harder (burnt-in titles sit behind the
      copy). Still an overlay, not a filter — see the note on .hero-video. */
   .hero-grade {
-    background: rgba(9, 6, 3, 0.64);
+    /* Same dusk treatment as desktop, held a stop darker: the portrait cut has
+       burnt-in Hindi titles behind the copy and they need more knock-back. */
+    background:
+      radial-gradient(120% 62% at 50% 106%, rgba(198, 132, 34, 0.3), transparent 66%),
+      linear-gradient(180deg, rgba(44, 31, 11, 0.6) 0%, rgba(34, 24, 9, 0.62) 100%);
   }
 
   /* --- 5. Phone hero: footage on top, copy on a panel below ------
@@ -3452,7 +4601,7 @@ section[id] {
    PAGE SHELL — one gutter and one measure for the whole site
 
    Sections had grown three different containers (max-w-[1600px],
-   max-w-7xl, max-w-6xl, plus a raw 1120px in .trust-inner) and three
+   max-w-7xl, max-w-6xl, plus a raw 1120px in .lp-inner) and three
    gutters (px-4 / px-5 / px-10). Measured at 1440px, content started
    at 40px in the hero, 176px in Mission, 216px in Trust — so nothing
    lined up down the page.
@@ -3564,7 +4713,7 @@ section[id] {
 }
 
 .contact-title {
-  /* Georgia, as every other display heading on the site (.trust-title,
+  /* Georgia, as every other display heading on the site (.lp-title,
      .mv-title and the rest) — the reference's "Contact Us" is a serif too. */
   font-family: Georgia, 'Times New Roman', serif;
   font-size: clamp(2.4rem, 6vw, 4rem);
@@ -3596,7 +4745,7 @@ section[id] {
 .contact-card {
   border-radius: 18px;
   padding: clamp(1.1rem, 2vw, 1.6rem);
-  /* Near-opaque, like .trust-panel: the plate's wave and leaves run under
+  /* Near-opaque, like .lp-panel: the plate's wave and leaves run under
      the cards at the section's edges, and at anything below ~0.9 the
      form's placeholder text picked up the artwork behind it. */
   background: rgba(255, 253, 248, 0.94);
@@ -4007,7 +5156,7 @@ a.contact-row-value:hover {
 
 .ht-title {
   /* Georgia, as every other display heading on the site — .contact-title,
-     .trust-title, .mv-title all run the same face. */
+     .lp-title, .mv-title all run the same face. */
   margin-top: 0.9rem;
   font-family: Georgia, 'Times New Roman', serif;
   font-size: clamp(2.2rem, 5.2vw, 3.6rem);
@@ -4040,7 +5189,7 @@ a.contact-row-value:hover {
   border-radius: 16px;
   padding: clamp(1.1rem, 2vw, 1.4rem);
   background: rgba(255, 253, 248, 0.94);
-  /* Same lift as .contact-card and .trust-panel — shadow, no hairline. */
+  /* Same lift as .contact-card and .lp-panel — shadow, no hairline. */
   box-shadow: 0 22px 46px -30px rgba(90, 62, 30, 0.42);
 }
 

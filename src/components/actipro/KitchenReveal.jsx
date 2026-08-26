@@ -14,18 +14,17 @@ gsap.registerPlugin(ScrollTrigger)
  * the cabinet frames forward. Frame 0 is the exact image Hero.jsx dissolved
  * into, so the viewer never sees the two components change hands.
  *
- * Two frame sets, picked by viewport — the landscape export cover-fitted into a
- * portrait phone crops away most of the cabinet, so phones scrub a portrait
- * re-shoot of the same scene instead. See kitchenFrames.js. Both sets run the
- * same arc (shut → doors part → packs lit → push in), so everything below —
- * FRAME_RAMP, TEXT, STILL_AT — is expressed as a fraction and applies to either.
+ * ONE frame set, landscape, serving both orientations — this clip keeps its
+ * action centred, so a portrait cover-fit still shows the whole cabinet and
+ * all four bottles. (The previous clip needed a separate portrait re-shoot.)
+ * See kitchenFrames.js. Everything below — TEXT, STILL_AT — is expressed as a
+ * fraction of the range, so it is independent of the frame count.
  *
  * ── TUNING ──────────────────────────────────────────────────────────────────
- * The [scroll progress → position in the frame range] ramp now lives on each
- *   frame set in kitchenFrames.js, as `ramp`, because its y values are
- *   fractions of THAT set's range. The desktop and mobile clips are separate
- *   takes whose door swings land at different fractions, so one shared ramp
- *   mistimed whichever set it was not written for.
+ * The [scroll progress → position in the frame range] ramp lives on the frame
+ *   set in kitchenFrames.js, as `ramp`. It is SOLVED from the clip's own
+ *   motion profile so that equal scroll produces equal visible change —
+ *   re-solve it if the clip or the range changes.
  * TEXT is [start, duration] as a fraction of the section's scroll.
  * Want the whole scene slower? Raise .kitchen-scene's height in index.css.
  */
@@ -89,8 +88,7 @@ export default function KitchenReveal() {
   // so a fresh one each render would refetch the whole sequence on every paint.
   const frames = useMemo(() => frameSetFor(isMobile), [isMobile])
 
-  // ~2 MB of frames per set (63 desktop / 106 mobile, see kitchenFrames.js).
-  // The hero clip gets
+  // ~1.6 MB / 67 frames (see kitchenFrames.js). The hero clip gets
   // the network to itself first; these only start once the browser is idle (or
   // after 1.2s, whichever comes first). They are requested in order and at low
   // priority, so the early frames — the ones the viewer reaches first — land
@@ -216,13 +214,13 @@ export default function KitchenReveal() {
         ease: 'none',
         scrollTrigger: {
           ...common,
-          /* A touch longer than the text timeline below. With 133 frames the
-             sequence no longer steps, so the remaining roughness is the wheel
-             itself — a notch arrives as one jump, not a ramp. This lets GSAP
-             glide the proxy value across those jumps instead of snapping to
-             each one. Much beyond ~0.8 and the cabinet starts trailing the
-             scroll noticeably. */
-          scrub: 0.75,
+          /* A touch longer than the text timeline below. The roughness this
+             absorbs is the wheel itself — a notch arrives as one jump, not a
+             ramp — plus, at 67 frames over ~16px of scroll each, a little
+             frame quantisation. GSAP glides the proxy value across both
+             instead of snapping. Much beyond ~0.8 and the cabinet visibly
+             trails the scroll. */
+          scrub: 0.7,
           onEnter: () => setSceneTone(1),
           onEnterBack: () => setSceneTone(1),
           onRefresh: () => schedule(),
@@ -306,7 +304,9 @@ export default function KitchenReveal() {
           </>
         )}
 
-        {/* Warm scrim — weighted to the counter, so the cabinet stays untouched */}
+        {/* Was a warm scrim over the counter; emptied by request (see
+            .kitchen-scrim in index.css). Kept in the tree so restoring it is a
+            CSS-only change. */}
         <div className="kitchen-scrim pointer-events-none absolute inset-0" />
 
         {/* The tail of the scene dissolves into page cream so it hands off to
@@ -338,7 +338,7 @@ export default function KitchenReveal() {
 
               <a
                 ref={ctaRef}
-                href="#products"
+                href="#rooted"
                 className={`mt-6 inline-flex rounded-full bg-acti-red px-7 py-3 sm:mt-8 sm:px-8 sm:py-3.5 text-[12px] font-bold uppercase tracking-[0.18em] text-white transition-colors hover:bg-acti-orange-dark ${
                   reduced ? '' : 'invisible'
                 }`}
