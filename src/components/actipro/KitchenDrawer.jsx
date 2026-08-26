@@ -22,7 +22,7 @@ export default function KitchenDrawer() {
   }, [])
 
   return (
-    <section id="range" className="bg-acti-cream py-20 sm:py-28">
+    <section id="drawer" className="bg-acti-cream py-20 sm:py-28">
       <div className="mx-auto max-w-6xl px-4 sm:px-8">
         <SectionHeading
           eyebrow="Our range"
@@ -44,6 +44,9 @@ export default function KitchenDrawer() {
 
           <div className="kd-backsplash" />
           <div className="kd-glow" />
+          <div className="kd-leaf kd-leaf-a" />
+          <div className="kd-leaf kd-leaf-b" />
+          <div className="kd-sun" />
           <div className="kd-counter" />
 
           <div className="kd-run">
@@ -62,7 +65,7 @@ export default function KitchenDrawer() {
                 {PRODUCTS.map((product) => (
                   <a
                     key={product.id}
-                    href="#products"
+                    href="#drawer"
                     className="kd-item"
                     aria-label={`${product.brand} — ${product.name}`}
                   >

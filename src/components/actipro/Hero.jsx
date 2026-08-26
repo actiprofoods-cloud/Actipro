@@ -11,16 +11,17 @@ gsap.registerPlugin(ScrollTrigger)
 /*
  * SCENE 01 → SCENE 02
  *
- * The hero is 100svh of composition plus an exit runway (--hero-exit, set in
- * index.css). Its contents are sticky, so during that runway nothing scrolls —
- * the scroll only drives the dissolve:
+ * 100svh of composition plus an exit runway (--hero-exit, set in index.css).
+ * The contents are sticky, so during that runway nothing scrolls — the scroll
+ * only drives the dissolve:
  *
  *   copy and packs lift away  →  a beat of pure oil-pour footage  →
- *   the black veils lift and a gold thread of oil draws across  →
+ *   the veils lift, the frame warms  →
  *   the hero clip dissolves into the first cabinet frame.
  *
- * Because it dissolves into the exact frame KitchenReveal's canvas starts on,
- * the join between the two components is invisible.
+ * That last frame is the plate below — the same image KitchenReveal starts its
+ * canvas on, picked from the same query — so the handoff between the two
+ * components is invisible. See firstSrcFor() in kitchenFrames.js.
  *
  * ── TUNING ──────────────────────────────────────────────────────────────────
  * Every entry is [start, duration] as a fraction of the exit runway.
@@ -33,7 +34,7 @@ const EXIT = {
   copyOut: [0.14, 0.28], // label, headline, both CTAs
   drift: [0.0, 0.5], // the -18px lift, running under both of the above
   veilsOut: [0.4, 0.44], // black gradients lift → the frame warms up
-  warmIn: [0.34, 0.3], // amber wash peaks mid-dissolve
+  warmIn: [0.34, 0.3], // amber wash peaks mid-fade
   warmOut: [0.76, 0.22],
   videoOut: [0.52, 0.4], // …only now does the oil-pour footage leave
   plateIn: [0.5, 0.44], // …and the cabinet takes its place
@@ -107,7 +108,7 @@ export default function Hero() {
     const section = sectionRef.current
     if (!section) return undefined
 
-    // Reduced motion: no runway, no scrub. The kitchen simply follows the hero.
+    // Reduced motion: no runway, no scrub. The range simply follows the hero.
     if (reduced) {
       setSceneTone(0)
       return undefined
@@ -116,9 +117,9 @@ export default function Hero() {
     // gsap.context scopes everything created inside it, so one revert() on
     // unmount kills the timeline and every ScrollTrigger it made — no leaks.
     const ctx = gsap.context(() => {
-      // Once the dissolve is done the stage is showing the identical frame the
-      // kitchen is already pinned on, so retiring it here is invisible — and it
-      // stops the two sliding past each other as the hero section scrolls out.
+      // By the end of the runway the stage has faded out entirely, so retiring
+      // it here is invisible — and it stops the spent stage sliding over the
+      // section below as the hero scrolls out.
       const syncStage = (self) => {
         gsap.set(stageRef.current, { autoAlpha: self.progress >= 0.999 ? 0 : 1 })
       }
@@ -186,17 +187,9 @@ export default function Hero() {
     // `phone` is a dependency because swapping the source remounts <video>, and
     // the timeline captured the OLD node's opacity tween. Without this the hero
     // footage would never fade out after a breakpoint cross.
-    //
-    // `cabinetMobile` is here for exactly the same reason: it keys the plate
-    // <img>, so crossing 639px hands us a new node and the tween above would
-    // otherwise still be driving the detached one — the dissolve would fade
-    // in nothing and the hero would cut straight to the section.
-  }, [reduced, phone, cabinetMobile])
+  }, [reduced, phone])
 
   return (
-    // The kitchen underlaps this section's last viewport, so the dark ground
-    // lives on the stage below, not on the section — a section background
-    // would paint straight over it.
     <section
       id="top"
       ref={sectionRef}
@@ -212,7 +205,7 @@ export default function Hero() {
             across the handoff. */}
         {!reduced && (
           <img
-            key={cabinetMobile ? 'mobile' : 'desktop'}
+            key={cabinetMobile ? 'plate-mobile' : 'plate-desktop'}
             ref={plateRef}
             src={firstSrcFor(cabinetMobile)}
             alt=""
@@ -227,7 +220,7 @@ export default function Hero() {
             `key` remounts on the swap — changing src alone on a live <video>
             leaves the previous footage playing until an explicit load(). */}
         <video
-          key={phone ? 'mobile' : 'desktop'}
+          key={phone ? 'video-mobile' : 'video-desktop'}
           ref={videoRef}
           className="hero-video absolute inset-0 -z-20 h-full w-full object-cover"
           src={phone ? '/video/mobile.mp4' : '/video/hero.mp4'}
@@ -248,9 +241,17 @@ export default function Hero() {
             Sits above the video (-z-20) and below the veils (-z-10). */}
         <div className="hero-grade -z-[15]" aria-hidden="true" />
 
+        {/* The veils, thinned so the footage actually reads through them.
+            The flat bg-black/25 sheet is gone entirely — it was a second full
+            -frame darkener stacked on top of .hero-grade, and between the two
+            the kitchen behind was barely visible.
+            What remains is only the top-and-bottom gradient that protects the
+            header and the copy, eased off hard through the middle (via-*) so
+            the centre of the frame is left clear. Warm-tinted rather than pure
+            black, to sit with the dusk grade instead of neutralising it. */}
         <div ref={veilRef} className="absolute inset-0 -z-10">
-          <div className="absolute inset-0 bg-black/25" />
-          <div className="absolute inset-0 bg-linear-to-t from-black/75 via-black/10 to-black/45" />
+          <div className="absolute inset-0 bg-linear-to-t from-[rgba(28,18,6,0.6)] via-[rgba(28,18,6,0.04)] to-[rgba(28,18,6,0.34)]" />
+
         </div>
 
         <div ref={warmRef} className="hero-warm absolute inset-0 -z-10 opacity-0" />
@@ -314,17 +315,32 @@ export default function Hero() {
                 two columns finish together instead of the copy floating a
                 screenful above it. They overlap vertically by design and are
                 kept apart horizontally: the copy is left, the pack is right. */}
-            <div ref={copyRef} className="max-w-2xl max-sm:mt-auto max-sm:mb-[-14.5rem] max-sm:min-w-0">
-              <p className="text-[12px] font-semibold uppercase sm:text-[11px] tracking-[0.24em] text-white/60 max-sm:text-[10px] max-sm:leading-[1.4]">
-                Lite hai. Right hai.
-              </p>
+            {/* max-sm:mb was -14.5rem, which is a NEGATIVE margin tuned to lift
+                the copy into the pack's band so the two columns finish level.
+                That value assumed a two-line headline; at 13ch the headline
+                takes three lines, so the extra line pushed its bottom 175px
+                past the top of the pack and "everything lighter." collided
+                with the "Madhuri Actipro" caption underneath it.
+
+                -9rem restores the intended overlap (the copy still rises into
+                the pack's band, which is what keeps the block compact) while
+                leaving the headline clear of the caption. Measured at 390px
+                and 430px with the longest product name in the rotation.
+
+                max-w-[62%] goes with it: the two columns overlap vertically by
+                design and are kept apart HORIZONTALLY (copy left, pack right).
+                The copy column was full-width, so "FROM OUR RANGE" — which is
+                right-aligned at the top of the pack column — was painting over
+                the headline's line box. Capping the copy leaves that gutter. */}
+            <div ref={copyRef} className="max-w-2xl max-sm:mt-auto max-sm:mb-[-9rem] max-sm:min-w-0 max-sm:max-w-[62%]">
+              <p className="hero-eyebrow text-white/70">Lite hai. Right hai.</p>
 
               {/* max-w-[11ch] on phones is what sets the headline over THREE
                   lines instead of two. 13ch is measured, not guessed: 14ch and
                   above still fit two lines, 11ch spills to four. A measure cap rather than hard <br>s: the break still
                   falls between words at any width, and the desktop measure is
                   untouched. */}
-              <h1 className="mt-5 font-serif text-4xl leading-[1.1] text-white sm:text-6xl lg:text-[4.25rem] max-sm:mt-2.5 max-sm:max-w-[13ch] max-sm:text-[1.6rem] max-sm:leading-[1.2]">
+              <h1 className="hero-display mt-5 text-white max-sm:mt-2.5 max-sm:max-w-[13ch]">
                 The right oil makes everything{' '}
                 {/* The reference accents the last word rather than the whole line. */}
                 <span className="text-acti-sun">lighter.</span>
@@ -337,7 +353,7 @@ export default function Hero() {
               <div className="mt-8 flex flex-wrap items-center gap-4 max-sm:mt-4 max-sm:flex-col max-sm:items-start max-sm:gap-2">
                 <a
                   href="#range"
-                  className="acti-tap hero-cta-primary inline-flex items-center justify-center rounded-full bg-acti-sun px-9 py-3.5 text-[12px] font-bold uppercase tracking-[0.18em] text-acti-ink transition-colors hover:bg-acti-orange hover:text-white max-sm:px-5 max-sm:py-1 max-sm:text-[10px]"
+                  className="acti-tap hero-cta-primary hero-eyebrow inline-flex items-center justify-center rounded-full bg-acti-sun px-9 py-3.5 text-acti-ink transition-colors hover:bg-acti-orange hover:text-white max-sm:px-5 max-sm:py-2"
                 >
                   See the range
                 </a>
@@ -347,7 +363,7 @@ export default function Hero() {
                   // footage and the button below already carries the primary
                   // action. The distributor page stays reachable from the header
                   // and footer nav, so nothing becomes unreachable.
-                  className="acti-tap inline-flex items-center gap-2 py-3 text-[12px] font-bold uppercase tracking-[0.18em] text-white underline-offset-8 hover:underline max-sm:hidden"
+                  className="acti-tap hero-eyebrow inline-flex items-center gap-2 py-3 text-white underline-offset-8 hover:underline max-sm:hidden"
                 >
                   Become a distributor
                   <ArrowRightIcon className="h-4 w-4 shrink-0" />
