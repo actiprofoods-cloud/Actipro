@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { PRODUCTS } from './productData'
 
 const ROTATE_MS = 4500
@@ -6,6 +6,37 @@ const ROTATE_MS = 4500
 export default function HeroProducts() {
   const [active, setActive] = useState(0)
   const [paused, setPaused] = useState(false)
+  const stageRef = useRef(null)
+
+  /*
+   * The parallax tilt.
+   *
+   * The pointer position is written straight to the node as two custom
+   * properties (--bx/--by, both -1..1) and every visual — the rotation, the
+   * shadow offset, the travel of the gloss — is derived from them in CSS. No
+   * React state, so moving the mouse over the hero costs zero renders while a
+   * video is playing behind it.
+   *
+   * Pointer events rather than mouse events so a stylus behaves; coarse
+   * pointers are ignored (see the `pointerType` guard) because a touch would
+   * otherwise leave the bottle stuck at whatever angle the tap landed on.
+   */
+  const tilt = useCallback((event) => {
+    const node = stageRef.current
+    if (!node || event.pointerType === 'touch') return
+    const rect = node.getBoundingClientRect()
+    const bx = (event.clientX - rect.left) / rect.width - 0.5
+    const by = (event.clientY - rect.top) / rect.height - 0.5
+    node.style.setProperty('--bx', (bx * 2).toFixed(3))
+    node.style.setProperty('--by', (by * 2).toFixed(3))
+  }, [])
+
+  const untilt = useCallback(() => {
+    const node = stageRef.current
+    if (!node) return
+    node.style.setProperty('--bx', '0')
+    node.style.setProperty('--by', '0')
+  }, [])
 
   useEffect(() => {
     if (paused) return undefined
@@ -22,34 +53,51 @@ export default function HeroProducts() {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <p className="text-[12px] font-semibold uppercase sm:text-[11px] tracking-[0.24em] text-white/50 max-sm:text-[9px] max-sm:tracking-[0.14em]">
-        From our range
-      </p>
+      <p className="hero-eyebrow text-white/60">From our range</p>
 
       <div key={product.id} className="acti-fade-up">
-        <img
-          src={product.image}
-          alt={`${product.brand} ${product.name}`}
-          className="mt-4 h-52 w-auto rounded-xl object-contain drop-shadow-2xl sm:ml-auto sm:h-72 max-sm:mt-1 max-sm:ml-auto max-sm:h-32"
-        />
+        {/* The pack is a transparent WebP, so it gets the full 3D treatment —
+            contact shadow, specular sweep, tilt — rather than the flat
+            drop-shadow the old white-background JPEGs had to make do with.
+            See the .hero-bottle block in index.css.
+
+            --bottle-mask carries the same file as the gloss layer's mask, so
+            the highlight is clipped to the bottle's own silhouette. */}
+        <div
+          ref={stageRef}
+          onPointerMove={tilt}
+          onPointerLeave={untilt}
+          // w-fit, not w-auto: the stage is a block, so `auto` let it span the
+          // whole column and the aspect-ratio'd child then scaled to THAT
+          // width rather than to the height cap. Shrink-to-fit keeps the box
+          // exactly as wide as the bottle it contains.
+          className="hero-bottle mt-4 h-52 w-fit sm:ml-auto sm:h-72 max-sm:mt-1 max-sm:ml-auto max-sm:h-32"
+          style={{ '--bottle-mask': `url(${product.image})` }}
+        >
+          <div className="hero-bottle-inner flex h-full items-end justify-center">
+            <img
+              src={product.image}
+              alt={`${product.brand} ${product.name}`}
+              className="h-full w-auto max-w-full object-contain"
+            />
+            <span className="hero-bottle-gloss" aria-hidden="true" />
+          </div>
+          <span className="hero-bottle-ground" aria-hidden="true" />
+        </div>
 
         {/* The phone step-downs are gentler than they were: this block used to
             live in a 43% column beside the copy, and now has the bottom-right
             corner to itself. */}
-        <p className="mt-5 font-serif text-2xl leading-tight text-white sm:text-3xl max-sm:mt-1 max-sm:text-base max-sm:leading-[1.05]">
-          {product.brand}
-        </p>
+        <p className="hero-lede mt-5 text-white max-sm:mt-1">{product.brand}</p>
         <p /* The name is the one line that wraps: "Cold Pressed Groundnut Oil"
              takes two lines where the others take one, so without a reserved
              height the whole card grew 14px on that product and the pack, the
              tagline and the dashes all jumped — on an automatic rotation. Two
              lines' worth is reserved for every product instead. */
-          className="mt-1 text-[13px] font-semibold uppercase tracking-[0.14em] text-acti-sun max-sm:mt-0 max-sm:min-h-[22px] max-sm:text-[10px] max-sm:leading-[1.1]">
+          className="hero-eyebrow mt-1 text-acti-sun max-sm:mt-0 max-sm:min-h-[22px]">
           {product.name}
         </p>
-        <p className="mt-1.5 text-sm text-white/60 max-sm:mt-0 max-sm:text-[11px] max-sm:leading-[1.15]">
-          {product.tagline}
-        </p>
+        <p className="hero-body mt-1.5 text-white/60 max-sm:mt-0">{product.tagline}</p>
       </div>
 
       {/* Kept as tappable controls rather than hidden on phone, since the

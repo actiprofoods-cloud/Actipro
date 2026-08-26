@@ -64,7 +64,7 @@ const MILESTONES = [
     Icon: DropIcon,
     stat: '04',
     label: 'Oils in the range',
-    body: 'Actipro Refined Sunflower, Actipro Gold multi-source, Madhuri Cold Pressed Groundnut and Madhuri Kachi Ghani Mustard — refined and cold pressed under one roof, and the Refined Sunflower carries the +F mark for Vitamin A and D.',
+    body: 'Madhuri Actipro Refined Sunflower, Kachi Ghani Mustard, Refined Groundnut and Rice Bran — refined and cold pressed under one roof, with Oryzanol in the rice bran and Vitamin E across the range.',
   },
   {
     Icon: ShieldIcon,

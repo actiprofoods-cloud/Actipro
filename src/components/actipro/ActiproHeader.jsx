@@ -26,9 +26,15 @@ const HIDE_AFTER = 120
 const FROST_AT = 0.35
 
 /* Sections that own the whole viewport and must never have chrome over them.
-   The kitchen is a full-bleed scrubbed scene — a nav bar sliding in over the
-   cabinet on an upward scroll breaks the shot, so inside it the bar stays
-   hidden in BOTH directions, not just on the way down. */
+   A section listed here outranks the direction logic entirely: the bar goes and
+   STAYS gone while the section covers the screen, whichever way the page is
+   moving. Without it an upward scroll slides the nav back over the shot, which
+   is what breaks a cinematic scene.
+
+   #range is KitchenReveal — a sticky, full-bleed, scroll-scrubbed cabinet
+   sequence (see KitchenReveal.jsx). It was dropped from this list during a
+   period when #range was an ordinary cream product section; it is a cinematic
+   scene again, so it belongs here again. */
 const BLACKOUT_IDS = ['range']
 /* How much of the viewport a blackout section must cover before it takes over.
    Below 1 so the bar is already gone as the section fills the screen, rather
@@ -43,9 +49,9 @@ const BLACKOUT_COVERAGE = 0.6
 const HERO_ID = 'top'
 
 /*
- * The one piece of chrome that survives both scenes. It never re-renders on
+ * The one piece of chrome that survives every scene. It never re-renders on
  * scroll: Hero.jsx writes --acti-tone (0 = over the dark hero, 1 = over the
- * bright kitchen) and every colour below is derived from that variable in CSS.
+ * bright page below) and every colour below is derived from that variable in CSS.
  * See the ".acti-header" block in index.css.
  *
  * Show/hide is handled the same way — a data-hidden attribute written straight
@@ -205,29 +211,58 @@ export default function ActiproHeader() {
       data-frosted="false"
       data-hero={onLanding ? 'true' : 'false'}
     >
-      <div className="acti-shell acti-shell--wide flex items-center justify-between gap-6 py-4">
+      {/* py-1 rather than py-4. The logo is the tallest thing in the bar and it
+          carries ~10% transparent padding of its own on every side, so that
+          margin is already built into the artwork — adding 16px of bar padding
+          on top of it pushed the header to 144px. At py-1 the bar is ~120px
+          and the visible spacing around the mark is unchanged. */}
+      <div className="acti-shell acti-shell--wide flex items-center justify-between gap-6 py-1">
         <Link to="/" className="relative flex shrink-0 items-center" aria-label="Actipro home">
-          {/* Two stacked prints crossfade — cleaner than filtering one through grey */}
+          {/* ONE print, always in full colour.
+              It used to be two stacked copies crossfading on --acti-tone, and
+              the "dark" copy carried `brightness-0 invert` — which strips the
+              artwork to a flat white silhouette. Over the hero (tone 0) that
+              silhouette was the ONLY thing visible, so the red wordmark and the
+              green figure never appeared on first paint. The brand mark now
+              stays coloured at every tone and earns its contrast over the
+              footage from .acti-logo's shadow instead of from inversion. */}
           <img
             src="/logo/actipro.png"
             alt="Actipro Refined Sunflower Oil"
-            className="acti-logo-light h-10 w-auto sm:h-12"
-          />
-          <img
-            src="/logo/actipro.png"
-            alt=""
-            aria-hidden="true"
-            className="acti-logo-dark absolute left-0 top-0 h-10 w-auto brightness-0 invert sm:h-12"
+            /* 4.5rem/6rem, up from the original 3.5rem/4.5rem but a step down
+               from the 5.5rem/7rem this first grew to.
+
+               It has to be bigger than it was: the artwork carries ~10%
+               transparent padding on every side (the ink occupies 479x181 of a
+               595x249 box), so the rendered mark is a tenth smaller than the
+               height class suggests, and the baseline strap ("REFINED
+               SUNFLOWER OIL") is thin 8px-tall type in the source that fell
+               under 3px on screen at the old size and read as a grey smudge.
+               At 6rem the strap still clears ~4px and stays legible. */
+            className="acti-logo h-[4.5rem] w-auto sm:h-24"
           />
         </Link>
 
         <div className="flex items-center gap-6">
-          <nav className="hidden items-center gap-8 lg:flex">
+          {/* gap-8 -> gap-5 at lg, opening back up to gap-7 at xl. Eight
+              nowrap labels plus a 268px logo do not fit at gap-8 on a 1024px
+              bar; they do at gap-5. */}
+          {/* xl, not lg. Eight nowrap labels plus the enlarged mark measured
+              content wider than the 1024px bar — the Enquire button ran off the
+              end. The inline nav now starts at 1280px, and 1024-1279px gets
+              the burger below. This and the burger's `xl:hidden` are a matched
+              pair: change one and the bar shows both menus or neither. */}
+          <nav className="hidden items-center gap-5 xl:flex xl:gap-7">
             {NAV_LINKS.map((link) => (
               <a
                 key={link.label}
                 href={sectionHref(link.href)}
-                className="acti-tone-ink text-[13px] font-semibold uppercase tracking-[0.1em] transition-opacity hover:opacity-60"
+                /* whitespace-nowrap: the labels are two-word phrases ("WHY
+                   ACTIPRO", "HOW IT'S MADE") and with the larger logo taking
+                   more of the bar they were wrapping to two lines each, which
+                   doubled the header's height budget. They now hold one line
+                   and the row tightens via the gap instead. */
+                className="acti-tone-ink whitespace-nowrap text-[13px] font-semibold uppercase tracking-[0.1em] transition-opacity hover:opacity-60"
               >
                 {link.label}
               </a>
@@ -237,14 +272,14 @@ export default function ActiproHeader() {
                 <Link>s rather than the hash anchors above. */}
             <Link
               to="/healthy-tips"
-              className="acti-tone-ink text-[13px] font-semibold uppercase tracking-[0.1em] transition-opacity hover:opacity-60"
+              className="acti-tone-ink whitespace-nowrap text-[13px] font-semibold uppercase tracking-[0.1em] transition-opacity hover:opacity-60"
             >
               Healthy Tips
             </Link>
 
             <Link
               to="/contact"
-              className="acti-tone-ink text-[13px] font-semibold uppercase tracking-[0.1em] transition-opacity hover:opacity-60"
+              className="acti-tone-ink whitespace-nowrap text-[13px] font-semibold uppercase tracking-[0.1em] transition-opacity hover:opacity-60"
             >
               Contact Us
             </Link>
@@ -271,7 +306,7 @@ export default function ActiproHeader() {
               onClick={() => setOpen((v) => !v)}
               aria-label={open ? 'Close menu' : 'Open menu'}
               aria-expanded={open}
-              className="acti-tap acti-tone-ink acti-tone-border flex h-9 w-9 items-center justify-center rounded-full border lg:hidden"
+              className="acti-tap acti-tone-ink acti-tone-border flex h-9 w-9 items-center justify-center rounded-full border xl:hidden"
             >
               {open ? <CloseIcon className="h-4 w-4" /> : <MenuIcon className="h-4 w-4" />}
             </button>
@@ -280,7 +315,7 @@ export default function ActiproHeader() {
       </div>
 
       {open && (
-        <nav className="border-t border-acti-ink/10 bg-acti-cream px-5 pb-6 pt-4 lg:hidden">
+        <nav className="border-t border-acti-ink/10 bg-acti-cream px-5 pb-6 pt-4 xl:hidden">
           <ul className="flex flex-col">
             {NAV_LINKS.map((link) => (
               <li key={link.label}>
