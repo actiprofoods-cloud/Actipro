@@ -20,22 +20,15 @@ gsap.registerPlugin(ScrollTrigger)
  *   Hero            #top      oil pour, then the dissolve           (scrubbed)
  *   KitchenReveal   #range    cabinet doors opening, canvas frames  (scrubbed)
  *   TrustSection    #rooted   "Trust in every drop" — four pillars  (static)
-<<<<<<< HEAD
  *   WhyActipro      #trust    "More than just oil" — carousel       (static)
  *   PurposeRing     #purpose  mission & vision, circular progress   (pinned)
  *   MilestonesWave  #milestones-wave  five nodes over a looping     (static)
  *                                     oil-ribbon video
-=======
- *   WhyTrust        #trust    "Made for real kitchens"              (pinned)
- *   MissionVision   #purpose  mission & vision cards                (static)
- *   Milestones      #mission  "What we have built so far"           (scrubbed)
->>>>>>> 5128b544f967ea98d8360e9fdcc251466bcfbba9
  *
  * Note the ids do not match the component names — #trust belongs to
  * WhyActipro, predating the section that reads like its owner. Check the
  * component before wiring an anchor to it.
  *
-<<<<<<< HEAD
  * MilestonesWave REPLACED Milestones here. The old vertical-timeline section
  * is still in the tree (components/actipro/Milestones.jsx) but is no longer
  * mounted — and with it went the #mission id, which it owned. Anything that
@@ -46,12 +39,6 @@ gsap.registerPlugin(ScrollTrigger)
  * Reviews,
  * Faq) are unmounted, not deleted — their files are still under
  * src/components/actipro/ ready to be slotted back in.
-=======
- * The older sections (Ticker, Why, Products, ProductShowcase, Nutrition,
- * Process, Kitchen, KitchenDrawer, LayeredPurity, Reviews, Faq) are unmounted,
- * not deleted — their files are still under src/components/actipro/ ready to
- * be slotted back in.
->>>>>>> 5128b544f967ea98d8360e9fdcc251466bcfbba9
  *
  * Contact is NOT among them: it is its own route now (/contact, see
  * src/pages/ContactPage.jsx), not a section of this page. The header's
