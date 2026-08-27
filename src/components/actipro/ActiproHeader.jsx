@@ -216,8 +216,14 @@ export default function ActiproHeader() {
           margin is already built into the artwork — adding 16px of bar padding
           on top of it pushed the header to 144px. At py-1 the bar is ~120px
           and the visible spacing around the mark is unchanged. */}
-      <div className="acti-shell acti-shell--wide flex items-center justify-between gap-6 py-1">
-        <Link to="/" className="relative flex shrink-0 items-center" aria-label="Actipro home">
+      {/* Three columns, not a justify-between pair. The nav used to be grouped
+          with the phone/Enquire actions on the right, so "centred" would have
+          meant centred in the leftover gap beside the logo — visibly off to
+          one side. The logo and the action cluster are now flex-1 rails of
+          equal weight with the nav between them, so the nav sits on the bar's
+          true centre line whatever the logo or button widths happen to be. */}
+      <div className="acti-shell acti-shell--wide flex items-center gap-6 py-1">
+        <Link to="/" className="relative flex flex-1 shrink-0 items-center" aria-label="Actipro home">
           {/* ONE print, always in full colour.
               It used to be two stacked copies crossfading on --acti-tone, and
               the "dark" copy carried `brightness-0 invert` — which strips the
@@ -243,79 +249,70 @@ export default function ActiproHeader() {
           />
         </Link>
 
-        <div className="flex items-center gap-6">
-          {/* gap-8 -> gap-5 at lg, opening back up to gap-7 at xl. Eight
-              nowrap labels plus a 268px logo do not fit at gap-8 on a 1024px
-              bar; they do at gap-5. */}
-          {/* xl, not lg. Eight nowrap labels plus the enlarged mark measured
-              content wider than the 1024px bar — the Enquire button ran off the
-              end. The inline nav now starts at 1280px, and 1024-1279px gets
-              the burger below. This and the burger's `xl:hidden` are a matched
-              pair: change one and the bar shows both menus or neither. */}
-          <nav className="hidden items-center gap-5 xl:flex xl:gap-7">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link.label}
-                href={sectionHref(link.href)}
-                /* whitespace-nowrap: the labels are two-word phrases ("WHY
-                   ACTIPRO", "HOW IT'S MADE") and with the larger logo taking
-                   more of the bar they were wrapping to two lines each, which
-                   doubled the header's height budget. They now hold one line
-                   and the row tightens via the gap instead. */
-                className="acti-tone-ink whitespace-nowrap text-[13px] font-semibold uppercase tracking-[0.1em] transition-opacity hover:opacity-60"
-              >
-                {link.label}
-              </a>
-            ))}
-
-            {/* Healthy Tips and Contact are ROUTES, not sections, so they are
-                <Link>s rather than the hash anchors above. */}
-            <Link
-              to="/healthy-tips"
-              className="acti-tone-ink whitespace-nowrap text-[13px] font-semibold uppercase tracking-[0.1em] transition-opacity hover:opacity-60"
-            >
-              Healthy Tips
-            </Link>
-
-            <Link
-              to="/contact"
-              className="acti-tone-ink whitespace-nowrap text-[13px] font-semibold uppercase tracking-[0.1em] transition-opacity hover:opacity-60"
-            >
-              Contact Us
-            </Link>
-          </nav>
-
-          <div className="flex items-center gap-2.5">
+        {/* lg, not xl. The bar carried eight nowrap labels when the inline nav
+            was pushed to 1280px; at four it measures comfortably inside a
+            1024px bar, so the burger hands over a breakpoint earlier. This and
+            the burger's `lg:hidden` are a matched pair — change one and the
+            bar shows both menus or neither. */}
+        <nav className="hidden items-center justify-center gap-8 lg:flex">
+          {NAV_LINKS.map((link) => (
             <a
-              href="tel:+919425066485"
-              aria-label="Call Actipro"
-              className="acti-tap acti-tone-ink acti-tone-border flex h-9 w-9 items-center justify-center rounded-full border"
+              key={link.label}
+              href={sectionHref(link.href)}
+              /* whitespace-nowrap: the labels are two-word phrases ("HOW IT'S
+                 MADE") and with the large logo taking its share of the bar
+                 they would wrap to two lines each, doubling the header's
+                 height budget. They hold one line and the row breathes via
+                 the gap instead. */
+              className="acti-tone-ink whitespace-nowrap text-[13px] font-semibold uppercase tracking-[0.1em] transition-opacity hover:opacity-60"
             >
-              <PhoneIcon className="h-4 w-4" />
+              {link.label}
             </a>
+          ))}
 
-            <Link
-              to="/contact"
-              className="acti-tone-cta hidden rounded-full px-5 py-2 text-[12px] font-bold uppercase tracking-[0.12em] sm:inline-flex"
-            >
-              Enquire
-            </Link>
+          {/* Contact is a ROUTE, not a section, so it is a <Link> rather than
+              one of the hash anchors above — which is why it is not in
+              NAV_LINKS with the other three. */}
+          <Link
+            to="/contact"
+            className="acti-tone-ink whitespace-nowrap text-[13px] font-semibold uppercase tracking-[0.1em] transition-opacity hover:opacity-60"
+          >
+            Contact Us
+          </Link>
+        </nav>
 
-            <button
-              type="button"
-              onClick={() => setOpen((v) => !v)}
-              aria-label={open ? 'Close menu' : 'Open menu'}
-              aria-expanded={open}
-              className="acti-tap acti-tone-ink acti-tone-border flex h-9 w-9 items-center justify-center rounded-full border xl:hidden"
-            >
-              {open ? <CloseIcon className="h-4 w-4" /> : <MenuIcon className="h-4 w-4" />}
-            </button>
-          </div>
+        {/* justify-end so this rail balances the logo rail's width without
+            pushing the centred nav off the middle. */}
+        <div className="flex flex-1 items-center justify-end gap-2.5">
+          <a
+            href="tel:+919425066485"
+            aria-label="Call Actipro"
+            className="acti-tap acti-tone-ink acti-tone-border flex h-9 w-9 items-center justify-center rounded-full border"
+          >
+            <PhoneIcon className="h-4 w-4" />
+          </a>
+
+          <Link
+            to="/contact"
+            className="acti-tone-cta hidden rounded-full px-5 py-2 text-[12px] font-bold uppercase tracking-[0.12em] sm:inline-flex"
+          >
+            Enquire
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-label={open ? 'Close menu' : 'Open menu'}
+            aria-expanded={open}
+            className="acti-tap acti-tone-ink acti-tone-border flex h-9 w-9 items-center justify-center rounded-full border lg:hidden"
+          >
+            {open ? <CloseIcon className="h-4 w-4" /> : <MenuIcon className="h-4 w-4" />}
+          </button>
         </div>
       </div>
 
       {open && (
-        <nav className="border-t border-acti-ink/10 bg-acti-cream px-5 pb-6 pt-4 xl:hidden">
+        <nav className="border-t border-acti-ink/10 bg-acti-cream px-5 pb-6 pt-4 lg:hidden">
           <ul className="flex flex-col">
             {NAV_LINKS.map((link) => (
               <li key={link.label}>
@@ -328,15 +325,6 @@ export default function ActiproHeader() {
                 </a>
               </li>
             ))}
-            <li>
-              <Link
-                to="/healthy-tips"
-                onClick={() => setOpen(false)}
-                className="block border-b border-acti-ink/10 py-3 text-[13px] font-semibold uppercase tracking-[0.1em] text-acti-ink"
-              >
-                Healthy Tips
-              </Link>
-            </li>
             <li>
               <Link
                 to="/contact"

@@ -53,8 +53,6 @@ export default function HeroProducts() {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <p className="hero-eyebrow text-white/60">From our range</p>
-
       <div key={product.id} className="acti-fade-up">
         {/* The pack is a transparent WebP, so it gets the full 3D treatment —
             contact shadow, specular sweep, tilt — rather than the flat

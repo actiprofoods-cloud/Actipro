@@ -5,9 +5,9 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import ActiproHeader from '../components/actipro/ActiproHeader'
 import Hero from '../components/actipro/Hero'
 import KitchenReveal from '../components/actipro/KitchenReveal'
-import Milestones from '../components/actipro/Milestones'
-import MissionVision from '../components/actipro/MissionVision'
-import WhyTrust from '../components/actipro/WhyTrust'
+import MilestonesWave from '../components/actipro/MilestonesWave'
+import PurposeRing from '../components/actipro/PurposeRing'
+import WhyActipro from '../components/actipro/WhyActipro'
 import TrustSection from '../components/actipro/TrustSection'
 import ActiproFooter from '../components/actipro/ActiproFooter'
 import { resetSceneTone } from '../components/actipro/sceneTone'
@@ -20,18 +20,25 @@ gsap.registerPlugin(ScrollTrigger)
  *   Hero            #top      oil pour, then the dissolve           (scrubbed)
  *   KitchenReveal   #range    cabinet doors opening, canvas frames  (scrubbed)
  *   TrustSection    #rooted   "Trust in every drop" — four pillars  (static)
- *   WhyTrust        #trust    "Made for real kitchens"              (pinned)
- *   MissionVision   #purpose  mission & vision cards                (static)
- *   Milestones      #mission  "What we have built so far"           (scrubbed)
+ *   WhyActipro      #trust    "More than just oil" — carousel       (static)
+ *   PurposeRing     #purpose  mission & vision, circular progress   (pinned)
+ *   MilestonesWave  #milestones-wave  five nodes over a looping     (static)
+ *                                     oil-ribbon video
  *
- * Note the ids do not match the component names — #trust belongs to WhyTrust and
- * #mission to Milestones, both predating the sections that read like their
- * owners. Check the component before wiring an anchor to either.
+ * Note the ids do not match the component names — #trust belongs to
+ * WhyActipro, predating the section that reads like its owner. Check the
+ * component before wiring an anchor to it.
+ *
+ * MilestonesWave REPLACED Milestones here. The old vertical-timeline section
+ * is still in the tree (components/actipro/Milestones.jsx) but is no longer
+ * mounted — and with it went the #mission id, which it owned. Anything that
+ * linked to #mission is now a dead anchor.
  *
  * The older sections (Ticker, Why, Products, ProductShowcase, Nutrition,
- * Process, Kitchen, KitchenDrawer, LayeredPurity, Reviews, Faq) are unmounted,
- * not deleted — their files are still under src/components/actipro/ ready to
- * be slotted back in.
+ * Process, Kitchen, KitchenDrawer, LayeredPurity, MissionVision, WhyTrust,
+ * Reviews,
+ * Faq) are unmounted, not deleted — their files are still under
+ * src/components/actipro/ ready to be slotted back in.
  *
  * Contact is NOT among them: it is its own route now (/contact, see
  * src/pages/ContactPage.jsx), not a section of this page. The header's
@@ -68,10 +75,24 @@ export default function ActiproSite() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined
 
     const lenis = new Lenis({
-      duration: 1.05,
+      /* 1.5, up from 1.05 — the glide takes longer to settle after the wheel
+         stops, so the page comes to rest gently instead of snapping. */
+      duration: 1.5,
       // Gentle exponential settle — long enough to feel smooth, short enough
       // that the pinned scenes still track the wheel closely.
       easing: (t) => Math.min(1, 1.001 - 2 ** (-10 * t)),
+      /* The pace control, and the one that actually matters here. duration
+         alone only changes how long the EASE runs — one notch still covers the
+         same distance, so the page keeps its speed and merely floats longer,
+         which reads as sluggish rather than slower. This cuts how far a single
+         notch travels, so the page genuinely moves less per gesture.
+
+         Kept at 0.7 rather than lower because every pinned scene on this page
+         (Hero, KitchenReveal, Milestones, PurposeRing) is scrubbed by scroll
+         DISTANCE: the smaller this gets, the more real scrolling it takes to
+         play a scene through, and too low turns the 400vh runways into a
+         chore. */
+      wheelMultiplier: 0.7,
       // Touch devices already have momentum of their own; doubling it feels wrong.
       smoothWheel: true,
       syncTouch: false,
@@ -97,9 +118,9 @@ export default function ActiproSite() {
         <Hero />
         <KitchenReveal />
         <TrustSection />
-        <WhyTrust />
-        <MissionVision />
-        <Milestones />
+        <WhyActipro />
+        <PurposeRing />
+        <MilestonesWave />
       </main>
       <ActiproFooter />
     </div>

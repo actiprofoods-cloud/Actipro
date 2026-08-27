@@ -6,7 +6,9 @@
    grows, which is what stops the headline reading like a small font scaled up.
    Inter is weight-only; it is doing the small-caps work where an opsz axis
    would buy nothing. */
+
 @import "@fontsource-variable/fraunces/opsz.css";
+
 @import "@fontsource-variable/inter";
 
 @theme {
@@ -38,7 +40,7 @@
   --fs-eyebrow: 0.75rem; /* 12px */
   --fs-body: 0.9375rem; /* 15px */
   --fs-lede: 1.5rem; /* 24px */
-  --fs-display: 2.5rem; /* 40px — the phone step; scales up per breakpoint */
+  --fs-display: 2.25rem; /* 36px — the phone step; scales up per breakpoint */
 
   --tracking-caps: 0.18em;
   --tracking-display: -0.015em;
@@ -49,12 +51,17 @@
   --color-acti-red: #c1121f;
   --color-acti-sun: #f5b301;
   --color-acti-cream: #fff8ee;
+  /* The same cream as channel values, so the translucent washes below can be
+     written rgb(var(--acti-cream-rgb) / <alpha>) and can never drift away from
+     the solid token the way #fbf8f3 / #faf6ee / #fff8ee had. */
+  --acti-cream-rgb: 255 248 238;
   --color-acti-ink: #17110d;
 }
 
 /* Lenis owns the easing (see ActiproSite.jsx). Native smooth-scroll on top of
    it double-animates every anchor jump, so it only applies when Lenis is NOT
    running — i.e. reduced motion, where the class is never added. */
+
 html.lenis,
 html.lenis body {
   height: auto;
@@ -79,24 +86,17 @@ html:not(.lenis) {
 /* Inter as the document face. Everything that is not explicitly display type
    inherits from here, so the small caps and body copy stop falling back to
    whatever sans the browser happened to default to. */
+
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* --- Hero type -----------------------------------------------------
-   The three classes below are the whole hero scale. Each one binds the
-   size, weight, tracking and leading that belong TOGETHER, so a size can
-   no longer drift away from the spacing it was designed with — which is
-   how the hero ended up with six small-caps sizes and five trackings.
-
-   Sizes step up at the breakpoints, never down. (The eyebrow used to be
-   text-[12px] sm:text-[11px], i.e. smaller on a bigger screen.) */
-
 /* Uppercase micro-label: eyebrow, buttons, pack meta. One size, one
    tracking, everywhere in the hero. Letterspacing this wide needs the
    extra weight or it reads as grey mush over the video. */
+
 .hero-eyebrow {
   font-family: var(--font-sans);
   font-size: var(--fs-eyebrow);
@@ -116,6 +116,7 @@ body {
    against the screen edge. Pulled back by the same half-step the indent uses.
    Scoped to the right-aligned block so the left-aligned eyebrows are
    untouched. */
+
 .hero-showcase .hero-eyebrow {
   /* padding, not margin: the element is full-width inside a text-right block,
      so its BOX already ends at the column edge — shrinking the box with a
@@ -131,6 +132,7 @@ body {
    right-aligned, where the same correction pushes the text further from the
    gutter instead of tidying it — there the trailing letterspace needs removing
    from the right edge, which is what the negative margin does. */
+
 .text-right .hero-eyebrow,
 .hero-showcase .hero-eyebrow {
   text-indent: 0;
@@ -141,6 +143,7 @@ body {
    heavier weight (they are actions, not labels) and NO optical indent — the
    negative text-indent above is a left-margin correction, and on centred
    button text it would just shift the label off-centre inside its pill. */
+
 .hero-eyebrow.hero-cta-primary,
 a.hero-eyebrow {
   font-weight: 700;
@@ -152,6 +155,7 @@ a.hero-eyebrow {
    the spacing closes up, which is what large text is supposed to do.
    Negative tracking for the same reason: default spacing is drawn for
    paragraph sizes and looks loose at 40px+. */
+
 .hero-display {
   font-family: var(--font-serif);
   font-variation-settings: 'opsz' 96, 'SOFT' 0, 'WONK' 0;
@@ -163,19 +167,20 @@ a.hero-eyebrow {
 
 @media (min-width: 640px) {
   .hero-display {
-    font-size: 3.5rem; /* 56px */
+    font-size: 3rem; /* 48px */
   }
 }
 
 @media (min-width: 1024px) {
   .hero-display {
-    font-size: 4.25rem; /* 68px */
+    font-size: 3.625rem; /* 58px */
   }
 }
 
 /* The pack name in the right-hand showcase — display face, but at a size
    that sits UNDER the headline in the hierarchy rather than competing.
    Lower opsz than .hero-display because it is genuinely smaller type. */
+
 .hero-lede {
   font-family: var(--font-serif);
   font-variation-settings: 'opsz' 48;
@@ -192,6 +197,7 @@ a.hero-eyebrow {
 }
 
 /* Supporting sentence under the pack name. */
+
 .hero-body {
   font-family: var(--font-sans);
   font-size: var(--fs-body);
@@ -199,7 +205,1199 @@ a.hero-eyebrow {
   letter-spacing: 0;
 }
 
+/* Two stages now (a mission/vision pair each), not four single steps, so the
+   runway is shorter: ~1.5 viewports per stage plus one for the sticky child
+   itself. 400vh made the second pair sit on screen far longer than it takes
+   to read. */
+
+.pr-runway {
+  position: relative;
+  height: 260vh;
+  background: var(--color-acti-cream);
+}
+
+.pr-sticky {
+  position: sticky;
+  top: 0;
+  /* svh: matches the rest of the page's sticky stages (.hero-scene,
+     .kitchen-scene) and keeps the stage inside the visible viewport on a
+     phone rather than under the address bar. */
+  height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* No padding: the banner is full-bleed now, so the stage runs edge to edge
+     and the inner wrapper owns the gutter instead. */
+  isolation: isolate;
+  /* The botanical banner, full screen. The flat cream stays underneath as the
+     fallback, so a failed image load degrades to plain cream rather than to
+     white. `cover` crops the 16:9 source to whatever the viewport is: the
+     leaves sit in the corners and the marble ledge along the foot, which are
+     the parts worth keeping at any aspect. */
+  background:
+    url('/purpose/banner.webp') center / cover no-repeat,
+    var(--color-acti-cream);
+}
+
+/* Cream wash over the banner. The leaf detail sits exactly where the two copy
+   columns are, so this knocks it back at the sides and leaves the centre
+   (behind the ring) closer to the full image. Measured over the real file:
+   headings land at ~13:1 and body copy at ~5.2:1, both clear of WCAG AA. */
+
+.pr-sticky::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(
+      90deg,
+      rgb(var(--acti-cream-rgb) / 0.88) 0%,
+      rgb(var(--acti-cream-rgb) / 0.52) 26%,
+      rgb(var(--acti-cream-rgb) / 0.34) 50%,
+      rgb(var(--acti-cream-rgb) / 0.52) 74%,
+      rgb(var(--acti-cream-rgb) / 0.88) 100%
+    );
+}
+
+.pr-card {
+  /* Was a bordered, cream-filled card. It is now just the content wrapper: the
+     banner and the wash moved up to .pr-sticky so they run full screen, and
+     what is left here is the max-width and the gutter. */
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  padding: clamp(1.5rem, 4vw, 3.5rem) clamp(1.25rem, 4vw, 3rem);
+}
+
+/* [text | ring | text]. The centre column is fixed so the ring never
+   resizes as the copy changes length; the side columns share what is
+   left, which keeps the ring optically centred. */
+
+.pr-grid {
+  display: grid;
+  /* A shade wider than the 440px ring so the arcs never sit flush against the
+     side columns' text. */
+  grid-template-columns: 1fr 480px 1fr;
+  align-items: center;
+  gap: clamp(1rem, 3vw, 2.5rem);
+}
+
+/* Both step blocks in a slot are stacked in the SAME grid area, so the
+   inactive one cannot push the active one around. */
+
+.pr-slot {
+  display: grid;
+}
+
+.pr-slot > * {
+  grid-area: 1 / 1;
+}
+
+.pr-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pr-icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border: 1px solid #ddd2be;
+  border-radius: 9999px;
+  background: transparent;
+  color: #3a3a32;
+}
+
+.pr-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #c9a227;
+}
+
+.pr-heading {
+  font-family: var(--font-serif);
+  /* Fraunces carries an optical-size axis; at 28px this is text, not
+     display, so opsz stays low. See the type notes in the hero block. */
+  font-variation-settings: 'opsz' 32;
+  font-weight: 500;
+  font-size: 28px;
+  line-height: 1.15;
+  color: #1f2318;
+}
+
+.pr-body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.65;
+  color: #5a5f52;
+  max-width: 260px;
+}
+
+/* --- The ring ---------------------------------------------------- */
+
+.pr-ring {
+  position: relative;
+  /* Square, and capped by the VIEWPORT height as well as by 440px — the stage
+     is 100vh with no scroll of its own, so a fixed size would clip on a short
+     window. The SVG viewBox (BOX in PurposeRing.jsx) is square too, so radii
+     there stay a constant fraction of whatever this resolves to. */
+  width: min(440px, 62vh);
+  height: min(440px, 62vh);
+  margin-inline: auto;
+  display: grid;
+  place-items: center;
+}
+
+.pr-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* The bottle standing inside the ring.
+   Sized by HEIGHT, not width — it is a tall portrait cutout (430x1474), so a
+   width-based size would run its cap and base straight through the arcs. At
+   72% of the ring box the bounding box measures ~80x275, whose corner radius
+   is 143 against the accent ring's 160, so the whole bottle sits inside the
+   dashed circle with margin. */
+
+.pr-bottle {
+  /* ABSOLUTE, not a grid item.
+     A percentage height resolves against the containing block. As a grid item
+     under place-items:center that block is the auto-sized grid AREA, which the
+     image's own 1474px natural height had already blown up — so a percentage
+     height produced a bottle several times the ring. Positioned against
+     .pr-ring the containing block is the real 440px box.
+
+     It is anchored by its BASE, not centred: the bottle stands ON the bottom
+     of the circle. With the pale track gone, "the circle" is the OLIVE ARC
+     (r=202 of a 440 box). Treating the base as a chord rather than a single
+     point: at height 80% the bottle is ~103x352, so its two base corners rest
+     at sqrt(202² - 51.5²) = 195.4 below centre, i.e. 5.6% up from the foot of
+     the box. That seats the base in the curve instead of poking through it.
+
+     The arc is a PROGRESS stroke and is usually incomplete, so for much of the
+     scroll there is nothing drawn under the bottle at all; z-index:1 keeps the
+     bottle in front wherever the arc has been drawn. */
+  position: absolute;
+  bottom: 5.6%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  height: 80%;
+  width: auto;
+  object-fit: contain;
+}
+
+/* Soft ground pool, so the bottle sits IN the ring rather than floating on it. */
+
+.pr-shadow {
+  position: absolute;
+  z-index: 0;
+  /* Sits at the bottle's base, which is on the olive arc's lowest point. */
+  bottom: 4.8%;
+  left: 50%;
+  width: 30%;
+  height: 5%;
+  transform: translateX(-50%);
+  border-radius: 9999px;
+  background: radial-gradient(closest-side, rgba(80, 62, 24, 0.28), transparent 76%);
+  filter: blur(7px);
+}
+
+/* --- Narrow screens ------------------------------------------------
+   Below the three-column layout the ring would be squeezed and the copy
+   would drop to two words a line. Stack instead: ring first, the active
+   copy underneath. The runway also shortens — four steps of scrolling on
+   a phone is a long way to hold someone. */
+
+@media (max-width: 1023px) {
+  .pr-grid {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 1.75rem;
+  }
+  .pr-ring {
+    width: min(320px, 74vw);
+    height: min(320px, 74vw);
+    order: -1;
+  }
+  /* Both slots collapse into one centred column of copy. */
+  .pr-block,
+  .pr-block.items-start,
+  .pr-block.items-end {
+    align-items: center;
+    text-align: center;
+  }
+  .pr-body {
+    max-width: 34ch;
+  }
+  .pr-heading {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .pr-runway {
+    height: 230vh;
+  }
+}
+
+/* Reduced motion: no pin, no scrubbed ring. The section becomes a plain
+   stack showing every step at full opacity, and the runway collapses so
+   there is no empty scrolling to sit through. */
+
+@media (prefers-reduced-motion: reduce) {
+  .pr-runway {
+    height: auto;
+  }
+  .pr-sticky {
+    /* `relative`, not `static`: the banner wash is an absolutely positioned
+       ::before and needs this element to stay its containing block. Static
+       would let it escape to .pr-runway. It is un-stuck either way — that is
+       what dropping `sticky` does. */
+    position: relative;
+    height: auto;
+    padding-block: clamp(3rem, 8vw, 5rem);
+  }
+  /* Un-stack: with no scrub the blocks are all visible at once, so they
+     need their own rows rather than sharing one cell. */
+  .pr-slot > * {
+    grid-area: auto;
+  }
+  .pr-slot {
+    gap: 2.5rem;
+  }
+}
+
+/* ===============================================================
+   TRUST — "Trust in every drop." (TrustSection.jsx)
+
+   Full-bleed art plate; all content lives in a 900px centre column
+   because the photograph's edges are occupied (leaves top-left,
+   bottle right, bowl bottom-right).
+================================================================*/
+.trust-scene {
+  position: relative;
+  isolation: isolate;
+  /* svh, not vh: vh is the viewport with the browser chrome RETRACTED, so on
+     a phone a 100vh block is taller than what is actually visible on load.
+     The rest of the site already uses svh. No px floor either — max(...,760px)
+     forced 760px on a 360x640 screen, i.e. taller than the phone. */
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  /* Under the photo, so a slow image load shows warm cream, not white. */
+  background: var(--color-acti-cream);
+  /* Strength of the readability wash; raised on phones (see the 639px block),
+     where the crop puts more artwork behind the type. */
+  --trust-veil: 0.72;
+  --trust-veil-mid: 0.35;
+}
+
+.trust-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* ONE soft cream layer. Deliberately not a dark scrim — the plate is airy and
+   a dark overlay would kill it. */
+.trust-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    rgb(var(--acti-cream-rgb) / var(--trust-veil)) 0%,
+    rgb(var(--acti-cream-rgb) / var(--trust-veil-mid)) 45%,
+    transparent 75%
+  );
+}
+
+.trust-inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 900px;
+  /* The gutter keeps the column clear of the bottle on narrow desktops, where
+     the art's right-hand subject creeps inward. */
+  padding: clamp(3rem, 7vw, 5rem) clamp(1.25rem, 5vw, 3.5rem);
+  text-align: center;
+}
+
+/* --- Header stack -------------------------------------------------- */
+.trust-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.trust-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #1e3b2c;
+}
+
+.trust-rule {
+  display: block;
+  width: 48px;
+  height: 1px;
+  background: #c08a1e;
+}
+.trust-rule--wide {
+  width: 56px;
+}
+
+.trust-title {
+  font-family: var(--font-serif);
+  /* Display size, so Fraunces' optical-size axis is pushed up — the hairlines
+     thin and the spacing closes, which is what large type wants. */
+  font-variation-settings: 'opsz' 96;
+  font-weight: 500;
+  font-size: clamp(34px, 6vw, 64px);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  color: #1e3b2c;
+}
+/* Same face and weight as the rest of the line — only the colour changes. */
+.trust-title em {
+  font-style: normal;
+  color: #c08a1e;
+}
+
+.trust-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.trust-sub {
+  font-family: var(--font-sans);
+  font-size: 17px;
+  font-weight: 400;
+  color: #4a5248;
+}
+
+/* --- Feature row ---------------------------------------------------- */
+.trust-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  margin-top: clamp(2.5rem, 5vw, 3.75rem);
+}
+
+.trust-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 clamp(0.5rem, 1.6vw, 1.1rem);
+}
+
+/* Dividers BETWEEN columns only, and ~70% height rather than full — a real
+   border-left would run the whole cell and read as a hard table rule. */
+.trust-cell + .trust-cell::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 15%;
+  height: 70%;
+  width: 1px;
+  background: rgba(216, 205, 184, 0.6);
+}
+
+.trust-badge {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 9999px;
+  background: rgba(240, 234, 221, 0.75);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.trust-cell-title {
+  margin-top: 1rem;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1e3b2c;
+}
+
+.trust-dot {
+  display: block;
+  width: 4px;
+  height: 4px;
+  margin: 10px 0;
+  border-radius: 9999px;
+  background: #c08a1e;
+}
+
+.trust-cell-body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.65;
+  color: #4a5248;
+  max-width: 200px;
+}
+
+/* --- Certification bar ---------------------------------------------- */
+.trust-certs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: center;
+  max-width: 700px;
+  margin: 44px auto 0;
+  padding: 1.15rem 0;
+  border: 1px solid #e4daca;
+  border-radius: 1rem;
+  background: rgb(var(--acti-cream-rgb) / 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 1px 2px rgba(30, 59, 44, 0.04);
+}
+
+.trust-certs > li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0 0.75rem;
+}
+
+.trust-certs > li + li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 20%;
+  height: 60%;
+  width: 1px;
+  background: rgba(216, 205, 184, 0.6);
+}
+
+.trust-certs img {
+  height: 40px;
+  width: auto;
+  opacity: 0.9;
+}
+
+/* Stand-in for the one mark with no artwork; matches the logos' optical size. */
+.trust-cert-icon {
+  display: grid;
+  place-items: center;
+  height: 40px;
+}
+
+.trust-certs p {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.25;
+  text-transform: uppercase;
+  color: #1e3b2c;
+}
+
+/* --- Responsive ------------------------------------------------------ */
+@media (max-width: 1023px) {
+  .trust-grid {
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: 2.5rem;
+  }
+  /* Vertical rules only between the two columns of a pair — so the 3rd cell
+     (which starts a new row) must not draw one. */
+  .trust-cell:nth-child(odd)::before {
+    display: none;
+  }
+  .trust-certs img {
+    height: 32px;
+  }
+  .trust-cert-icon {
+    height: 32px;
+  }
+}
+
+@media (max-width: 639px) {
+  .trust-scene {
+    /* The phone crop puts more art behind the type, so the wash carries more. */
+    --trust-veil: 0.85;
+    --trust-veil-mid: 0.5;
+  }
+  .trust-grid {
+    grid-template-columns: 1fr;
+    row-gap: 0;
+  }
+  /* One column: the rules become HORIZONTAL separators between rows. */
+  .trust-cell::before {
+    display: none;
+  }
+  .trust-cell + .trust-cell {
+    margin-top: 1.75rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid rgba(216, 205, 184, 0.6);
+  }
+  .trust-cell-body {
+    max-width: 30ch;
+  }
+  .trust-certs {
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: 1.25rem;
+  }
+  /* Both axes now: vertical between the pair, horizontal between the rows. */
+  .trust-certs > li:nth-child(odd)::before {
+    display: none;
+  }
+  .trust-certs > li:nth-child(n + 3) {
+    padding-top: 1.25rem;
+    border-top: 1px solid rgba(216, 205, 184, 0.6);
+  }
+}
+
+/* ===============================================================
+   WHY ACTIPRO — "More than just oil." (WhyActipro.jsx)
+
+   The plate (public/why/why-bg.webp) carries the bottle on a plinth
+   at the RIGHT and its own footer ribbon. Measured on the file: the
+   bottle's saturation rises sharply past x=85%, so the content
+   column stops there. Nothing is drawn along the foot either — the
+   art already has a line, and a second one reads as a mistake.
+================================================================*/
+.why-scene {
+  position: relative;
+  isolation: isolate;
+  /* svh and no px floor — see the note on .trust-scene. */
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  /* Same cream as every other section. This was #f1e1cb, matched to the
+     plate's edge back when .why-bg used `contain` and left letterbox bars to
+     fill. It uses `cover` now, so no bar is ever visible and a colour of its
+     own only put a hard band at the two section boundaries. */
+  background: var(--color-acti-cream);
+  --why-veil: 0.55;
+}
+
+.why-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  /* `contain`, not `cover`. The source is 2:1 and most viewports are ~16:9, so
+     cover was scaling it up and cropping ~10% off each side — taking part of
+     the bottle with it. contain shows the whole plate; the bars it leaves are
+     filled by the matched background above. */
+  object-fit: contain;
+  object-position: center;
+}
+
+/* Cream wash, weighted LEFT — that is where the copy sits. The right stays
+   clear so the bottle keeps its own contrast. */
+.why-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    rgba(250, 243, 230, var(--why-veil)) 0%,
+    rgba(250, 243, 230, calc(var(--why-veil) * 0.72)) 46%,
+    rgba(250, 243, 230, 0.12) 74%,
+    transparent 88%
+  );
+}
+
+.why-inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1240px;
+  margin-inline: auto;
+  /* The right gutter is bottle clearance, not symmetry. */
+  padding: clamp(2.5rem, 6vw, 4.5rem) clamp(3rem, 15vw, 12rem) clamp(4.5rem, 9vw, 7rem)
+    clamp(1.25rem, 5vw, 4rem);
+}
+
+/* --- Header ---------------------------------------------------------- */
+.why-head {
+  text-align: center;
+  max-width: 640px;
+  margin-inline: auto;
+}
+
+.why-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #a8781a;
+}
+.why-rule {
+  display: block;
+  width: 44px;
+  height: 1px;
+  background: #cfa94e;
+}
+
+.why-title {
+  margin-top: 0.6rem;
+  font-family: var(--font-serif);
+  font-variation-settings: 'opsz' 96;
+  font-weight: 500;
+  font-size: clamp(30px, 4.6vw, 52px);
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  color: #1f3a2b;
+}
+.why-title em {
+  font-style: normal;
+  color: #c08a1e;
+}
+
+.why-sub {
+  margin: 0.85rem auto 0;
+  max-width: 46ch;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  color: #5d6355;
+}
+
+/* --- Carousel stage --------------------------------------------------- */
+.why-stage {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  margin-top: clamp(2rem, 4vw, 3rem);
+}
+
+.why-arrow {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(31, 58, 43, 0.18);
+  border-radius: 9999px;
+  color: #1f3a2b;
+  background: rgba(255, 253, 248, 0.5);
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+.why-arrow:hover {
+  background: rgba(255, 253, 248, 0.9);
+  border-color: rgba(31, 58, 43, 0.34);
+}
+
+/* The expanded step. */
+.why-card {
+  flex: 1 1 400px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 2.4vw, 1.75rem);
+  padding: clamp(0.9rem, 1.8vw, 1.35rem);
+  isolation: isolate;
+  /* The panel fill is NOT painted here. This element is the flex container
+     that also holds the photo, so a background on it necessarily runs the
+     full width — including behind the photo. The fill lives on ::before
+     instead, inset from the left, so the panel STARTS partway across the
+     photo and the photo's left half overhangs it. */
+  position: relative;
+  border-radius: 1.25rem;
+}
+
+/* The panel itself. Inset by half the photo's width plus its 10px ring, so
+   the edge lands on the photo's centre-line and the arch reads as sitting
+   ON the card rather than inside it.
+
+   z-index/isolation: the pseudo-element must sit UNDER the card's own
+   children. `z-index: -1` alone would push it behind the section background
+   too (the card creates no stacking context of its own), so the card gets
+   `isolation: isolate` — that makes it a stacking context, which keeps -1
+   scoped to this card. Without it the panel vanishes behind why-bg.webp. */
+.why-card::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset-block: 0;
+  inset-inline-end: 0;
+  /* left edge = padding + half the photo + its ring */
+  inset-inline-start: calc(clamp(0.9rem, 1.8vw, 1.35rem) + clamp(120px, 15vw, 168px) / 2 + 10px);
+  border-radius: 1.25rem;
+  /* Only a touch lighter than the plate behind it — this was rgba(255,252,245)
+     at 0.62, which read as a white panel sitting on the art. Tinted toward the
+     plate's own colour and dropped in opacity so it lifts the card just enough
+     to hold the type. */
+  background: rgba(252, 246, 236, 0.42);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 10px 34px rgba(90, 68, 22, 0.09);
+}
+
+.why-card-photo {
+  flex: none;
+  width: clamp(120px, 15vw, 168px);
+  /* The pill from the previous section (.wt-photo): a TALL box with a radius
+     large enough to clamp at half the width, so the caps are semicircles and
+     the sides run straight. `border-radius: 50%` here would give a true
+     ellipse instead — a different shape, curving the whole way round. */
+  aspect-ratio: 1 / 1.32;
+  border-radius: 999px;
+  overflow: hidden;
+  /* A SOLID white backing plate, with the gold hairline tracing its outer
+     edge. This ring used to be rgba(252, 246, 236, 0.45) — translucent, so
+     why-bg.webp read straight through it and the "plate" dissolved into
+     whatever art happened to sit behind the card. Opaque cream is what makes
+     it read as a mount the photo is set into.
+
+     Order matters: each box-shadow spread is measured from the border-box, so
+     these stack outward — 9px of solid plate first, then the gold line at
+     10px sits OUTSIDE it. Listing the gold first would put it under the
+     plate, where the opaque ring would paint straight over it. */
+  box-shadow:
+    0 0 0 9px #fdf8f0,
+    0 0 0 10px rgba(201, 162, 39, 0.55);
+}
+.why-card-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* --i is the stagger slot set inline by the component (0..3); each step
+     starts 70ms after the one above, so the card resolves top-to-bottom.
+     The easing is the same EASE curve the section's entrance uses. */
+  animation: why-fade 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+.why-card-copy {
+  min-width: 0;
+}
+
+.why-index {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #c08a1e;
+  /* --i is the stagger slot set inline by the component (0..3); each step
+     starts 70ms after the one above, so the card resolves top-to-bottom.
+     The easing is the same EASE curve the section's entrance uses. */
+  animation: why-fade 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+.why-index-rule {
+  display: block;
+  width: 34px;
+  height: 1px;
+  background: rgba(192, 138, 30, 0.5);
+}
+
+.why-card-title {
+  margin-top: 0.45rem;
+  font-family: var(--font-serif);
+  font-variation-settings: 'opsz' 40;
+  font-weight: 500;
+  font-size: clamp(19px, 2.1vw, 25px);
+  line-height: 1.18;
+  color: #1f3a2b;
+  /* --i is the stagger slot set inline by the component (0..3); each step
+     starts 70ms after the one above, so the card resolves top-to-bottom.
+     The easing is the same EASE curve the section's entrance uses. */
+  animation: why-fade 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+.why-line {
+  display: block;
+}
+
+.why-card-body {
+  margin-top: 0.5rem;
+  max-width: 30ch;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #5d6355;
+  /* --i is the stagger slot set inline by the component (0..3); each step
+     starts 70ms after the one above, so the card resolves top-to-bottom.
+     The easing is the same EASE curve the section's entrance uses. */
+  animation: why-fade 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+.why-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 0.9rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 9999px;
+  background: #e8b430;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #3a2c08;
+  transition: background-color 0.2s ease;
+  /* --i is the stagger slot set inline by the component (0..3); each step
+     starts 70ms after the one above, so the card resolves top-to-bottom.
+     The easing is the same EASE curve the section's entrance uses. */
+  animation: why-fade 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+.why-cta:hover {
+  background: #d9a422;
+}
+
+/* The three inactive steps. */
+.why-thumbs {
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(0.5rem, 1.6vw, 1.4rem);
+}
+.why-thumbs button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  width: clamp(78px, 9vw, 104px);
+  text-align: center;
+}
+.why-thumb-icon {
+  color: #c08a1e;
+}
+.why-thumb-photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1.32;
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(201, 162, 39, 0.32);
+  transition:
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+.why-thumbs button:hover .why-thumb-photo {
+  transform: translateY(-3px);
+  box-shadow: 0 0 0 1px rgba(201, 162, 39, 0.75);
+}
+.why-thumb-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.why-thumb-index {
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #c08a1e;
+}
+.why-thumb-title {
+  font-family: var(--font-serif);
+  font-variation-settings: 'opsz' 24;
+  font-size: 14px;
+  line-height: 1.25;
+  color: #1f3a2b;
+}
+
+.why-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: clamp(1.25rem, 2.5vw, 1.75rem);
+}
+.why-dots button {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: rgba(31, 58, 43, 0.2);
+  transition:
+    background-color 0.25s ease,
+    width 0.25s ease;
+}
+.why-dots button[data-on='true'] {
+  width: 20px;
+  background: #e8b430;
+}
+
+@keyframes why-fade {
+  from {
+    opacity: 0;
+    /* 6px was too small to register as movement at this size - the eye read
+       it as a flicker rather than a transition. 14px plus the slight scale
+       gives the swap a direction without it feeling like a slide-in. */
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --- Responsive -------------------------------------------------------- */
+@media (max-width: 1023px) {
+  .why-inner {
+    /* The bottle crops further out of frame at this width, so the right gutter
+       can relax. */
+    padding-right: clamp(1.5rem, 8vw, 5rem);
+  }
+  .why-stage {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .why-card {
+    flex: 1 1 100%;
+    order: 1;
+  }
+  .why-thumbs {
+    order: 2;
+    justify-content: center;
+    width: 100%;
+  }
+  .why-arrow {
+    order: 3;
+  }
+}
+
+@media (max-width: 639px) {
+  .why-scene {
+    --why-veil: 0.82;
+  }
+  .why-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  /* Stacked, the photo sits ABOVE the copy rather than beside it, so the
+     left inset that makes the panel start at the photo's centre-line has
+     nothing left to align to — it would just leave a bare strip down the
+     left of the card. Full width is the right shape once the row breaks. */
+  .why-card::before {
+    inset-inline-start: 0;
+  }
+  .why-card-body {
+    max-width: 34ch;
+  }
+  .why-index,
+  .why-thumbs {
+    justify-content: center;
+  }
+  .why-thumbs {
+    gap: 0.5rem;
+  }
+  .why-card-title,
+  .why-card-body {
+    margin-inline: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Must list EVERY element carrying why-fade. The index and the CTA gained
+     the animation when the swap was staggered; leaving them off here would
+     animate them for exactly the users who asked for no motion. */
+  .why-card-photo img,
+  .why-card-index,
+  .why-index,
+  .why-card-title,
+  .why-card-body,
+  .why-cta {
+    animation: none;
+  }
+}
+
+
+/* ===============================================================
+   MOBILE — the three new sections (WhyActipro, TrustSection,
+   PurposeRing).
+
+   Four real problems, measured rather than guessed:
+
+   1. vh vs svh, and a px floor taller than the phone. Both fixed
+      at source on .why-scene / .trust-scene / .pr-sticky rather
+      than overridden here — see the notes on those rules.
+
+   2. Tap targets. The carousel dots were 7x7px and its arrows
+      38x38, against the 44x44 both iOS and Android ask for. The
+      dots stay visually small; the HIT AREA is grown with padding
+      and a negative margin so the layout does not move.
+
+   3. Hover-only affordances. .why-thumbs lifted on :hover, which a
+      touch screen never fires — so on a phone there was no
+      indication the thumbnails were pressable at all.
+================================================================*/
+
+/* --- Touch targets ---------------------------------------------- */
+@media (pointer: coarse) {
+  .why-arrow {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* The dot itself stays 7px; the button around it becomes a 44px target.
+     The negative margin cancels the padding so the row's spacing, and the
+     dots' visual positions, are unchanged. */
+  .why-dots button {
+    padding: 18px;
+    margin: -18px;
+    background-clip: content-box;
+  }
+  /* background-clip:content-box keeps the pill visual on the 7px content box
+     rather than letting it fill the new padded area. */
+}
+
+/* --- Press feedback where hover does not exist ------------------- */
+@media (hover: none) {
+  .why-thumbs button:active .why-thumb-photo {
+    transform: scale(0.96);
+    box-shadow: 0 0 0 1px rgba(201, 162, 39, 0.75);
+  }
+  .why-arrow:active {
+    background: rgba(255, 253, 248, 0.9);
+  }
+}
+
+/* --- Phone layout ---------------------------------------------------- */
+@media (max-width: 639px) {
+  /* WhyActipro ------------------------------------------------------- */
+  .why-inner {
+    /* The desktop rule reserves a big right gutter for the bottle. On a phone
+       the plate is cropped (see the mobile source) and the bottle is mostly
+       out of frame, so that reservation only wasted width. */
+    padding: clamp(2rem, 8vw, 3rem) 1.25rem clamp(2.5rem, 8vw, 3.5rem);
+  }
+
+  .why-stage {
+    /* The arrows flank a card that is now full width; stacking them under it
+       keeps the card from being squeezed to nothing. */
+    gap: 1rem;
+  }
+
+  .why-card {
+    padding: 1rem;
+    gap: 0.9rem;
+  }
+
+  .why-card-photo {
+    /* Smaller, so the photo and the copy under it both fit above the fold. */
+    width: clamp(96px, 30vw, 132px);
+  }
+
+  .why-thumbs {
+    /* Three thumbs at the 78px floor plus gaps need ~250px; a 360px phone has
+       ~310px of content width, so they fit — but only just, and the titles
+       need the room. Shrink the floor here. */
+    gap: 0.4rem;
+    width: 100%;
+    justify-content: space-between;
+  }
+  .why-thumbs button {
+    width: auto;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .why-thumb-title {
+    font-size: 12.5px;
+    line-height: 1.2;
+    /* Long titles wrap to three lines at this width and push the row taller
+       than the card; two lines is the cap. */
+    overflow-wrap: break-word;
+  }
+
+  /* Arrows below the card rather than beside it. */
+  .why-arrow {
+    order: 4;
+  }
+
+  /* TrustSection ------------------------------------------------------ */
+  .trust-inner {
+    padding-inline: 1.25rem;
+  }
+
+  .trust-certs {
+    padding: 1rem 0;
+  }
+  .trust-certs > li {
+    padding: 0 0.5rem;
+    gap: 0.45rem;
+  }
+  .trust-certs p {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+  }
+
+  /* PurposeRing ------------------------------------------------------- */
+  .pr-card {
+    padding: 1.5rem 1.25rem;
+  }
+  .pr-ring {
+    /* Capped against the SHORT viewport too, not just the width: at 74vw on a
+       430x740 phone the ring plus two copy blocks overflowed the stage. */
+    width: min(300px, 68vw, 38svh);
+    height: min(300px, 68vw, 38svh);
+  }
+  .pr-heading {
+    font-size: 21px;
+  }
+  .pr-body {
+    font-size: 13.5px;
+  }
+}
+
+/* Very narrow phones (320-360). */
+@media (max-width: 380px) {
+  .why-thumb-title {
+    font-size: 11.5px;
+  }
+  .why-card {
+    gap: 0.75rem;
+  }
+  .trust-certs p {
+    font-size: 9.5px;
+  }
+}
+
+
 /* Anchor targets sit below the sticky Actipro header */
+
 section[id] {
   scroll-margin-top: 88px;
 }
@@ -218,6 +1416,7 @@ section[id] {
 }
 
 /* Each hero pack fades up as it rotates in */
+
 @keyframes acti-fade-up {
   from {
     opacity: 0;
@@ -241,6 +1440,7 @@ section[id] {
    below. The header derives all of its colours from it, so a 60fps
    scrub costs zero React renders.
 ================================================================*/
+
 :root {
   --acti-tone: 0;
 }
@@ -248,6 +1448,7 @@ section[id] {
 /* --- Scroll runways. These two blocks are the main tuning dials. ---
    --hero-exit  how much scroll the hero → kitchen dissolve takes.
    .kitchen-scene height  how much scroll the doors take to open.  */
+
 .hero-scene {
   --hero-exit: 48vh;
   height: calc(100svh + var(--hero-exit));
@@ -259,6 +1460,7 @@ section[id] {
    cabinet frame the kitchen opens on, it showed the frame twice, one sliding
    over the other. Pulling the kitchen up by exactly one viewport means it pins
    the instant the hero unpins, and Hero.jsx retires its stage at that point. */
+
 .kitchen-scene {
   margin-top: -100svh;
   /* The runway is sized against the FRAME COUNT: pinned distance is
@@ -281,10 +1483,6 @@ section[id] {
   }
 }
 
-/* --- Grading -------------------------------------------------------
-   The two clips were generated separately and do not match out of the
-   box. These two rules pull them toward one film — adjust here rather
-   than in the markup. The hero stays deliberately darker. */
 /*
  * The hero grade is done with an overlay, NOT a CSS filter on the video.
  *
@@ -299,6 +1497,7 @@ section[id] {
  * dropped — they were doing very little at brightness 0.45 and neither can be
  * faked cheaply. Keep this element filter-free.
  */
+
 .hero-video {
   /* promote to its own layer so scrolling never repaints it */
   will-change: transform;
@@ -334,6 +1533,7 @@ section[id] {
 
 /* The amber wash that bridges hero black → page cream. It peaks in the
    middle of the exit and is gone by the time the stage has faded. */
+
 .hero-warm {
   background:
     radial-gradient(78% 62% at 50% 88%, rgba(245, 179, 1, 0.2), transparent 72%),
@@ -349,6 +1549,7 @@ section[id] {
    1498x936 image sitting under the dissolve. The canvas (.kitchen-frame) keeps
    its grade — it is only repainted when the frame index actually changes, so
    the cost is per-frame-change, not per-scroll-frame. */
+
 .kitchen-plate {
   will-change: transform;
   transform: translateZ(0);
@@ -358,9 +1559,6 @@ section[id] {
   filter: brightness(0.92) contrast(1.05) saturate(0.88) sepia(0.05);
 }
 
-/* --- Kitchen scrim -------------------------------------------------
-   Weighted to the counter and the bottom-left corner where the copy
-   sits, so the cabinet and the packs themselves stay ungraded. */
 /* Intentionally empty — the scrim was removed by request.
  *
  * It used to darken the foot of the frame (to 74% ink) so the white payoff
@@ -370,6 +1568,7 @@ section[id] {
  * gets it back to 4.8:1) if that copy ever becomes hard to read.
  *
  * The element is left in the markup so this is a one-rule change either way. */
+
 .kitchen-scrim {
   background: none;
 }
@@ -384,6 +1583,7 @@ section[id] {
  * clipped and painted over. The dissolve has to be inside the stage — hence
  * .kitchen-tail, rendered as the last layer of KitchenReveal's sticky stage.
  */
+
 .kitchen-tail {
   height: calc(var(--seam) * 1.5);
   z-index: 3;
@@ -415,6 +1615,7 @@ section[id] {
    Everything animates transform/opacity only — no layout, no paint of the
    image itself — so the hero stays at 60fps alongside the video.
    =============================================================== */
+
 .hero-bottle {
   position: relative;
   display: block;
@@ -439,6 +1640,7 @@ section[id] {
 
 /* A slow bob under the tilt. Applied to the wrapper rather than the same
    element as the rotation so the two never fight over `transform`. */
+
 @keyframes bottle-float {
   0%, 100% { translate: 0 0; }
   50% { translate: 0 -7px; }
@@ -468,6 +1670,7 @@ section[id] {
 /* The specular sweep — a soft band of light down the glass. Masked to the
    image's own alpha so it only ever lights the BOTTLE, never the empty corners
    of the box, which is what separates this from a generic gradient overlay. */
+
 .hero-bottle-gloss {
   position: absolute;
   inset: 0;
@@ -495,6 +1698,7 @@ section[id] {
    perspective the bottle is in, so it reads as lying on a surface. It tightens
    and darkens as the bottle floats down, which is what ties the bob to a real
    ground plane instead of looking like a drifting cutout. */
+
 .hero-bottle-ground {
   position: absolute;
   left: 50%;
@@ -517,6 +1721,7 @@ section[id] {
 /* Motion is decoration here: the pack must still be legible without it. The
    tilt is driven by a custom property that simply never changes, so only the
    idle animations need switching off. */
+
 @media (prefers-reduced-motion: reduce) {
   .hero-bottle-inner,
   .hero-bottle-ground {
@@ -528,6 +1733,7 @@ section[id] {
    Transparent over the dark hero, fading to a blurred cream bar as the
    page below arrives. The contents (logo, nav, buttons) ride the same
    variable, flipping white → ink to stay readable against each. */
+
 .acti-header {
   background-color: rgb(255 248 238 / calc(var(--acti-tone) * 0.92));
   /* No backdrop-filter by default. Over the hero the bar is fully transparent
@@ -554,6 +1760,7 @@ section[id] {
    data-frosted as --acti-tone crosses its threshold, so over the hero the bar
    stays perfectly clear and the video behind it is untouched. A constant
    radius — see the note above. */
+
 .acti-header[data-frosted='true'] {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -568,6 +1775,7 @@ section[id] {
    Pinning --acti-tone to 0 alongside carries the contents with it: the logo
    crossfades back to its white print and the icon outlines to white, which is
    what the bar needs to read as chrome sitting on video. */
+
 @media (max-width: 767px) {
   .acti-header[data-hero='true']:not([data-solid='true']) {
     --acti-tone: 0;
@@ -580,6 +1788,7 @@ section[id] {
 
 /* The open mobile menu needs a solid bar whatever the scene is doing — and
    because that bar IS opaque, it frosts regardless of where the scene is. */
+
 .acti-header[data-solid='true'] {
   --acti-tone: 1;
   backdrop-filter: blur(12px);
@@ -599,6 +1808,7 @@ section[id] {
 }
 
 /* Oil gold over the hero → Actipro red over the page below */
+
 .acti-tone-cta {
   background-color: color-mix(in srgb, #c1121f calc(var(--acti-tone) * 100%), #f5b301);
   color: color-mix(in srgb, #ffffff calc(var(--acti-tone) * 100%), #17110d);
@@ -612,6 +1822,7 @@ section[id] {
    throwing the artwork away. The shadow is strongest at tone 0 (over the dark
    video, where the red wordmark needs separating from the grade) and fades out
    as the cream page arrives beneath it, since ink-on-cream needs no halo. */
+
 .acti-logo {
   /* Three passes rather than two. The mark's baseline strap ("REFINED SUNFLOWER
      OIL") is thin dark-grey type, and against the warmed dusk grade it was
@@ -638,6 +1849,7 @@ section[id] {
    0 → 1. Every colour below is interpolated from --n-p, so the copy
    darkens from a pale wash to full ink as the oil passes it.
 ================================================================*/
+
 .ms-scene {
   background-color: var(--color-acti-cream);
   background-image: url('/bg/mile.webp');
@@ -658,6 +1870,7 @@ section[id] {
    So a second linear layer floors the bottom of the scene to near-opaque
    cream. It is listed first (top-most) and only covers the lower third, so
    the decorative border still shows at the top and sides. */
+
 .ms-scene::before {
   content: '';
   position: absolute;
@@ -690,6 +1903,7 @@ section[id] {
 /* --- The pour ------------------------------------------------------
    Sits in the centre channel, spanning the full height of the track,
    fully drawn at all times. */
+
 .ms-oil {
   /* How much of each end dissolves into the page. Long enough to read as the
      pour arriving and departing rather than being switched on — roughly one
@@ -749,6 +1963,7 @@ section[id] {
    something to dissolve INTO, so they read as light rather than as absence.
    Sits behind the ribbon and spills well past the channel — the blur is the
    whole point, so it is deliberately wider than --ms-oil-w. */
+
 .ms-oil::before {
   content: '';
   position: absolute;
@@ -824,6 +2039,7 @@ section[id] {
    Re-bake the poster from the SAME stack (one frame, libwebp -q:v 88) so the
    reduced-motion still and the video agree. Verify alpha survived by drawing
    the webm on a red canvas: the corners must stay pure red. */
+
 .ms-oil-line {
   width: 100%;
   height: 100%;
@@ -853,6 +2069,7 @@ section[id] {
 }
 
 /* --- Items --------------------------------------------------------- */
+
 .ms-list {
   position: relative;
   z-index: 1;
@@ -874,16 +2091,19 @@ section[id] {
    After the last one there is nothing left to run to, so reserving a further
    15rem just left a band of empty cream between the closing copy and the
    footer. The last item is sized by its own text instead. */
+
 .ms-item:last-child {
   min-height: 0;
 }
 
 /* Odd items sit left of the pour and read toward it; even items mirror. */
+
 .ms-item:nth-child(odd) .ms-card {
   grid-column: 1;
   text-align: right;
   align-items: flex-end;
 }
+
 .ms-item:nth-child(even) .ms-card {
   grid-column: 3;
   text-align: left;
@@ -893,6 +2113,7 @@ section[id] {
 /* Weave the rows the way the reference does, instead of leaving each milestone
    marooned in its own band. Pull only the left-hand items up — pulling the
    right-hand ones too would ride their labels into the pour. */
+
 .ms-item + .ms-item {
   margin-top: -2rem;
 }
@@ -902,6 +2123,7 @@ section[id] {
    oil reaches it. --n-p is that milestone's own 0 → 1, written by
    Milestones.jsx. Interpolating colour (rather than opacity) keeps the
    text painted against mile.png the whole way, so nothing ghosts. */
+
 .ms-item {
   --n-p: 0;
 }
@@ -943,15 +2165,6 @@ section[id] {
   color: color-mix(in srgb, var(--color-acti-ink) calc(14% + var(--n-p) * 58%), transparent);
 }
 
-/* --- The milestone marker ------------------------------------------
-   This used to sit at the centre of the rail, "on the line". It cannot:
-   the pour is a filmed ribbon that meanders across the rail AND animates,
-   so at some rows the rail centre is empty space and the dot floated in
-   the gap (measured: at 10% and 70% down, dead centre has no ink).
-
-   No static x can track a moving ribbon, so the marker now sits on the
-   ribbon's inner edge instead, where its position is deterministic. The
-   pour itself is the connector — it does not need dots on it. */
 /* The marker holds STILL while it reads in. It used to animate its own
    geometry off --n-p — `transform: scale(0.8 → 1)` on a 9px box, plus a
    box-shadow ring whose spread grew 1px → 3px. Both are geometry on a
@@ -963,6 +2176,7 @@ section[id] {
    The fix is to animate only COLOUR, which cannot move anything. The box,
    the ring, and the position are all fixed. It still reads in — it warms
    from pale wash to full gold exactly as the copy beside it does. */
+
 .ms-dot {
   grid-column: 2;
   align-self: start;
@@ -974,15 +2188,19 @@ section[id] {
   /* Constant 2px spread — a fixed ring, so the footprint never changes. */
   box-shadow: 0 0 0 2px rgba(255, 248, 238, 0.9);
 }
+
 /* odd items read leftward, so their marker hugs the rail's left edge */
+
 .ms-item:nth-child(odd) .ms-dot {
   justify-self: start;
 }
+
 .ms-item:nth-child(even) .ms-dot {
   justify-self: end;
 }
 
 /* --- Phones: one column, the pour runs down the left gutter -------- */
+
 @media (max-width: 767px) {
   .ms-track {
     /* The pour reads as a real ribbon here, not a hairline — it fills most of
@@ -1088,6 +2306,7 @@ section[id] {
    the viewer, revealing the real product packs standing inside.
    All positions are % of the scene box so it scales at any width.
 ----------------------------------------------------------------*/
+
 .kd-scene {
   position: relative;
   width: 100%;
@@ -1099,6 +2318,7 @@ section[id] {
 }
 
 /* Warm window light + soft leaf shadows on the wall */
+
 .kd-sun {
   position: absolute;
   inset: 0;
@@ -1108,6 +2328,7 @@ section[id] {
     radial-gradient(45% 40% at 92% 88%, rgba(120, 80, 40, 0.18), transparent 70%);
   z-index: 6;
 }
+
 .kd-leaf {
   position: absolute;
   width: 26%;
@@ -1119,10 +2340,12 @@ section[id] {
   pointer-events: none;
   z-index: 5;
 }
+
 .kd-leaf-a {
   left: 4%;
   top: 6%;
 }
+
 .kd-leaf-b {
   left: 16%;
   top: 20%;
@@ -1133,6 +2356,7 @@ section[id] {
 }
 
 /* Wall + upper cabinets */
+
 .kd-uppers {
   position: absolute;
   inset: 0 0 66% 0;
@@ -1141,6 +2365,7 @@ section[id] {
   padding: 3% 4% 0;
   background: linear-gradient(180deg, #f3ead9, #e9dcc7);
 }
+
 .kd-door {
   position: relative;
   flex: 1;
@@ -1150,6 +2375,7 @@ section[id] {
     inset 0 1px 0 rgba(255, 255, 255, 0.6),
     0 6px 14px rgba(90, 62, 30, 0.12);
 }
+
 .kd-door::after {
   content: '';
   position: absolute;
@@ -1160,16 +2386,19 @@ section[id] {
   border-radius: 3px;
   background: linear-gradient(180deg, #cfc9c0, #9b948a);
 }
+
 .kd-door-wide {
   flex: 1.6;
 }
 
 /* Under-cabinet glow strip + backsplash */
+
 .kd-backsplash {
   position: absolute;
   inset: 34% 0 47% 0;
   background: linear-gradient(180deg, #f7f0e3, #efe5d3);
 }
+
 .kd-glow {
   position: absolute;
   inset: 33.4% 4% auto 4%;
@@ -1181,6 +2410,7 @@ section[id] {
 }
 
 /* Countertop slab */
+
 .kd-counter {
   position: absolute;
   inset: 47% 0 47.5% 0;
@@ -1190,6 +2420,7 @@ section[id] {
 }
 
 /* Lower cabinet run */
+
 .kd-run {
   position: absolute;
   inset: 52.5% 0 12% 0;
@@ -1198,6 +2429,7 @@ section[id] {
   padding: 0 3%;
   z-index: 2;
 }
+
 .kd-wood {
   background-color: #8b5a2b;
   background-image:
@@ -1211,6 +2443,7 @@ section[id] {
     linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.2)),
     linear-gradient(105deg, #ab7444 0%, #8d5b2d 42%, #b17d48 62%, #7c4d25 100%);
 }
+
 .kd-cab {
   position: relative;
   flex: 1;
@@ -1219,6 +2452,7 @@ section[id] {
     inset 0 1px 0 rgba(255, 255, 255, 0.18),
     0 8px 18px rgba(60, 38, 16, 0.25);
 }
+
 .kd-cab::after {
   content: '';
   position: absolute;
@@ -1229,15 +2463,17 @@ section[id] {
   background: linear-gradient(180deg, #3b3b3b, #181818);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
+
 .kd-cab-left::after {
   right: 8%;
 }
+
 .kd-cab-right::after {
   left: 8%;
 }
 
-/* The drawer bay — cavity + sliding front */
 /* The bay must NOT clip — the drawer front slides out past its edges */
+
 .kd-bay {
   position: relative;
   flex: 2.1;
@@ -1246,35 +2482,42 @@ section[id] {
 }
 
 /* One-point-perspective interior, built from clipped panels */
+
 .kd-interior {
   position: absolute;
   inset: 0;
   overflow: hidden;
   border-radius: 3px;
 }
+
 .kd-back {
   position: absolute;
   inset: 8% 14% 30% 14%;
   background: linear-gradient(180deg, #4a2f18, #6a4526);
 }
+
 .kd-side {
   position: absolute;
   inset: 0;
 }
+
 .kd-side-l {
   background: linear-gradient(90deg, #3a2412, #5c3a1e);
   clip-path: polygon(0 0, 14% 8%, 14% 70%, 0 100%);
 }
+
 .kd-side-r {
   background: linear-gradient(270deg, #3a2412, #5c3a1e);
   clip-path: polygon(100% 0, 86% 8%, 86% 70%, 100% 100%);
 }
+
 .kd-floor {
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg, #6b4726 0%, #8a5c31 60%, #9a6836 100%);
   clip-path: polygon(0 100%, 14% 70%, 86% 70%, 100% 100%);
 }
+
 .kd-cavity-shade {
   position: absolute;
   inset: 0;
@@ -1284,6 +2527,7 @@ section[id] {
 }
 
 /* Packs standing in the drawer */
+
 .kd-items {
   position: absolute;
   inset: auto 7% 11% 7%;
@@ -1293,6 +2537,7 @@ section[id] {
   justify-content: space-between;
   gap: 2%;
 }
+
 .kd-item {
   position: relative;
   height: 100%;
@@ -1311,6 +2556,7 @@ section[id] {
   /* Perspective lives here so the pack itself can turn in 3D on hover */
   perspective: 800px;
 }
+
 .kd-item img {
   height: 100%;
   width: auto;
@@ -1321,21 +2567,27 @@ section[id] {
     transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
     filter 0.35s ease;
 }
+
 /* Hover / keyboard focus: the pack lifts, turns toward the viewer and brightens */
+
 .kd-item:hover img,
 .kd-item:focus-visible img {
   transform: translateY(-14px) scale(1.07) rotateY(-16deg) rotateZ(-1.5deg);
   filter: drop-shadow(0 22px 22px rgba(0, 0, 0, 0.5)) brightness(1.06);
 }
+
 /* Everything else in the drawer steps back so the hovered pack reads first */
+
 .kd-items:hover .kd-item:not(:hover) img {
   filter: drop-shadow(0 14px 14px rgba(0, 0, 0, 0.45)) brightness(0.78);
 }
+
 .kd-item:focus-visible {
   outline: none;
 }
 
 /* The detail card that rises above the hovered pack */
+
 .kd-label {
   position: absolute;
   bottom: calc(100% + 12px);
@@ -1363,6 +2615,7 @@ section[id] {
     transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
     visibility 0.3s;
 }
+
 .kd-label::after {
   content: '';
   position: absolute;
@@ -1377,45 +2630,56 @@ section[id] {
   border-right: 1px solid rgba(255, 255, 255, 0.14);
   border-bottom: 1px solid rgba(255, 255, 255, 0.14);
 }
+
 .kd-label-brand {
   font-size: clamp(11px, 1.15vw, 13px);
   font-weight: 700;
   letter-spacing: 0.01em;
 }
+
 .kd-label-name {
   font-size: clamp(10px, 1vw, 12px);
   color: rgba(253, 246, 234, 0.82);
 }
+
 .kd-label-meta {
   margin-top: 3px;
   font-size: clamp(9px, 0.85vw, 11px);
   color: #f0b46a;
 }
+
 .kd-item:hover .kd-label,
 .kd-item:focus-visible .kd-label {
   opacity: 1;
   visibility: visible;
   transform: translate(-50%, 0) scale(1);
 }
+
 /* Only meaningful with a pointer — touch devices go straight to #products */
+
 @media (hover: none) {
   .kd-label {
     display: none;
   }
 }
+
 .kd-scene[data-open='true'] .kd-item {
   opacity: 1;
   transform: translateY(0);
 }
+
 .kd-scene[data-open='true'] .kd-item:nth-child(1) {
   transition-delay: 0.35s;
 }
+
 .kd-scene[data-open='true'] .kd-item:nth-child(2) {
   transition-delay: 0.45s;
 }
+
 .kd-scene[data-open='true'] .kd-item:nth-child(3) {
   transition-delay: 0.55s;
 }
+
 .kd-scene[data-open='true'] .kd-item:nth-child(4) {
   transition-delay: 0.65s;
 }
@@ -1423,6 +2687,7 @@ section[id] {
 /* Drawer front — closed it covers the bay; open it slides toward the viewer
    and tips down, so you look over its top edge into the drawer. Rotating
    from the top edge foreshortens the panel, exactly like a real open drawer. */
+
 .kd-front {
   position: absolute;
   inset: 0;
@@ -1440,12 +2705,14 @@ section[id] {
     0 6px 14px rgba(50, 30, 12, 0.3);
   z-index: 3;
 }
+
 .kd-scene[data-open='true'] .kd-front {
   transform: perspective(1200px) translateY(60%) translateZ(55px) rotateX(-56deg);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.22),
     0 34px 55px rgba(40, 24, 10, 0.6);
 }
+
 .kd-handle {
   position: absolute;
   top: 14%;
@@ -1459,6 +2726,7 @@ section[id] {
     0 2px 5px rgba(0, 0, 0, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
+
 .kd-seam {
   position: absolute;
   inset: auto 0 0 0;
@@ -1467,6 +2735,7 @@ section[id] {
 }
 
 /* Toe kick + floor */
+
 .kd-plinth {
   position: absolute;
   inset: 88% 0 0 0;
@@ -1495,6 +2764,7 @@ section[id] {
          p.resize((tw, round(p.height*tw/p.width)), Image.LANCZOS)          .save(f"public/bg/{name}.webp","WEBP",quality=84,method=6)
      EOF
 ================================================================*/
+
 .mv-scene {
   position: relative;
   background-color: var(--color-acti-cream);
@@ -1516,6 +2786,7 @@ section[id] {
  * number alone to slow it further — do not reach for scrub, which only changes
  * how much the drop lags the wheel, not how far it travels per pixel.
  */
+
 .mv-scene--pinned {
   --mv-runway: 190vh;
   height: calc(100svh + var(--mv-runway));
@@ -1536,6 +2807,7 @@ section[id] {
  * so anything it needs to override there has to be repeated after it — see the
  * padding rule further down rather than putting it here.
  */
+
 @media (max-width: 1023px) {
   .mv-card {
     min-height: 0;
@@ -1551,6 +2823,7 @@ section[id] {
     margin-top: 2rem;
   }
 }
+
 .mv-scene--pinned .mv-stage {
   position: sticky;
   top: 0;
@@ -1571,6 +2844,7 @@ section[id] {
  * 190vh on a much shorter viewport is a far longer thumb journey for the same
  * animation.
  */
+
 @media (max-width: 1023px) {
   .mv-scene--pinned {
     --mv-runway: 150vh;
@@ -1581,6 +2855,7 @@ section[id] {
 }
 
 /* --- Heading ------------------------------------------------------- */
+
 .mv-eyebrow {
   display: inline-flex;
   align-items: center;
@@ -1608,6 +2883,7 @@ section[id] {
 }
 
 /* --- Card shell ---------------------------------------------------- */
+
 .mv-card {
   --mv-accent: var(--color-acti-red);
   position: relative;
@@ -1621,6 +2897,7 @@ section[id] {
   /* tall enough for the arc to read as a sweep rather than a kink */
   min-height: 27rem;
 }
+
 .mv-card[data-tone='sun'] {
   --mv-accent: var(--color-acti-sun);
 }
@@ -1630,6 +2907,7 @@ section[id] {
    cannot track a fluid card. The referenced <clipPath> uses
    clipPathUnits="objectBoundingBox" (0-1 coords), which scales for free.
    The def lives once in MissionVision.jsx; both cards share it. */
+
 .mv-figure {
   position: absolute;
   inset: 0;
@@ -1637,6 +2915,7 @@ section[id] {
   z-index: 0;
   clip-path: url(#mv-curve);
 }
+
 .mv-figure img {
   width: 100%;
   height: 100%;
@@ -1645,6 +2924,7 @@ section[id] {
 }
 
 /* The arc, stroked in the card's accent over the photo/copy join */
+
 .mv-stroke {
   position: absolute;
   inset: 0;
@@ -1658,11 +2938,6 @@ section[id] {
   opacity: 0.85;
 }
 
-/*
- * The dot that rides down the curve as the card scrolls into view.
- * --mv-dot-x/y are written by MissionVision.jsx straight from the path's own
- * getPointAtLength(), so it tracks the sweep exactly at any card size.
- */
 /* --mv-dot-a is the curve's tangent where the drop currently is, written every
    frame by the scroll effect, and it MUST be registered.
    `transform: rotate(var(--mv-dot-a))` on a plain custom property is invalid at
@@ -1671,6 +2946,7 @@ section[id] {
    drop therefore stayed bolt upright while the curve fell away beneath it,
    which read as the drop sitting BESIDE the line instead of running along it.
    Typing it as <angle> makes the substitution valid, and animatable too. */
+
 @property --mv-dot-a {
   syntax: '<angle>';
   inherits: true;
@@ -1702,6 +2978,7 @@ section[id] {
 }
 
 /* --- Copy --------------------------------------------------------- */
+
 .mv-body {
   position: relative;
   z-index: 2;
@@ -1728,6 +3005,7 @@ section[id] {
  * Each starts as an outline on cream and fills with the accent as the drop
  * reaches it (data-lit), which is what makes the arrival read as an arrival.
  */
+
 .mv-badge {
   position: absolute;
   /* left/top are written INLINE by MissionVision.jsx from the path's own
@@ -1773,10 +3051,12 @@ section[id] {
  * grid (rather than absolute positioning) is what makes that height automatic:
  * every child occupies 1/1, so the track takes the max of their heights.
  */
+
 .mv-stops {
   display: grid;
   margin-top: 1.1rem;
 }
+
 .mv-stop {
   grid-area: 1 / 1;
   margin-top: 0;
@@ -1789,23 +3069,15 @@ section[id] {
   /* Hidden lines must not be clickable or focus-reachable while invisible. */
   pointer-events: none;
 }
+
 .mv-stop[data-on='true'] {
   opacity: 1;
   transform: none;
 }
 
-/*
- * The reveal: once the drop reaches the last stop, --mv-reveal runs 0 -> 1 and
- * the photo opens out of its curve to fill the card while the copy fades under
- * it.
- *
- * The clip-path is interpolated toward a full-bleed rectangle rather than being
- * switched off, which is what makes it grow smoothly — clip-path:none would
- * simply pop. inset() is used for the target because a path() cannot animate to
- * a different node count, and inset(0) is exactly "the whole card".
- */
 /* Registered for the same reason as --mv-flip below: it feeds calc() inside
    color-mix() and clamp(), which need a resolved number, not a token list. */
+
 @property --mv-reveal {
   syntax: '<number>';
   inherits: true;
@@ -1815,14 +3087,7 @@ section[id] {
 .mv-card {
   --mv-reveal: 0;
 }
-/*
- * The resting figure retires as the reveal layer takes over.
- *
- * Both draw the same photo, but the reveal layer's clip is the one that travels;
- * leaving this one at full opacity underneath meant its stationary curve showed
- * through as a lighter panel wherever the two clips did not coincide — the seam
- * down the middle of the card. Gone by the time the curve has cleared the copy.
- */
+
 /*
  * The resting figure holds until the reveal layer has genuinely overtaken it.
  *
@@ -1832,9 +3097,11 @@ section[id] {
  * where the picture had been — the washed-out panel. It only needs to go at the
  * very end, and by then the layer above covers the whole card anyway.
  */
+
 .mv-figure {
   opacity: clamp(0, calc((0.98 - var(--mv-reveal)) / 0.06), 1);
 }
+
 /* The photo layer that grows.
  *
  * It sits above the clipped figure and is wiped in from the RIGHT — i.e. from
@@ -1845,6 +3112,7 @@ section[id] {
  *
  * Fully opaque throughout: the clip alone does the reveal. Fading it in as well
  * meant the copy showed through the photo for the whole transition. */
+
 .mv-reveal-img {
   position: absolute;
   inset: 0;
@@ -1878,6 +3146,7 @@ section[id] {
   clip-path: url(#mv-curve-open);
   transition: none;
 }
+
 .mv-reveal-img img {
   width: 100%;
   height: 100%;
@@ -1888,6 +3157,7 @@ section[id] {
 /* The curve furniture retires as the image takes the card — the stroke and the
    drop describe a boundary that no longer exists once the photo is full-bleed.
    The COPY does not: it stays, and rides on top of the finished picture. */
+
 .mv-stroke,
 .mv-dot {
   opacity: clamp(0, calc(1 - var(--mv-reveal) * 2), 1);
@@ -1902,10 +3172,12 @@ section[id] {
  * no contrast against a sunlit field. So past the reveal the panel fades in a
  * dark scrim behind the text and the type inverts to white.
  */
+
 .mv-body {
   position: relative;
   z-index: 3;
 }
+
 /*
  * The scrim behind the copy once the photo is full-bleed.
  *
@@ -1916,6 +3188,7 @@ section[id] {
  *
  * The gradient extends well past the element so its own bounds never show.
  */
+
 .mv-body::before {
   content: '';
   position: absolute;
@@ -1943,9 +3216,7 @@ section[id] {
   opacity: clamp(0, calc((var(--mv-reveal) - 0.82) / 0.18), 1);
   pointer-events: none;
 }
-/* Type inverts over the scrim. Interpolating the colours (rather than swapping
-   them at a threshold) keeps it readable at every point of the transition,
-   including the middle where both the panel and the scrim are half-strength. */
+
 /*
  * --mv-flip has to be a REGISTERED property, not a plain custom property.
  *
@@ -1955,6 +3226,7 @@ section[id] {
  * sitting on the dark scrim. @property gives it a <number> type, so the clamp
  * resolves to a real number before color-mix() sees it.
  */
+
 @property --mv-flip {
   syntax: '<number>';
   inherits: true;
@@ -1968,6 +3240,7 @@ section[id] {
   --mv-flip: clamp(0, calc((var(--mv-reveal) - 0.82) / 0.18), 1);
   --mv-ink: color-mix(in srgb, #fff calc(var(--mv-flip) * 100%), var(--color-acti-ink));
 }
+
 /* The badges retire WITH the curve furniture.
    They used to stay, on the reasoning that they tie the finished card back to
    the points the drop just made — but once the photo is full-bleed there is no
@@ -1976,6 +3249,7 @@ section[id] {
    stroke and the drop: gone by the time --mv-reveal reaches 0.5, which is well
    before the photo has finished opening.
    The COPY still stays — it rides on top of the finished picture. */
+
 .mv-badge {
   opacity: clamp(0, calc(1 - var(--mv-reveal) * 2), 1);
 }
@@ -2040,6 +3314,7 @@ section[id] {
 }
 
 /* The faint outline motif low in the copy panel */
+
 .mv-motif {
   width: 3.6rem;
   height: 3.6rem;
@@ -2054,7 +3329,6 @@ section[id] {
   );
 }
 
-/* --- Phones: photo on top, copy beneath, no arc ------------------- */
 /* --- Phones -------------------------------------------------------
    The card keeps its curved layout here rather than stacking into
    photo-above-copy: copy down the left, photo bleeding in from the right,
@@ -2063,6 +3337,7 @@ section[id] {
 
    Only the proportions change — a taller card (the phone is narrow, so the
    copy needs more vertical room) and a smaller badge sat on the curve. */
+
 @media (max-width: 639px) {
   /* Short enough that both cards, the heading and the section padding fit one
      844px viewport together (2x300 + 112 + 28 gap + 2x48 pad = 836). The card
@@ -2167,15 +3442,6 @@ section[id] {
   }
 }
 
-/* ---------------------------------------------------------------
-   Why-trust scene (WhyTrust.jsx)
-   A pinned stage whose row of ovals travels right-to-left as the
-   page scrolls down. Photo ovals and copy ovals alternate.
-
-   The pin height is set by GSAP (end: +=travel distance), so there
-   is no fixed runway to keep in sync here — the stage is one
-   viewport tall and the rail is as wide as its content.
-----------------------------------------------------------------*/
 /* GSAP pins .wt-stage with position:fixed, so this element must NOT become a
    containing block for it — no transform, no filter, no isolation, and no
    overflow:hidden. Any of those re-anchor the fixed stage to this box and the
@@ -2183,6 +3449,7 @@ section[id] {
    therefore painted straight onto the background here rather than through an
    ::before that would need a stacking context, and the horizontal clip lives
    on .wt-viewport, which has no fixed child. */
+
 .wt-scene {
   /* One viewport for the stage + however far the rail has to travel. The
      travel is content-dependent, so WhyTrust.jsx measures it and writes
@@ -2200,6 +3467,7 @@ section[id] {
    nothing that can desync from Lenis (see the note in WhyTrust.jsx).
    height (not min-height) so it is exactly one viewport tall; box-sizing keeps
    the padding inside that viewport instead of adding to it. */
+
 .wt-stage {
   position: sticky;
   top: 0;
@@ -2214,6 +3482,7 @@ section[id] {
 }
 
 /* --- Heading -------------------------------------------------- */
+
 .wt-head {
   text-align: center;
   padding-inline: 5vw;
@@ -2236,6 +3505,7 @@ section[id] {
 }
 
 /* --- The travelling row --------------------------------------- */
+
 .wt-viewport {
   overflow: hidden;
 }
@@ -2250,6 +3520,7 @@ section[id] {
 
    The gap must stay comfortably larger than the lap, or the grouping reads
    as accidental. */
+
 .wt-rail {
   --wt-lap: clamp(1.5rem, 3.2vw, 3rem);
   --wt-gap: clamp(3rem, 6vw, 6rem);
@@ -2270,6 +3541,7 @@ section[id] {
 
 /* Inside a pair only: the card slides under the photo. Deliberately NOT
    `.wt-pair + .wt-pair` — the space between pairs is the rail's gap above. */
+
 .wt-pair > * + * {
   margin-left: calc(var(--wt-lap) * -1);
 }
@@ -2277,29 +3549,37 @@ section[id] {
 /* Later ovals stack on top of earlier ones, so the row reads as a deck
    dealt left-to-right rather than a random pile. Photos sit above cards at
    the same index, which is what puts the curved kicker over the card edge. */
+
 .wt-pair {
   position: relative;
 }
+
 .wt-pair:nth-child(1) {
   z-index: 4;
 }
+
 .wt-pair:nth-child(2) {
   z-index: 3;
 }
+
 .wt-pair:nth-child(3) {
   z-index: 2;
 }
+
 .wt-pair:nth-child(4) {
   z-index: 1;
 }
+
 .wt-photo {
   z-index: 2;
 }
+
 .wt-card {
   z-index: 1;
 }
 
 /* --- Photo oval ----------------------------------------------- */
+
 .wt-photo {
   position: relative;
   flex: none;
@@ -2321,6 +3601,7 @@ section[id] {
    WhyTrust.jsx rotates the whole <svg> on scroll — rotating the ring
    (not the glyphs) is what makes the line read as rolling around the
    rim rather than tilting as a block. */
+
 .wt-arc {
   position: absolute;
   inset: 0;
@@ -2352,6 +3633,7 @@ section[id] {
 }
 
 /* --- Copy oval ------------------------------------------------- */
+
 .wt-card {
   --wt-tone: var(--color-acti-sun);
   position: relative;
@@ -2375,9 +3657,11 @@ section[id] {
 .wt-card--sun {
   --wt-tone: var(--color-acti-sun);
 }
+
 .wt-card--red {
   --wt-tone: var(--color-acti-red);
 }
+
 .wt-card--green {
   --wt-tone: var(--color-acti-green);
 }
@@ -2406,6 +3690,7 @@ section[id] {
 }
 
 /* The small diamond rule under the title */
+
 .wt-rule {
   display: block;
   width: 4.5rem;
@@ -2450,12 +3735,12 @@ section[id] {
   transform: translateY(-2px);
 }
 
-/* --- Footer line ----------------------------------------------- */
 /* --- Step control -------------------------------------------------
    Arrows and dots under the row. Desktop hides it: the travel is obvious
    with a pointer, and the section already reads as horizontal there.
    On a phone the row moves with the PAGE scroll, so this is both the
    position readout and a way to jump between steps. */
+
 .wt-nav {
   display: none;
   align-items: center;
@@ -2494,6 +3779,7 @@ section[id] {
    obvious way to get a big hit area around a small dot, but background-clip
    cannot round the CONTENT box — the paint came out as a rectangle. A pseudo
    element has its own box, so it takes border-radius properly. */
+
 .wt-dot {
   display: inline-flex;
   align-items: center;
@@ -2540,25 +3826,30 @@ section[id] {
    horizontal scrub, so this is keyed off .wt-viewport--swipe, which WhyTrust.jsx
    only applies when prefers-reduced-motion is set. It cannot be a width query:
    the pin needs .wt-stage to stay sticky at every size. */
+
 .wt-viewport--swipe {
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
+
 .wt-viewport--swipe::-webkit-scrollbar {
   display: none;
 }
+
 .wt-viewport--swipe .wt-rail {
   /* GSAP is not driving this one; let the browser own the scroll. */
   transform: none !important;
   will-change: auto;
 }
+
 .wt-viewport--swipe .wt-pair {
   scroll-snap-align: center;
 }
 
 /* Tablet: the ovals come down but the pin stays. */
+
 @media (max-width: 1023px) {
   .wt-photo,
   .wt-card {
@@ -2569,6 +3860,7 @@ section[id] {
 /* Phone: a pair is photo + card side by side, so each oval gets a little under
    half the viewport. Type inside the card steps down with it — at this width the
    desktop sizes overflow the oval instead of sitting inside the curve. */
+
 @media (max-width: 639px) {
   /* Bigger than they were (46vw/13rem). With the pin at a full viewport there is
      ~674px of vertical room for a row that only needed 251px, and undersized
@@ -2935,6 +4227,7 @@ section[id] {
    Nothing here is scroll-driven. The section arrives once (data-in,
    set by an IntersectionObserver) and the pack rotates on a timer.
 ================================================================*/
+
 .ps-scene {
   position: relative;
   isolation: isolate;
@@ -2967,6 +4260,7 @@ section[id] {
 
 /* The whole block lifts in once. Transition rather than @keyframes: it is
    toggled by an attribute, so there is no remount to restart an animation. */
+
 .ps-copy,
 .ps-stage {
   opacity: 0;
@@ -2975,12 +4269,15 @@ section[id] {
     opacity 0.7s ease-out,
     transform 0.7s ease-out;
 }
+
 .ps-scene[data-in='true'] .ps-copy,
 .ps-scene[data-in='true'] .ps-stage {
   opacity: 1;
   transform: none;
 }
+
 /* The pack follows the copy in, so the two do not arrive as one slab. */
+
 .ps-stage {
   transition-delay: 0.12s;
 }
@@ -2995,6 +4292,7 @@ section[id] {
 }
 
 /* --- Copy column ---------------------------------------------------- */
+
 .ps-copy {
   display: flex;
   flex-direction: column;
@@ -3028,6 +4326,7 @@ section[id] {
 
 /* Pushed to the foot of the column, so the name sits high and the detail
    sits low — the strip then follows it. */
+
 .ps-body {
   margin-top: auto;
   padding-top: clamp(1.5rem, 4vh, 2.75rem);
@@ -3048,6 +4347,7 @@ section[id] {
   font-size: 12.5px;
   color: color-mix(in srgb, var(--color-acti-ink) 55%, transparent);
 }
+
 .ps-points li {
   display: inline-flex;
   align-items: center;
@@ -3059,6 +4359,7 @@ section[id] {
 }
 
 /* --- Pack strip ----------------------------------------------------- */
+
 .ps-strip {
   margin-top: clamp(1.5rem, 4vh, 2.5rem);
   display: flex;
@@ -3086,17 +4387,21 @@ section[id] {
     box-shadow 0.4s ease,
     border-color 0.4s ease;
 }
+
 .ps-thumb img {
   width: 100%;
   height: 100%;
   object-fit: contain;
   padding: 0.4rem;
 }
+
 .ps-thumb:hover {
   transform: translateY(-3px);
 }
+
 /* The active pack is the one the big stage is showing — lifted and ringed
    so the strip reads as a position indicator, not four equal buttons. */
+
 .ps-thumb[data-active='true'] {
   transform: translateY(-8px);
   border-color: var(--color-acti-sun);
@@ -3107,6 +4412,7 @@ section[id] {
   display: flex;
   gap: 0.6rem;
 }
+
 .ps-nav button {
   display: inline-flex;
   align-items: center;
@@ -3122,6 +4428,7 @@ section[id] {
     color 0.3s ease,
     border-color 0.3s ease;
 }
+
 .ps-nav button:hover {
   color: var(--color-acti-ink);
   background: var(--color-acti-sun);
@@ -3129,6 +4436,7 @@ section[id] {
 }
 
 /* --- The pack on the right ------------------------------------------ */
+
 .ps-stage {
   display: flex;
   align-items: center;
@@ -3182,6 +4490,7 @@ section[id] {
    section is deliberately cooler and greener than the orange/sun house style,
    which is what makes it read as the "proof" beat of the page.
 ================================================================*/
+
 .lp-scene {
   --lp-ground: #f8f5ee;
   --lp-ink: #243024;
@@ -3205,6 +4514,7 @@ section[id] {
 }
 
 /* The soft cream glow sitting behind the deck. */
+
 .lp-glow {
   position: absolute;
   inset: 0;
@@ -3253,6 +4563,7 @@ section[id] {
 }
 
 /* --- Left: heading ------------------------------------------------- */
+
 .lp-eyebrow {
   font-family: var(--font-sans);
   font-size: 11px;
@@ -3282,6 +4593,7 @@ section[id] {
 }
 
 /* --- Middle: the deck ---------------------------------------------- */
+
 .lp-deck {
   position: relative;
   /* The stack is absolutely positioned inside this box, so the box needs its
@@ -3338,6 +4650,7 @@ section[id] {
 
 /* Backs of the deck are glass, not photographs — the picture would fight the
    front card for attention through the transparency. */
+
 .lp-card:not([data-front]) img {
   opacity: 0;
 }
@@ -3360,6 +4673,7 @@ section[id] {
 }
 
 /* Inner hairline, kept on a pseudo-element so it sits above the photo. */
+
 .lp-card[data-front]::after {
   content: '';
   position: absolute;
@@ -3375,6 +4689,7 @@ section[id] {
 
    It starts past the fan (100% + the deepest card's 3 x 34px offset) so the
    line emerges from the far edge of the stack rather than from underneath it. */
+
 .lp-connector {
   position: absolute;
   top: 50%;
@@ -3398,6 +4713,7 @@ section[id] {
 }
 
 /* --- Right: the step list ------------------------------------------ */
+
 .lp-panel {
   border-radius: 20px;
   background: var(--lp-surface);
@@ -3432,6 +4748,7 @@ section[id] {
 
 /* The gold accent bar on the active row. On a pseudo-element so no border
    appears and disappears, which would shift the row's copy by 3px. */
+
 .lp-step::before {
   content: '';
   position: absolute;
@@ -3473,6 +4790,7 @@ section[id] {
 }
 
 /* The 20px rule under each number, turning gold on the active row. */
+
 .lp-step-num::after {
   content: '';
   position: absolute;
@@ -3516,11 +4834,13 @@ section[id] {
 }
 
 /* The per-row picture is the phone layout's job; the deck covers desktop. */
+
 .lp-step-figure {
   display: none;
 }
 
 /* --- Chrome: arrows and dots --------------------------------------- */
+
 .lp-arrow {
   position: absolute;
   top: 50%;
@@ -3595,6 +4915,7 @@ section[id] {
 }
 
 /* --- Tablet: heading above, deck and list side by side -------------- */
+
 @media (max-width: 1023px) {
   /* The three-column layout is gone, so there is no panel edge to hang off —
      back to the section's own corner. */
@@ -3624,6 +4945,7 @@ section[id] {
    glass under a photo is not worth a horizontal scrollbar. Instead each row
    carries its own picture and reveals it when selected, so the section becomes
    a straightforward image accordion. */
+
 @media (max-width: 767px) {
   .lp-scene {
     padding-inline: 1rem;
@@ -3709,6 +5031,7 @@ section[id] {
 /* Reduced motion: the reshuffle becomes a cross-fade. Transforms are frozen at
    their resting values (so the fan still LOOKS like a fan — it just stops
    sliding) and only opacity moves. Autoplay is disabled in the component. */
+
 @media (prefers-reduced-motion: reduce) {
   .lp-card,
   .lp-card img,
@@ -3740,6 +5063,7 @@ section[id] {
 
    Anything full-bleed added later just needs the .acti-seam class.
 ================================================================*/
+
 :root {
   --seam: clamp(4rem, 9vh, 8.5rem);
 }
@@ -3754,6 +5078,7 @@ section[id] {
  * and a high z-index keeps it above section artwork but below copy, which all
  * sits in positioned children.
  */
+
 .acti-seam::after {
   content: '';
   position: absolute;
@@ -3790,11 +5115,11 @@ section[id] {
     );
 }
 
-
 /* The copy has to sit above the veil. Targeted rather than blanket
    (.acti-seam > *) on purpose: .ms-scene's background layers sit at z-index
    -2/-1 so the seam can fade them, and promoting every child would drag those
    back above it and defeat the dissolve. */
+
 .lp-inner,
 /* ===============================================================
    ROOTED IN TRUST — TrustSection.jsx
@@ -3811,11 +5136,15 @@ section[id] {
      JOBS = [("bg (2).png","scene",1800,0), ("9.png","bottle",620,0),
              ("3 (3).png","droplet",360,1), ("4 (2).png","wave",1000,1)]
      for src,name,tw,keep in JOBS:
-         im = Image.open(f"public/build/{src}")
+         im = Image.open(f"public/build/{src}
+
+")
          a  = im.mode in ("RGBA","LA") and keep
          im = im.convert("RGBA" if a else "RGB")
          im.resize((tw, round(im.height*tw/im.width)), Image.LANCZOS)\
-           .save(f"public/rooted/{name}.webp","WEBP",quality=82,method=6)
+           .save(f"public/rooted/{name}
+
+.webp","WEBP",quality=82,method=6)
      EOF
 
    The four pillar cards are separate: their sources are already small
@@ -3829,515 +5158,10 @@ section[id] {
               ("small_batch_factory_exact.png","batch"),
               ("purity_oil_ripple_exact.png","ripple")]
      for src,name in CARDS:
-         Image.open(f"public/build/{src}").convert("RGB")\
-           .save(f"public/rooted/{name}.webp","WEBP",quality=86,method=6)
-     EOF
-================================================================*/
+         Image.open(f"public/build/{src}
 
-.trust-scene {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  padding: clamp(3rem, 6vw, 5.5rem) 0 clamp(2.5rem, 4vw, 4rem);
-  /* Matches the page rather than setting a paler ground of its own, which read
-     as a step against the cream on either side — the photo carries the warmth. */
-  background: var(--color-acti-cream);
-  /* Top edge only. Above is the dark cabinet, which genuinely needs the
-     dissolve; below is WhyTrust, already cream — so a bottom seam blends
-     nothing and only washes a pale band over the foot of the pillar cards. */
-  --seam-bottom: 0px;
-}
-
-.trust-scene > picture {
-  display: contents;
-}
-
-.trust-bg {
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-}
-
-/* The scene's middle is already pale, but the copy needs a guaranteed floor */
-
-.trust-veil {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background:
-    radial-gradient(58% 46% at 50% 30%, rgba(255, 250, 240, 0.82), transparent 74%),
-    linear-gradient(180deg, rgba(255, 250, 240, 0.42) 0%, rgba(250, 242, 228, 0.2) 55%, rgba(246, 235, 216, 0.5) 100%);
-}
-
-.trust-inner {
-  position: relative;
-  margin: 0 auto;
-  /* Same measure and gutter as .acti-shell, so the trust panel's edges line up
-     with Mission, Milestones and the footer instead of sitting 40px inboard. */
-  max-width: calc(var(--shell-max) + var(--shell-gutter) * 2);
-  padding-inline: var(--shell-gutter);
-}
-
-/* --- Heading ------------------------------------------------------- */
-
-.trust-head {
-  text-align: center;
-}
-
-.trust-eyebrow {
-  margin-top: 0.75rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.9rem;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.26em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--color-acti-ink) 52%, transparent);
-}
-
-.trust-rule {
-  display: block;
-  width: clamp(34px, 6vw, 74px);
-  height: 1px;
-  background: color-mix(in srgb, var(--color-acti-sun) 65%, transparent);
-}
-
-.trust-title {
-  margin-top: 0.5rem;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(2.1rem, 5vw, 3.4rem);
-  line-height: 1.1;
-  color: #3d3020;
-}
-
-.trust-title em {
-  font-style: normal;
-  color: var(--color-acti-sun);
-}
-
-.trust-sub {
-  margin-top: 0.5rem;
-  font-size: 13.5px;
-  letter-spacing: 0.02em;
-  color: color-mix(in srgb, var(--color-acti-ink) 60%, transparent);
-}
-
-/*
- * The right edge is a straight edge, matching the other three sides.
- *
- * It previously carried a concave radial mask so the panel appeared to curve
- * around the bottle standing behind it. Removed on request — the sweep read as
- * an unexplained fade on the fourth column rather than as a shaped edge.
- */
-
-.trust-panel {
-  margin-top: clamp(1.75rem, 3vw, 2.75rem);
-  border-radius: 20px;
-  /* Opaque enough that the bottle behind never reads through a cell — at 0.66
-     it showed straight through the fourth column. */
-  background: rgba(255, 252, 245, 0.93);
-  /* The panel is 93% opaque, so the blur behind it is barely perceptible —
-     6px composites meaningfully cheaper over the full-bleed scene photo. */
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 24px 50px -30px rgba(90, 62, 30, 0.35);
-  overflow: hidden;
-}
-
-.trust-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-}
-
-.trust-cell {
-  /* Shared with .trust-figure, which cancels this padding with a negative
-     margin so its picture reaches the cell's edges. Change it in one place. */
-  --trust-cell-pad: 1.15rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 1.75rem var(--trust-cell-pad) 0;
-  /* hairline dividers, as in the reference */
-  border-left: 1px solid rgba(120, 92, 54, 0.14);
-  overflow: hidden;
-}
-
-.trust-cell:first-child {
-  border-left: 0;
-}
-
-/* The sweep bites into this column's right edge, so its copy is inset to stay
-   clear of it. Only while the cut is active — the narrow layouts zero it. */
-
-@media (min-width: 1024px) {
-  .trust-cell:last-child {
-      padding-right: calc(var(--trust-cell-pad) + 1.75rem);
-    }
-}
-
-.trust-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 999px;
-  color: var(--color-acti-sun);
-  border: 1px solid color-mix(in srgb, var(--color-acti-sun) 45%, transparent);
-  background: rgba(255, 255, 255, 0.6);
-}
-
-.trust-cell-copy {
-  width: 100%;
-}
-
-.trust-cell-title {
-  margin-top: 1rem;
-  font-size: 14.5px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  color: #3d3020;
-}
-
-.trust-cell-body {
-  margin-top: 0.5rem;
-  font-size: 12.5px;
-  line-height: 1.65;
-  color: color-mix(in srgb, var(--color-acti-ink) 62%, transparent);
-}
-
-/* Sides only. The cell has left/right padding for the picture to cancel, but
-   its bottom padding is already 0 — a negative bottom margin here had nothing
-   to pull back against, so it hung the image ~18px BELOW the panel, past the
-   cream that is meant to sit behind it. That overhang is what read as the
-   picture fading out at the bottom; it was actually the panel ending. */
-
-.trust-figure {
-  margin: auto calc(var(--trust-cell-pad) * -1) 0;
-  width: auto;
-  height: 8.5rem;
-  overflow: hidden;
-}
-
-/*
- * The picture dissolves in from its top edge rather than starting on a hard
- * line across the card. A mask is used, not a cream gradient laid on top: the
- * panel behind is translucent (rgba + backdrop-blur), so an opaque overlay
- * would paint a lighter bar over it and read as a band of its own. Masking
- * removes the pixels instead, letting the real card show through.
- *
- * --trust-fade is the depth of that dissolve; raise it for a longer fade.
- */
-
-.trust-figure img {
-  --trust-fade: 42%;
-  width: 100%;
-  height: 100%;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--trust-fade));
-  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--trust-fade));
-}
-
-.trust-figure[data-fit='cover'] img {
-  object-fit: cover;
-}
-
-/* The marks must never be cropped, so this one is contained. It also fades
-   over a shorter distance — the logos sit high in their own artwork, and a
-   42% dissolve eats into the tops of the FSSAI and ISO rings. */
-
-.trust-figure[data-fit='contain'] img {
-  --trust-fade: 18%;
-  object-fit: contain;
-  object-position: bottom center;
-}
-
-/* --- Bottom assurance strip ---------------------------------------- */
-
-.trust-strip {
-  margin-top: clamp(1.25rem, 2.5vw, 2rem);
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-  border-radius: 999px;
-  padding: 1rem clamp(1rem, 3vw, 2rem);
-  background: rgba(61, 48, 32, 0.82);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-
-.trust-strip > li {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.65rem;
-  padding: 0 clamp(0.5rem, 1.5vw, 1.25rem);
-  border-left: 1px solid rgba(255, 255, 255, 0.14);
-}
-
-.trust-strip > li:first-child {
-  border-left: 0;
-}
-
-.trust-strip-title {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: #fdf6ea;
-}
-
-.trust-strip-body {
-  margin-top: 0.15rem;
-  font-size: 11px;
-  line-height: 1.5;
-  color: rgba(253, 246, 234, 0.62);
-}
-
-/* --- Tablet: 2 x 2 ------------------------------------------------- */
-
-@media (max-width: 1023px) {
-  .trust-grid,
-    .trust-strip {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-  .trust-cell:nth-child(odd) {
-      border-left: 0;
-    }
-
-  .trust-cell:nth-child(n + 3) {
-      border-top: 1px solid rgba(120, 92, 54, 0.14);
-    }
-
-  .trust-strip {
-      border-radius: 20px;
-      row-gap: 1rem;
-    }
-
-  .trust-strip > li:nth-child(odd) {
-      border-left: 0;
-    }
-}
-
-/* --- Phones: single column, taller pictures ------------------------ */
-
-@media (max-width: 639px) {
-  /* --- Heading -----------------------------------------------------
-       No phone override existed, so the title was inheriting the desktop
-       clamp's floor of 2.1rem and dominating the section. */
-
-  .trust-head {
-      padding-inline: 0.5rem;
-    }
-
-  .trust-eyebrow {
-      gap: 0.6rem;
-    }
-
-  .trust-rule {
-      width: clamp(24px, 7vw, 44px);
-    }
-
-  .trust-title {
-      margin-top: 0.35rem;
-      font-size: 1.7rem;
-      line-height: 1.14;
-    }
-
-  .trust-sub {
-      margin-top: 0.35rem;
-      font-size: 12.5px;
-    }
-
-  /* --- The scene sits ABOVE the panel, not behind it ---------------
-       Full-bleed, the portrait crop ran the whole section height and its leaves
-       and bottle collided with the heading and showed through the panel. It is
-       now a top band that fades out before the pillars begin. */
-
-  .trust-bg {
-      height: 42%;
-      object-position: center top;
-      /* The crop is a bright, low-contrast plate; knocking it back gives the
-         heading something to sit on and stops the bottle competing with it. */
-      filter: brightness(0.82) contrast(1.06) saturate(1.04);
-      -webkit-mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
-      mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
-    }
-
-  /* The bottle and the pour sit right where the heading does, so the veil
-       needs a firm local floor behind the type — a soft wash left "every drop."
-       reading straight over the bottle's neck. */
-
-  .trust-veil {
-      background:
-        radial-gradient(78% 20% at 50% 14%, rgba(255, 250, 240, 0.82), rgba(255, 250, 240, 0.34) 64%, transparent 100%),
-        linear-gradient(180deg, rgba(255, 250, 240, 0.24) 0%, rgba(255, 248, 238, 0.86) 34%, var(--color-acti-cream) 50%);
-    }
-
-  /* --- Phone layout ------------------------------------------------
-       Desktop gives each pillar its own column with a photo underneath. On a
-       phone that stacks into four tall photo blocks and the section runs to
-       several screens, so the pillars become compact icon-left / text-right
-       rows and the per-cell picture is dropped — the scene behind the panel is
-       already carrying the imagery. The assurance strip stays 4-across with the
-       icon above its label, which fits because the labels are two short words. */
-
-  .trust-grid {
-      grid-template-columns: 1fr;
-    }
-
-  .trust-panel {
-      /* tighter than full-bleed so the scene reads around it */
-      margin-inline: 0.25rem;
-      border-radius: 16px;
-    }
-
-  .trust-cell {
-      /* row, not a centred column */
-      flex-direction: row;
-      align-items: flex-start;
-      gap: 0.65rem;
-      text-align: left;
-      border-left: 0;
-      padding: 0.75rem 0.9rem;
-    }
-
-  .trust-cell + .trust-cell {
-      border-top: 1px solid rgba(120, 92, 54, 0.14);
-    }
-
-  .trust-badge {
-      flex: none;
-      width: 1.9rem;
-      height: 1.9rem;
-      margin-top: 0.05rem;
-    }
-
-  .trust-badge svg {
-      width: 0.9rem;
-      height: 0.9rem;
-    }
-
-  /* The copy column sits to the right of the icon, title stacked over body */
-
-  .trust-cell-copy {
-      flex: 1;
-      min-width: 0;
-    }
-
-  .trust-cell-title {
-      margin-top: 0;
-      font-size: 13px;
-    }
-
-  .trust-cell-body {
-      margin-top: 0.15rem;
-      font-size: 12px;
-      line-height: 1.45;
-    }
-
-  .trust-marks {
-      justify-content: flex-start;
-      margin-top: 0.55rem;
-    }
-
-  /* The pillar photos are what made this section three screens tall */
-
-  .trust-figure {
-      display: none;
-    }
-
-  /* --- Assurance strip: 4 across, icon over label ------------------ */
-
-  .trust-strip {
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0;
-      border-radius: 18px;
-      padding: 0.9rem 0.4rem;
-    }
-
-  /* The 1023px block sets border-left:0 on :nth-child(odd) for its 2-up
-       layout. That selector is specificity 0,2,1 and beats a plain
-       `.trust-strip > li` (0,1,1) whatever the order, so child 3 lost its
-       divider — the "missing middle line". Re-assert at equal specificity. */
-
-  .trust-strip > li:nth-child(odd) {
-      border-left: 1px solid rgba(255, 255, 255, 0.12);
-    }
-
-  .trust-strip > li:first-child {
-      border-left: 0;
-    }
-
-  .trust-strip > li {
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      gap: 0.4rem;
-      padding: 0 0.25rem;
-      border-left: 1px solid rgba(255, 255, 255, 0.12);
-    }
-
-  .trust-strip > li:first-child {
-      border-left: 0;
-    }
-
-  .trust-strip-title {
-      font-size: 12px;
-      line-height: 1.25;
-      letter-spacing: 0;
-    }
-
-  /* Only the label survives at this width — the sentence would wrap to four
-       lines each and the strip would be taller than the panel above it. */
-
-  .trust-strip-body {
-      display: none;
-    }
-}
-
-/* The copy has to sit above the veil. Targeted rather than blanket
-   (.acti-seam > *) on purpose: .trust-bg and .trust-veil live at z-index -2/-1
-   so the seam can fade them, and promoting every child would drag those back
-   above it and defeat the dissolve. */
-
-
-
-@media (max-width: 639px) {
-  /* --- 3. Lift the smallest type -------------------------------- */
-
-  .trust-eyebrow,
-    .wt-eyebrow,
-    .ms-label,
-    .mv-kicker {
-      font-size: 12px;
-    }
-
-  .trust-strip-body,
-    .wt-foot {
-      font-size: 12px;
-      letter-spacing: 0.14em;
-    }
-
-  .trust-cell-body,
-    .ms-body,
-    .mv-text {
-      font-size: 14.5px;
-    }
-
-  /* --- 4. Hold headline contrast against the burnt-in titles ---- */
-}
-
-
-.trust-inner,
-.ms-scene > div {
-  position: relative;
-  z-index: 1;
-}
+").convert("RGB")\
+           .save(f"public/rooted/{name}
 
 @media (prefers-reduced-motion: reduce) {
   :root {
@@ -4361,6 +5185,7 @@ section[id] {
       portrait object-cover crops hard and they sit behind the
       headline, so the scrim is deepened to hold contrast.
 ================================================================*/
+
 @media (max-width: 639px) {
   /* --- 1. Snap one oval at a time, not the pair ------------------ */
   .wt-viewport--swipe {
@@ -4549,6 +5374,7 @@ section[id] {
 /* --- 2. Touch targets ------------------------------------------
    Applies on any coarse pointer, not a width breakpoint — a small
    tablet has the same fingers. */
+
 @media (pointer: coarse) {
   .acti-tap {
     min-width: 44px;
@@ -4609,6 +5435,7 @@ section[id] {
    .acti-shell is the single container. Change --shell-max or
    --shell-gutter here and every section moves together.
 ================================================================*/
+
 :root {
   --shell-max: 1200px;
   --shell-gutter: clamp(1.25rem, 4vw, 3rem);
@@ -4624,6 +5451,7 @@ section[id] {
 /* The two cinematic scenes are full-bleed by design — their copy sits in the
    frame, not in a measured column — but the copy still has to align with the
    rest of the page, so they take the same gutter on a wider measure. */
+
 .acti-shell--wide {
   --shell-max: 1520px;
 }
@@ -4645,6 +5473,7 @@ section[id] {
    pushes the content down instead of overlapping it — the copy never
    ends up underneath the sweep however narrow the viewport gets.
 ================================================================*/
+
 .af-curve {
   display: block;
   width: 100%;
@@ -4674,6 +5503,7 @@ section[id] {
    `isolation: isolate` section, so it can never escape over the header
    or the footer's arc however tall the cards get.
 ================================================================*/
+
 .contact-scene {
   position: relative;
   isolation: isolate;
@@ -4703,6 +5533,7 @@ section[id] {
 }
 
 /* --- Heading ------------------------------------------------------- */
+
 .contact-head {
   text-align: center;
   /* The plate puts the bottle top-right and leaves top-left. The heading
@@ -4729,31 +5560,17 @@ section[id] {
   color: color-mix(in srgb, var(--color-acti-ink) 62%, transparent);
 }
 
-/* --- The three cards ----------------------------------------------- */
 /* Form / details / map. The form is widest because it holds five inputs
    and a textarea; the other two are content-sized. On tablet the map
    drops to a full-width row under the other two, and on phone all three
    stack in source order. */
+
 .contact-grid {
   margin-top: clamp(2rem, 4vw, 3.25rem);
   display: grid;
   grid-template-columns: 1.15fr 1fr 1fr;
   gap: clamp(1rem, 2vw, 1.5rem);
   align-items: start;
-}
-
-.contact-card {
-  border-radius: 18px;
-  padding: clamp(1.1rem, 2vw, 1.6rem);
-  /* Near-opaque, like .lp-panel: the plate's wave and leaves run under
-     the cards at the section's edges, and at anything below ~0.9 the
-     form's placeholder text picked up the artwork behind it. */
-  background: rgba(255, 253, 248, 0.94);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  /* No border — a hairline read as an outline against the plate. The
-     shadow alone lifts the card, same call as the trust panel. */
-  box-shadow: 0 22px 46px -28px rgba(90, 62, 30, 0.42);
 }
 
 .contact-card-title {
@@ -4766,6 +5583,7 @@ section[id] {
 }
 
 /* --- Card 1: the form ---------------------------------------------- */
+
 .contact-form {
   display: flex;
   flex-direction: column;
@@ -4811,6 +5629,7 @@ section[id] {
 
 /* A ring as well as a border colour: the 1px border alone was not a
    visible enough focus target on the cream card for keyboard users. */
+
 .contact-field input:focus,
 .contact-field textarea:focus {
   border-color: var(--color-acti-orange);
@@ -4842,6 +5661,7 @@ section[id] {
 }
 
 /* --- Card 2: the details ------------------------------------------- */
+
 .contact-rows {
   margin-top: 1rem;
   display: flex;
@@ -4902,6 +5722,7 @@ a.contact-row-value:hover {
 }
 
 /* --- Card 3: the map ----------------------------------------------- */
+
 .contact-map {
   display: flex;
   flex-direction: column;
@@ -4939,6 +5760,7 @@ a.contact-row-value:hover {
 }
 
 /* --- Follow us ------------------------------------------------------ */
+
 .contact-social {
   margin-top: clamp(1rem, 2vw, 1.5rem);
   display: grid;
@@ -4991,6 +5813,7 @@ a.contact-row-value:hover {
 }
 
 /* --- Tablet: the map drops to its own full-width row ---------------- */
+
 @media (max-width: 1023px) {
   .contact-grid {
     grid-template-columns: 1fr 1fr;
@@ -5006,6 +5829,7 @@ a.contact-row-value:hover {
 }
 
 /* --- Phone: single column ------------------------------------------ */
+
 @media (max-width: 639px) {
   .contact-scene {
     padding: clamp(2.25rem, 8vw, 3rem) 0 clamp(2rem, 6vw, 2.75rem);
@@ -5034,21 +5858,6 @@ a.contact-row-value:hover {
   }
 }
 
-/* --- /contact as a page --------------------------------------------
-   ActiproSite's hero is designed to run UNDER the fixed bar, so that page
-   needs no clearance. This one starts with a heading, which the bar would
-   sit on top of — hence a reserved strip the height of the header. It is
-   on the page wrapper rather than on .contact-scene so the section stays
-   reusable if it is ever dropped back into a scrolling page.
-
-   The clearance is padding on the SECTION, not on this wrapper: the plate
-   is .contact-scene's own background, so wrapper padding would push the
-   image down and leave a band above it. The image's top edge is not one
-   flat colour either (pale at the left, warm at the right), so painting a
-   band to match is not possible — it has to be the artwork itself that
-   runs up behind the bar. */
-
-
 /* The footer's curve is a shape cut out of the ink, so whatever sits BEHIND
    it shows through the negative space above the arc. On the landing page
    that is page cream and the join is invisible. Here the section above ends
@@ -5059,6 +5868,7 @@ a.contact-row-value:hover {
    instead of following it, so the plate runs behind the arc and the two
    meet with no band. The section's padding-bottom (below) replaces the
    space the negative margin removes, so no content is covered. */
+
 .contact-page .af-curve {
   position: relative;
   z-index: 1;
@@ -5072,6 +5882,7 @@ a.contact-row-value:hover {
 
    padding-bottom is the room the curve overlaps into. Without it the arc
    would cut across the social row instead of across empty plate. */
+
 .contact-page .contact-scene {
   padding-top: clamp(7rem, 13vw, 9rem);
   padding-bottom: clamp(5rem, 10vw, 8rem);
@@ -5093,6 +5904,7 @@ a.contact-row-value:hover {
    band across the top. The frost stays: it is what keeps the nav legible
    where the bottle passes underneath it.
    ------------------------------------------------------------------- */
+
 .contact-page .acti-header {
   --acti-tone: 1;
   /* No solid cream band and no hairline: the plate's artwork runs up behind
@@ -5111,6 +5923,7 @@ a.contact-row-value:hover {
 
 /* The open mobile menu still needs a solid bar — its panel below is opaque
    cream, and a translucent bar above an opaque panel reads as a mistake. */
+
 .contact-page .acti-header[data-solid='true'] {
   background-color: rgb(255 248 238 / 0.96);
 }
@@ -5128,6 +5941,7 @@ a.contact-row-value:hover {
    source order — the alternation is a wide-screen affordance and
    means nothing in one column.
 ================================================================*/
+
 .ht-scene {
   position: relative;
   /* padding-top clears the fixed header, the same problem .contact-scene
@@ -5139,6 +5953,7 @@ a.contact-row-value:hover {
 }
 
 /* --- Heading ------------------------------------------------------- */
+
 .ht-head {
   max-width: 46rem;
 }
@@ -5172,10 +5987,10 @@ a.contact-row-value:hover {
   color: color-mix(in srgb, var(--color-acti-ink) 66%, transparent);
 }
 
-/* --- The four numbers ---------------------------------------------- */
 /* auto-fit rather than a fixed four columns: at the tablet width four
    would each be too narrow to hold "Oil per person, per day" on two
    lines, and this drops to two columns on its own instead. */
+
 .ht-quick {
   margin-top: clamp(2.5rem, 5vw, 3.5rem);
   display: grid;
@@ -5216,6 +6031,7 @@ a.contact-row-value:hover {
 }
 
 /* --- The tip cards -------------------------------------------------- */
+
 .ht-list {
   margin-top: clamp(3rem, 6vw, 4.5rem);
   display: grid;
@@ -5236,11 +6052,13 @@ a.contact-row-value:hover {
    grid rather than by reordering in JSX so the DOM order stays
    copy-then-video — that is the order it must be read and tabbed in,
    and the order it collapses to on a phone. */
+
 .ht-card:nth-child(even) {
   direction: rtl;
 }
 
 /* The flip above inherits into the children, so put them back. */
+
 .ht-card:nth-child(even) > * {
   direction: ltr;
 }
@@ -5277,12 +6095,12 @@ a.contact-row-value:hover {
   color: color-mix(in srgb, var(--color-acti-ink) 68%, transparent);
 }
 
-/* --- The artwork ----------------------------------------------------- */
 /* 4 / 5 because that is what the creatives are (see healthTips.js) — the
    ratio is declared here rather than left to the file so the row reserves
    the right height before the image arrives and nothing jumps as it loads.
    max-width keeps a tall creative from towering over its paragraph on a
    wide screen; margin-inline centres what is left of the column. */
+
 .ht-frame {
   position: relative;
   aspect-ratio: 4 / 5;
@@ -5306,6 +6124,7 @@ a.contact-row-value:hover {
 }
 
 /* --- The disclaimer -------------------------------------------------- */
+
 .ht-note {
   margin-top: clamp(2.5rem, 5vw, 3.5rem);
   padding-top: 1.5rem;
@@ -5316,6 +6135,7 @@ a.contact-row-value:hover {
 }
 
 /* --- Tablet and phone ------------------------------------------------ */
+
 @media (max-width: 900px) {
   /* One column, so the alternation has nothing left to alternate and the
      rtl flip must be undone or the copy reads right-aligned. */
@@ -5344,6 +6164,7 @@ a.contact-row-value:hover {
    the bar keeps a solid cream fill and its hairline rather than going to
    glass: there is nothing underneath it worth showing through.
    -------------------------------------------------------------------- */
+
 .healthy-tips-page .acti-header {
   --acti-tone: 1;
   background-color: rgb(255 248 238 / 0.92);

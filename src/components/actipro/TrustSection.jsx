@@ -1,148 +1,199 @@
-import { PinIcon, ShieldIcon, FlameIcon, DropIcon, LeafIcon, HeartIcon } from './icons'
+import { useRef } from 'react'
+import { motion, useInView, useReducedMotion } from 'framer-motion'
+import { Leaf, Droplet, ShieldCheck, Sprout, FlaskConical } from 'lucide-react'
 
 /*
- * ROOTED IN TRUST — the four-pillar trust panel.
+ * TRUST — "Trust in every drop."
  *
- * Layout is the reference's: a full-bleed photographic scene (pour and bowl at
- * the left, bottle at the right, clear middle), a centred heading over it, and
- * a translucent card holding four columns. A slim strip of secondary
- * reassurances runs along the bottom.
+ * A full-bleed art plate with everything set in a 900px column down the middle.
+ * That column is not a style choice: the background photograph already has
+ * leaves in the top-left, a bottle on the right and a bowl bottom-right, so the
+ * centre is the only part of the frame that is actually empty. Content that
+ * escapes the column lands on top of the bottle.
  *
- * Every image comes from public/build/, resized into public/rooted/ as WebP —
- * the originals are 0.6-2.3 MB PNGs and there are eight of them. See the note
- * in index.css for the conversion, and for which build/ file became which name.
+ * Readability is ONE soft cream radial, no dark overlay — the art is airy and a
+ * scrim would flatten it. The gradient is stronger on phones, where the crop
+ * puts more of the artwork behind the text (see --trust-veil).
  *
- * Each pillar carries its own card image along the bottom of its column:
- * farm (illustration), certs (FSSAI / ISO 22000 / GMP marks), batch (the
- * filling line) and ripple (a drop landing in oil). certs is `contain` so the
- * marks are never cropped; the rest are `cover` and bleed to the cell edge.
- *
- * Static by design: this sits after three scroll-driven scenes, and the page
- * does not need a fourth thing competing for attention.
+ * Motion runs once, on scroll into view, and is skipped entirely under
+ * prefers-reduced-motion (the variants collapse to a static state rather than
+ * animating to it, so nothing ever moves).
  */
-const PILLARS = [
+
+const GREEN = '#1E3B2C'
+const GOLD = '#C08A1E'
+
+const DEFAULT_FEATURES = [
   {
     key: 'traceability',
-    Icon: PinIcon,
+    Icon: Sprout,
     title: '100% Traceability',
     body: 'We trace our oils from trusted farms to your kitchen.',
-    image: '/rooted/farm.webp',
-    alt: 'A line drawing of a farmhouse above ploughed fields',
-    fit: 'cover',
   },
   {
     key: 'certified',
-    Icon: ShieldIcon,
+    Icon: ShieldCheck,
     title: 'Certified Quality',
     body: 'Tested and certified to meet the highest safety and quality standards.',
-    image: '/rooted/certs.webp',
-    alt: 'FSSAI licence 100210220000234, ISO 22000 certified company and GMP marks',
-    fit: 'contain',
   },
   {
-    key: 'batch',
-    Icon: FlameIcon,
+    key: 'small-batch',
+    Icon: Droplet,
     title: 'Small Batch Made',
     body: 'Made in small batches to retain natural goodness and freshness.',
-    image: '/rooted/batch.webp',
-    alt: 'Oil running from a bottling head into a glass flask on the filling line',
-    fit: 'cover',
   },
   {
     key: 'purity',
-    Icon: DropIcon,
+    Icon: Leaf,
     title: 'Purity You Can See',
     body: 'No additives. No compromises. Just pure, healthy oil.',
-    image: '/rooted/ripple.webp',
-    alt: 'A drop falling into golden oil, sending out rings',
-    fit: 'cover',
   },
 ]
 
-const ASSURANCES = [
-  { Icon: ShieldIcon, title: 'Safe & Reliable', body: 'Every bottle is safe for you and your family.' },
-  { Icon: LeafIcon, title: 'Sustainably Sourced', body: 'We partner with farmer communities we respect.' },
-  { Icon: FlameIcon, title: 'Lab Tested', body: 'Every batch is lab-tested for purity and safety.' },
-  { Icon: HeartIcon, title: 'Made with Care', body: 'Crafted with passion, packed with care.' },
+/*
+ * Three of the four marks are real artwork, split out of the combined
+ * certification strip that shipped with the old section (public/rooted/
+ * certs.webp) and re-cut with their card background knocked out so they sit on
+ * the glass bar rather than on a beige rectangle of their own.
+ *
+ * The fourth has no logo — there is no "lab tested" mark in the repo — so it
+ * renders an outlined flask instead of inventing a badge. `logo: null` is the
+ * signal for that, not an oversight.
+ */
+const DEFAULT_BADGES = [
+  { key: 'fssai', logo: '/trust/badges/fssai.webp', line1: 'FSSAI', line2: 'Approved' },
+  { key: 'iso', logo: '/trust/badges/iso22000.webp', line1: 'ISO 22000', line2: 'Certified' },
+  { key: 'gmp', logo: '/trust/badges/gmp.webp', line1: 'GMP', line2: 'Certified' },
+  { key: 'lab', logo: null, Icon: FlaskConical, line1: 'Lab Tested', line2: 'For Purity' },
 ]
 
-export default function TrustSection() {
+const EASE = [0.22, 1, 0.36, 1]
+
+export default function TrustSection({
+  bgImage = '/trust/trust-bg.webp',
+  bgImageMobile = '/trust/trust-bg-mobile.webp',
+  features = DEFAULT_FEATURES,
+  badges = DEFAULT_BADGES,
+}) {
+  const ref = useRef(null)
+  const reduced = useReducedMotion()
+  // once:true — the section animates the first time it is reached and then
+  // stays put; re-running on every scroll-by is distracting on a long page.
+  const inView = useInView(ref, { once: true, margin: '-100px' })
+  const show = reduced || inView
+
+  /* Header children stagger 80ms; the feature columns pick up after the header
+     has finished (4 header items x 80ms + the 0.5s item duration), and the
+     certification bar lands last. Delays are expressed as functions of the
+     index so the sequence stays right if items are added. */
+  const rise = (delay) => ({
+    initial: reduced ? false : { opacity: 0, y: 16 },
+    animate: show ? { opacity: 1, y: 0 } : undefined,
+    transition: reduced ? { duration: 0 } : { duration: 0.5, ease: EASE, delay },
+  })
+
+  const HEADER_STEP = 0.08
+  const FEATURES_AT = 5 * HEADER_STEP + 0.2
+
   return (
-    <section id="rooted" className="trust-scene acti-seam">
-      {/* The photographic ground.
-          scene.webp is a 1800x1013 landscape: cover-fitting it into a tall
-          phone section renders it 1452px wide and shows only the middle 27% —
-          which is the scene's empty backdrop, so the pour and the bottle both
-          crop away and the top of the section looked blank.
-          scene-portrait.webp is a phone-shaped recomposition (the two busy
-          edges kept, the dead centre dropped, seam feathered) so a narrow
-          viewport still gets the subject. Decorative, hence no alt text. */}
+    <section id="rooted" ref={ref} className="trust-scene">
+      {/* object-cover on a <picture>, not a CSS background, so the phone crop
+          can be swapped with a media query and the browser only fetches one. */}
       <picture>
-        <source media="(max-width: 639px)" srcSet="/rooted/scene-portrait.webp" />
-        <img className="trust-bg" src="/rooted/scene.webp" alt="" aria-hidden="true" loading="lazy" />
+        <source media="(max-width: 639px)" srcSet={bgImageMobile} />
+        <img className="trust-bg" src={bgImage} alt="" aria-hidden="true" />
       </picture>
+
+      {/* The single readability layer. Cream, never dark. */}
       <div className="trust-veil" aria-hidden="true" />
 
       <div className="trust-inner">
         <header className="trust-head">
-          <LeafIcon className="mx-auto h-5 w-5 text-acti-sun" aria-hidden="true" />
+          <motion.div {...rise(0)}>
+            <Leaf size={32} strokeWidth={1.5} color={GOLD} aria-hidden="true" />
+          </motion.div>
 
-          <span className="trust-eyebrow">
+          <motion.p className="trust-eyebrow" {...rise(HEADER_STEP)}>
             <span className="trust-rule" aria-hidden="true" />
             Rooted in trust
             <span className="trust-rule" aria-hidden="true" />
-          </span>
+          </motion.p>
 
-          <h2 className="trust-title">
+          <motion.h2 className="trust-title" {...rise(HEADER_STEP * 2)}>
             Trust in <em>every drop.</em>
-          </h2>
+          </motion.h2>
 
-          <DropIcon className="mx-auto h-4 w-4 text-acti-sun" aria-hidden="true" />
-          <p className="trust-sub">Purity. Quality. Care. In every step.</p>
+          <motion.div className="trust-divider" {...rise(HEADER_STEP * 3)} aria-hidden="true">
+            <span className="trust-rule trust-rule--wide" />
+            <Droplet size={18} strokeWidth={1.5} color={GOLD} />
+            <span className="trust-rule trust-rule--wide" />
+          </motion.div>
+
+          <motion.p className="trust-sub" {...rise(HEADER_STEP * 4)}>
+            Purity. Quality. Care. In every step.
+          </motion.p>
         </header>
 
-        <div className="trust-panel">
-          <ul className="trust-grid">
-            {PILLARS.map(({ key, Icon, title, body, image, alt, fit }) => (
-              <li key={key} className="trust-cell">
-                <span className="trust-badge">
-                  <Icon className="h-6 w-6" />
-                </span>
+        <ul className="trust-grid">
+          {features.map(({ key, Icon, title, body }, i) => (
+            <motion.li
+              key={key}
+              className="trust-cell"
+              initial={reduced ? false : { opacity: 0, y: 16 }}
+              animate={show ? { opacity: 1, y: 0 } : undefined}
+              transition={
+                reduced ? { duration: 0 } : { duration: 0.5, ease: EASE, delay: FEATURES_AT + i * 0.1 }
+              }
+            >
+              <motion.span
+                className="trust-badge"
+                initial={reduced ? false : { scale: 0.92 }}
+                animate={show ? { scale: 1 } : undefined}
+                transition={
+                  reduced
+                    ? { duration: 0 }
+                    : { duration: 0.5, ease: EASE, delay: FEATURES_AT + i * 0.1 }
+                }
+              >
+                <Icon size={34} strokeWidth={1.5} color={GREEN} aria-hidden="true" />
+              </motion.span>
 
-                {/* Wrapped so the phone layout can put the icon beside the copy
-                    and still stack the title over the body. Without this the
-                    two become sibling flex children of the row and sit side by
-                    side, which wraps every title to three lines. Full-width
-                    block on desktop, so that column layout is unchanged. */}
-                <div className="trust-cell-copy">
-                  <h3 className="trust-cell-title">{title}</h3>
-                  <p className="trust-cell-body">{body}</p>
-                </div>
-
-                {/* The certification marks are now real artwork (rooted/certs.webp)
-                    rather than the typographic stand-in they used to be, so every
-                    pillar carries its picture the same way. */}
-                <figure className="trust-figure" data-fit={fit}>
-                  <img src={image} alt={alt} loading="lazy" decoding="async" />
-                </figure>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <ul className="trust-strip">
-          {ASSURANCES.map(({ Icon, title, body }) => (
-            <li key={title}>
-              {/* Nudged down off the flex-start edge so it centres against the
-                  title rather than sitting proud of it. */}
-              <Icon className="mt-1 h-11 w-11 shrink-0 text-acti-sun" aria-hidden="true" />
-              <div>
-                <p className="trust-strip-title">{title}</p>
-                <p className="trust-strip-body">{body}</p>
-              </div>
-            </li>
+              <h3 className="trust-cell-title">{title}</h3>
+              <span className="trust-dot" aria-hidden="true" />
+              <p className="trust-cell-body">{body}</p>
+            </motion.li>
           ))}
         </ul>
+
+        <motion.ul
+          className="trust-certs"
+          initial={reduced ? false : { opacity: 0, y: 12 }}
+          animate={show ? { opacity: 1, y: 0 } : undefined}
+          transition={
+            reduced
+              ? { duration: 0 }
+              : { duration: 0.5, ease: EASE, delay: FEATURES_AT + features.length * 0.1 }
+          }
+        >
+          {badges.map(({ key, logo, Icon, line1, line2 }) => (
+            <li key={key}>
+              {logo ? (
+                <img src={logo} alt="" aria-hidden="true" loading="lazy" decoding="async" />
+              ) : (
+                /* No artwork for this mark, so an outlined icon stands in at
+                   the same optical size rather than a fabricated badge. */
+                <span className="trust-cert-icon">
+                  <Icon size={30} strokeWidth={1.5} color={GREEN} aria-hidden="true" />
+                </span>
+              )}
+              <p>
+                {line1}
+                <br />
+                {line2}
+              </p>
+            </li>
+          ))}
+        </motion.ul>
       </div>
     </section>
   )
