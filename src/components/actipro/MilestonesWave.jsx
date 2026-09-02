@@ -73,15 +73,6 @@ const NODES = [
   { id: '05', x: '85%', y: '62%', Icon: Users,       label: 'Trusted daily',   body: 'In kitchens across central India.' },
 ]
 
-/* The stats bar, under the stage. Carried over from Milestones.jsx (the
-   vertical-timeline section this replaced) so the hard numbers it published are
-   not lost with it — the copy is the same, trimmed to bar length. */
-const STATS = [
-  { stat: '03', label: 'Refineries running' },
-  { stat: '04', label: 'Oils in the range' },
-  { stat: '100%', label: 'Batches on record' },
-]
-
 /* A leaf drawn inline rather than pulled from lucide: it sits INSIDE the
    divider rule at 10px, where lucide's 1.5-weight strokes turn to mush. */
 function LeafGlyph() {
@@ -109,7 +100,26 @@ export default function MilestonesWave({
   poster,
 }) {
   return (
-    <section id="milestones-wave" className="w-full overflow-hidden bg-[#F5E9D9]">
+    /* #F5E7D5 — SAMPLED from the clip's bottom edge with ffmpeg, not taken
+       from the spec. The spec named #F5E9D9, which is two points off on green
+       and blue; close enough to look right in isolation and still enough to
+       show as a faint line where the letterbox meets it. The clip's backdrop
+       is a subtle texture (it ranges #F3E5D5..#F6EBDA across the frame), but
+       its bottom edge — the only part that matters here — is a consistent
+       #F5E7D5.
+
+       object-contain letterboxes the footage against whatever this section
+       paints, so the section has to be the same cream as the clip or the
+       letterbox shows as a hard horizontal line where the video ends. Matching
+       it makes the seam disappear: the section and the footage are one
+       continuous field of colour.
+
+       This is also why there is no closing curve in this component. The FOOTER
+       already carries this cream down into the ink (.af-curve in
+       ActiproFooter.jsx), and that curve is now the single edge between the
+       two. A curve here as well produced two parallel arcs with a cream ribbon
+       trapped between them. */
+    <section id="milestones-wave" className="w-full overflow-hidden bg-[#F5E7D5]">
       {/* THE STAGE — the locked-ratio box EVERYTHING is measured against, the
           heading included. Its aspect ratio is reserved up front, so the
           section holds its final height before the video has loaded a single
@@ -181,8 +191,15 @@ export default function MilestonesWave({
         </div>
 
         {/* Content layer over the footage. pointer-events-none so the nodes
-            never swallow a scroll gesture that started on the video. */}
-        <div className="pointer-events-none absolute inset-0 z-10">
+            never swallow a scroll gesture that started on the video.
+
+            HIDDEN BELOW md. The stage scales with the viewport (16:9), so at
+            phone widths it is only ~220px tall — five 128px-wide nodes pinned
+            at 12..85% overlapped the heading, each other and the section's
+            bottom edge. On phones the same five nodes render as the in-flow
+            grid AFTER the stage instead; this pinned layer is the md+ layout
+            only. */}
+        <div className="pointer-events-none absolute inset-0 z-10 hidden md:block">
           {NODES.map(({ id, x, y, Icon, label, body }) => (
             <div
               key={id}
@@ -273,21 +290,31 @@ export default function MilestonesWave({
         )}
       </div>
 
-      {/* STATS BAR. Sits under the stage in normal flow — it is a summary of
-          the section, not something pinned to a point on the wave, so it does
-          not belong inside the locked-ratio box. */}
-      <div className="mx-auto grid max-w-4xl grid-cols-3 gap-4 px-5 pb-16 pt-8 md:pb-20">
-        {STATS.map(({ stat, label }) => (
-          <div key={label} className="text-center">
-            <p className="font-serif text-[32px] leading-none text-[#55692B] md:text-[44px]">
-              {stat}
-            </p>
-            <p className="mx-auto mt-2 max-w-[18ch] text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8A7A5C] md:text-[12px]">
+      {/* PHONE LAYOUT — the same five milestones as an ordinary grid under the
+          wave, in the same fixed child order (badge → number → label → body).
+          On phones the stage above keeps only the heading and the footage;
+          this grid replaces the percent-pinned layer, which is md+ only (see
+          the note on it). The body copy is shown here — in flow there is room
+          for it, unlike on the pinned layout where it is md+ as well. The
+          fifth item spans both columns so the odd count doesn't leave a hole. */}
+      <ul className="mx-auto grid max-w-md grid-cols-2 gap-x-4 gap-y-8 px-5 pb-12 pt-4 text-center md:hidden">
+        {NODES.map(({ id, Icon, label, body }) => (
+          <li key={id} className="last:col-span-2">
+            <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full border border-[#C9A961] bg-[#FFFDF8] shadow-sm">
+              <Icon size={19} strokeWidth={1.6} className="text-[#55692B]" aria-hidden="true" />
+            </span>
+            <span className="my-1 block text-[11px] font-semibold tracking-[0.18em] text-[#8A7A5C]">
+              {id}
+            </span>
+            <span className="block text-[13px] font-bold uppercase tracking-[0.08em] text-[#2F4A21]">
               {label}
-            </p>
-          </div>
+            </span>
+            <span className="mx-auto mt-1 block max-w-[24ch] text-[12px] leading-snug text-[#5C5347]">
+              {body}
+            </span>
+          </li>
         ))}
-      </div>
+      </ul>
     </section>
   )
 }

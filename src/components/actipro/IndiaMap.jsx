@@ -1,92 +1,124 @@
+import { useEffect, useState } from 'react'
+
 /*
- * A simplified outline of India, drawn as a single path, with a pin per
- * distributor cluster.
+ * INDIA MAP — the "Our Presence" panel on /contact.
  *
- * Deliberately NOT a real geographic projection and not a mapping library:
- * this is a decorative "where we reach" graphic in a contact card, so the
- * whole thing is ~1 KB of inline SVG instead of a tiles/GeoJSON dependency
- * plus a network request. If real, pannable geography is ever needed here,
- * this component is the only thing that has to be replaced.
+ * Real state geometry, from public/contact/india.svg. That file is a cleaned
+ * copy of the Simplemaps outline the client supplied (public/contact/in.svg):
+ * 36 <path> elements, one per state and union territory, each keyed by its ISO
+ * code with the state name on data-name.
  *
- * The outline traces the recognisable silhouette — Kutch and Gujarat on the
- * west, the Deccan tapering to Kanyakumari, the east coast up through Bengal,
- * and the Himalayan arc across the top. viewBox is 0 0 100 116, so the pin
- * coordinates below are read as percentages of that box and can be nudged by
- * eye without recomputing anything.
+ * ── WHY IT IS FETCHED RATHER THAN INLINED ───────────────────────────────────
+ * The path data is ~199 KB (48 KB gzipped). Inlining it would put all of that
+ * in the JS bundle, downloaded by every visitor to every page. Fetched, it is
+ * one cached request that only /contact ever makes, and the panel renders its
+ * frame immediately while the geometry arrives.
  *
- * PINS are the states Actipro currently ships to. Names carry into the
- * <title> of each pin, so a screen reader gets the list rather than 9
- * anonymous shapes — and the map itself is role="img" with one label.
+ * It is injected with dangerouslySetInnerHTML, which is safe here for a
+ * specific reason: the file is a build-time asset in our own public/ directory,
+ * not user input or a third-party URL. Do NOT point `src` at anything a visitor
+ * can influence.
+ *
+ * ── PRECISION ───────────────────────────────────────────────────────────────
+ * Coordinates are kept to ONE decimal. The paths use relative `l` commands with
+ * sub-unit deltas (-0.3 -0.5 and the like), so rounding to whole numbers
+ * collapses most segments to "0 0" and destroys the outline — that was tried
+ * and it flattened every state. One decimal halves nothing but is the floor.
+ *
+ * ── SERVED STATES ───────────────────────────────────────────────────────────
+ * SERVED lists the states Actipro currently ships to, by the same ISO code the
+ * SVG uses. They are filled in the brand red and carry a pin; everything else
+ * is drawn as pale, unhighlighted land. Centroids are computed from the real
+ * path geometry (walked, not guessed), so a pin sits on its own state.
+ *
+ * These are STATES, not verified distributor addresses — the panel's copy says
+ * so. When a real distributor list arrives, extend the SERVED entries with
+ * whatever the tooltip should show; onSelect already hands the whole object out.
  */
-const PINS = [
-  { name: 'Punjab', x: 33, y: 22 },
-  { name: 'Delhi NCR', x: 38, y: 30 },
-  { name: 'Rajasthan', x: 27, y: 38 },
-  { name: 'Uttar Pradesh', x: 47, y: 36 },
-  { name: 'Gujarat', x: 22, y: 51 },
-  { name: 'Madhya Pradesh', x: 40, y: 47 },
-  { name: 'Maharashtra', x: 31, y: 61 },
-  { name: 'Telangana', x: 41, y: 68 },
-  { name: 'Karnataka', x: 33, y: 78 },
+
+const SERVED = [
+  { id: 'INMP', name: 'Madhya Pradesh', x: 376.3, y: 460.8, home: true },
+  { id: 'INPB', name: 'Punjab', x: 303.1, y: 250.2 },
+  { id: 'INDL', name: 'Delhi', x: 344.5, y: 320.6 },
+  { id: 'INRJ', name: 'Rajasthan', x: 288.5, y: 403.0 },
+  { id: 'INUP', name: 'Uttar Pradesh', x: 428.2, y: 385.8 },
+  { id: 'INGJ', name: 'Gujarat', x: 187.7, y: 506.6 },
+  { id: 'INMH', name: 'Maharashtra', x: 323.5, y: 600.0 },
+  { id: 'INTG', name: 'Telangana', x: 398.5, y: 644.2 },
+  { id: 'INKA', name: 'Karnataka', x: 327.5, y: 726.9 },
 ]
 
-/* Indore — the head office, and the reason the map is here at all. Drawn
-   larger and in the brand red so it reads as the origin the others radiate
-   from, rather than as a tenth equal pin. */
-const HOME = { name: 'Indore (head office)', x: 33, y: 50 }
+const SERVED_IDS = SERVED.map((s) => s.id).join(',')
 
-const OUTLINE =
-  'M34 8 C39 6 44 7 48 9 C52 11 56 10 60 9 C64 8 68 10 70 13 ' +
-  'C73 17 78 18 82 17 C86 16 89 18 88 22 C87 26 83 27 80 30 ' +
-  'C77 33 76 37 73 40 C70 43 68 47 69 51 C70 56 73 60 74 65 ' +
-  'C75 70 73 75 70 79 C67 84 62 87 58 91 C54 95 51 100 48 105 ' +
-  'C46 109 44 113 41 112 C38 111 38 106 37 102 C36 97 33 93 30 89 ' +
-  'C27 85 24 81 22 76 C20 71 18 66 16 61 C14 57 11 54 10 50 ' +
-  'C9 46 12 43 16 42 C20 41 24 42 27 40 C30 38 30 34 28 31 ' +
-  'C26 28 22 26 21 22 C20 18 24 16 28 15 C31 14 32 10 34 8 Z'
+export default function IndiaMap({ className, active, onSelect, src = '/contact/india.svg' }) {
+  const [markup, setMarkup] = useState(null)
 
-export default function IndiaMap({ className }) {
+  useEffect(() => {
+    let cancelled = false
+    fetch(src)
+      .then((r) => (r.ok ? r.text() : Promise.reject(new Error(String(r.status)))))
+      .then((text) => {
+        if (cancelled) return
+        // Keep only what is inside <svg>…</svg>: this component supplies its
+        // own <svg> wrapper so it controls the viewBox and can layer the pins
+        // over the land in one coordinate space.
+        const inner = text.replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>[\s\S]*$/, '')
+        setMarkup(inner)
+      })
+      .catch(() => {
+        // A failed fetch leaves the pins and the frame — the panel degrades to
+        // a pin diagram rather than an empty box.
+        if (!cancelled) setMarkup('')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [src])
+
   return (
     <svg
       className={className}
-      viewBox="0 0 100 116"
+      /* Cropped to the landmass, not the file's 0 0 1000 1000 frame. India
+         occupies x 100..900, y 46..954 of that square, so a tenth of the width
+         was empty margin on each side — this renders the map ~25% larger in
+         the same column. A small pad keeps the coast off the edge. Pin extents
+         (x 167..449, y 206..727) sit well inside it. */
+      viewBox="90 36 820 928"
       role="img"
-      aria-label="Map of India showing Actipro distributor presence across nine states"
+      aria-label="Map of India showing the states Actipro currently ships to"
       focusable="false"
     >
-      {/* The landmass. Filled pale so the pins carry the contrast, with a
-          slightly darker hairline so the coast still reads on the cream card. */}
-      <path
-        d={OUTLINE}
-        fill="rgba(245, 179, 1, 0.13)"
-        stroke="rgba(193, 18, 31, 0.28)"
-        strokeWidth="0.9"
-        strokeLinejoin="round"
-      />
+      {/* The land. `im-land` styles every state pale; `im-served` (a CSS
+          :is() list of the ISO ids) tints the ones we reach. */}
+      {markup ? <g className="im-land" dangerouslySetInnerHTML={{ __html: markup }} /> : null}
 
-      {PINS.map(({ name, x, y }) => (
-        <g key={name} transform={`translate(${x} ${y})`}>
-          <title>{name}</title>
-          {/* Teardrop: a circle's worth of head over a point, drawn as one
-              path so the pin scales as a unit with the map. */}
+      {SERVED.map((s) => (
+        <g
+          key={s.id}
+          className="im-pin"
+          data-on={active === s.name}
+          data-home={s.home ? 'true' : undefined}
+          onClick={() => onSelect?.(s)}
+          role={onSelect ? 'button' : undefined}
+          tabIndex={onSelect ? 0 : undefined}
+          onKeyDown={(e) => {
+            if (onSelect && (e.key === 'Enter' || e.key === ' ')) {
+              e.preventDefault()
+              onSelect(s)
+            }
+          }}
+        >
+          <title>{s.name}</title>
+          {/* Drawn from the pin's POINT, so x/y is the location on the state
+              rather than the centre of the teardrop. */}
           <path
-            d="M0 0 C-3.1 -3.4 -4.6 -5.6 -4.6 -8 A4.6 4.6 0 0 1 4.6 -8 C4.6 -5.6 3.1 -3.4 0 0 Z"
-            fill="var(--color-acti-red)"
+            d={`M${s.x} ${s.y} c-14 -17 -21 -27 -21 -37 a21 21 0 0 1 42 0 c0 10 -7 20 -21 37 z`}
           />
-          <circle cy="-8" r="1.8" fill="#fff8ee" />
+          <circle cx={s.x} cy={s.y - 37} r="7.5" className="im-pin-dot" />
         </g>
       ))}
-
-      <g transform={`translate(${HOME.x} ${HOME.y})`}>
-        <title>{HOME.name}</title>
-        <path
-          d="M0 0 C-4 -4.4 -6 -7.2 -6 -10.3 A6 6 0 0 1 6 -10.3 C6 -7.2 4 -4.4 0 0 Z"
-          fill="var(--color-acti-orange)"
-          stroke="#fff8ee"
-          strokeWidth="1"
-        />
-        <circle cy="-10.3" r="2.3" fill="#fff8ee" />
-      </g>
     </svg>
   )
 }
+
+export { SERVED, SERVED_IDS }

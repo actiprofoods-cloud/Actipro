@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { MenuIcon, CloseIcon, PhoneIcon } from './icons'
 import { NAV_LINKS } from './navLinks'
+import NavLabel from './NavLabel'
 import { setSceneTone } from './sceneTone'
 
 /* How far the page must travel in one direction before the bar reacts. This is
@@ -58,6 +59,15 @@ const HERO_ID = 'top'
  * to the node, never React state, so a scroll costs no render. The page is
  * driven by Lenis, so this reads window.scrollY inside a rAF rather than
  * listening for native scroll events, which Lenis does not emit on its own.
+ *
+ * ── THE BAR BELONGS TO THE HERO ─────────────────────────────────────────────
+ * This is NOT a conventional sticky nav. It is pinned while the hero is on
+ * screen, and once the page scrolls past the hero it hides and STAYS hidden —
+ * scrolling back up does not summon it over the sections below. Those sections
+ * are full-bleed scenes and a bar sliding in over them breaks the shot.
+ *
+ * The nav is not lost: it returns on its own at the top of the page, which is
+ * where the logo takes you.
  */
 export default function ActiproHeader() {
   const [open, setOpen] = useState(false)
@@ -75,6 +85,16 @@ export default function ActiproHeader() {
   useEffect(() => {
     const node = headerRef.current
     if (!node) return undefined
+
+    /* The hide-on-scroll dance exists for the landing page's cinematic
+       scenes (hero footage, the #range blackout). The inner pages
+       (/contact, /about, /products, /healthy-tips) have no such scenes —
+       there the bar simply stays pinned to the top, so the whole rAF loop
+       is skipped and data-hidden is locked to false. */
+    if (!onLanding) {
+      node.dataset.hidden = 'false'
+      return undefined
+    }
 
     // Travel is measured from the furthest point reached in the current
     // direction (`extreme`), so an eased 3px-per-frame glide accumulates
@@ -158,8 +178,25 @@ export default function ActiproHeader() {
         return
       }
 
-      if (hidden) {
-        // Hidden: watch for upward travel from the lowest point seen.
+      /* The bar belongs to the HERO. Once the page has scrolled past it the bar
+         goes and STAYS gone — scrolling back up does not summon it over the
+         sections below, the way a conventional sticky nav would.
+
+         `heroBottom` is measured every frame rather than cached: the hero's
+         height depends on --hero-exit and on the viewport, both of which change
+         on resize and on the reduced-motion path.
+
+         The nav is not lost — it comes back on its own at the top of the page
+         (the final clause below), which is also where the logo returns you. */
+      const heroEl = document.getElementById(HERO_ID)
+      const heroBottom = heroEl ? heroEl.getBoundingClientRect().bottom : window.innerHeight
+      const pastHero = heroBottom <= 0
+
+      if (pastHero) {
+        setHidden(true)
+        extreme = y
+      } else if (hidden) {
+        // Still on the hero: an upward gesture brings it back as before.
         extreme = Math.max(extreme, y)
         if (extreme - y > REVEAL_THRESHOLD) setHidden(false)
       } else {
@@ -176,7 +213,7 @@ export default function ActiproHeader() {
 
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
-  }, [])
+  }, [onLanding])
 
   // An open mobile menu must not slide away underneath the user's finger.
   useEffect(() => {
@@ -205,7 +242,12 @@ export default function ActiproHeader() {
        it, so it is bound to the route rather than hard-coded. */
     <header
       ref={headerRef}
-      className="acti-header fixed inset-x-0 top-0 z-50"
+      /* FIXED only on the landing page, where the bar is meant to travel with
+         the scroll and hide/reveal on direction. On the content pages it is
+         ABSOLUTE: it sits over the hero at the top of the document and simply
+         scrolls away with it, rather than riding down the page over every
+         section below. */
+      className={`acti-header ${onLanding ? 'fixed' : 'absolute'} inset-x-0 top-0 z-50`}
       data-solid={open ? 'true' : 'false'}
       data-hidden="false"
       data-frosted="false"
@@ -232,6 +274,40 @@ export default function ActiproHeader() {
               green figure never appeared on first paint. The brand mark now
               stays coloured at every tone and earns its contrast over the
               footage from .acti-logo's shadow instead of from inversion. */}
+          {/* THE STRAP OVERLAY.
+
+              "REFINED SUNFLOWER OIL" is near-black type baked into the PNG, so
+              over the dark hero footage it was black-on-black and simply did
+              not appear. A drop-shadow cannot fix that — a halo separates dark
+              type from a dark ground but does not make it readable.
+
+              This is a SECOND copy of the same artwork, clipped to just the
+              strap band and inverted to white, laid exactly over the original.
+              Only that band is touched, which is the point: the note below
+              records that inverting the WHOLE mark flattens it to a silhouette
+              and loses the red wordmark and green figure.
+
+              It is driven by --acti-tone (0 = over the hero, 1 = over the cream
+              page): fully opaque over the footage, faded out entirely by the
+              time the bar is cream, where the original black strap is correct.
+
+              The band is 75.5%–82.7% of the artwork's height, measured off the
+              PNG by scanning for dark rows — the strap occupies y=188..205 of
+              249. The swoosh sits just above it at y=174 and must stay out of
+              the clip, or it inverts to a white smear.
+
+              z-10 is load-bearing: the main logo below carries a `filter`
+              (its drop-shadows), which makes it a stacking context painted in
+              DOM order alongside this positioned overlay — so without an
+              explicit z-index the logo's own dark strap pixels paint exactly
+              on top of this white copy and the overlay never shows. */}
+          <img
+            src="/logo/actipro.png"
+            alt=""
+            aria-hidden="true"
+            className="acti-logo-strap pointer-events-none absolute inset-0 z-10 h-[4.5rem] w-auto sm:h-24"
+          />
+
           <img
             src="/logo/actipro.png"
             alt="Actipro Refined Sunflower Oil"
@@ -255,7 +331,18 @@ export default function ActiproHeader() {
             the burger's `lg:hidden` are a matched pair — change one and the
             bar shows both menus or neither. */}
         <nav className="hidden items-center justify-center gap-8 lg:flex">
-          {NAV_LINKS.map((link) => (
+          {NAV_LINKS.map((link) =>
+            /* route entries are real pages; the rest are hash anchors into
+               the landing page. */
+            link.route ? (
+              <Link
+                key={link.label}
+                to={link.href}
+                className="acti-tone-ink whitespace-nowrap text-[13px] font-semibold uppercase tracking-[0.1em]"
+              >
+                <NavLabel text={link.label} />
+              </Link>
+            ) : (
             <a
               key={link.label}
               href={sectionHref(link.href)}
@@ -264,21 +351,12 @@ export default function ActiproHeader() {
                  they would wrap to two lines each, doubling the header's
                  height budget. They hold one line and the row breathes via
                  the gap instead. */
-              className="acti-tone-ink whitespace-nowrap text-[13px] font-semibold uppercase tracking-[0.1em] transition-opacity hover:opacity-60"
+              className="acti-tone-ink whitespace-nowrap text-[13px] font-semibold uppercase tracking-[0.1em]"
             >
-              {link.label}
+              <NavLabel text={link.label} />
             </a>
-          ))}
-
-          {/* Contact is a ROUTE, not a section, so it is a <Link> rather than
-              one of the hash anchors above — which is why it is not in
-              NAV_LINKS with the other three. */}
-          <Link
-            to="/contact"
-            className="acti-tone-ink whitespace-nowrap text-[13px] font-semibold uppercase tracking-[0.1em] transition-opacity hover:opacity-60"
-          >
-            Contact Us
-          </Link>
+            ),
+          )}
         </nav>
 
         {/* justify-end so this rail balances the logo rail's width without
@@ -316,24 +394,27 @@ export default function ActiproHeader() {
           <ul className="flex flex-col">
             {NAV_LINKS.map((link) => (
               <li key={link.label}>
-                <a
-                  href={sectionHref(link.href)}
-                  onClick={() => setOpen(false)}
-                  className="block border-b border-acti-ink/10 py-3 text-[13px] font-semibold uppercase tracking-[0.1em] text-acti-ink"
-                >
-                  {link.label}
-                </a>
+                {/* Same split as the desktop nav: routes are <Link>s, the
+                    rest are hash anchors into the landing page. */}
+                {link.route ? (
+                  <Link
+                    to={link.href}
+                    onClick={() => setOpen(false)}
+                    className="block border-b border-acti-ink/10 py-3 text-[13px] font-semibold uppercase tracking-[0.1em] text-acti-ink"
+                  >
+                    {link.label}
+                  </Link>
+                ) : (
+                  <a
+                    href={sectionHref(link.href)}
+                    onClick={() => setOpen(false)}
+                    className="block border-b border-acti-ink/10 py-3 text-[13px] font-semibold uppercase tracking-[0.1em] text-acti-ink"
+                  >
+                    {link.label}
+                  </a>
+                )}
               </li>
             ))}
-            <li>
-              <Link
-                to="/contact"
-                onClick={() => setOpen(false)}
-                className="block border-b border-acti-ink/10 py-3 text-[13px] font-semibold uppercase tracking-[0.1em] text-acti-ink"
-              >
-                Contact Us
-              </Link>
-            </li>
           </ul>
           <Link
             to="/contact"

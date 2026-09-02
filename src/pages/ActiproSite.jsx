@@ -112,7 +112,11 @@ export default function ActiproSite() {
   }, [])
 
   return (
-    <div className="bg-acti-cream">
+    /* acti-landing scopes the footer's curve backdrop: the last section here
+       is MilestonesWave on the clip's darker cream, so the arc's negative
+       space has to be that same tone. See ".acti-landing .acti-footer" in
+       index.css. Other routes keep the page cream. */
+    <div className="acti-landing bg-acti-cream">
       <ActiproHeader />
       <main>
         <Hero />

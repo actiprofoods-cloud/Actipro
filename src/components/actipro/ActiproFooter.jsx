@@ -25,7 +25,17 @@ export default function ActiproFooter() {
     // ink, so what sits behind it has to be the PAGE. With bg-acti-ink here the
     // negative space above the arc was filled with ink too and the sweep was
     // invisible against it. The ink starts at .af-body, under the curve.
-    <footer className="text-white">
+    /* The curve below is a shape cut out of the ink, so the negative space
+       above the arc shows whatever is behind this element. That has to match
+       the section the footer follows, or the two creams meet on a straight
+       line exactly where the curve was meant to be the only edge.
+
+       It differs per route, so it is a CSS variable rather than a fixed class:
+       --af-top defaults to the page cream (#fff8ee, correct for /contact and
+       /healthy-tips) and the landing page overrides it to the clip's #F5E9D9
+       in index.css, because MilestonesWave is the last thing above the footer
+       there. See the ".acti-landing .acti-footer" rule. */
+    <footer className="acti-footer text-white" style={{ background: 'var(--af-top, var(--color-acti-cream))' }}>
       {/*
         The sweep that carries the cream page down into the ink footer.
 

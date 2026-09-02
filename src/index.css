@@ -485,6 +485,7 @@ a.hero-eyebrow {
    because the photograph's edges are occupied (leaves top-left,
    bottle right, bowl bottom-right).
 ================================================================*/
+
 .trust-scene {
   position: relative;
   isolation: isolate;
@@ -517,6 +518,7 @@ a.hero-eyebrow {
 
 /* ONE soft cream layer. Deliberately not a dark scrim — the plate is airy and
    a dark overlay would kill it. */
+
 .trust-veil {
   position: absolute;
   inset: 0;
@@ -542,6 +544,7 @@ a.hero-eyebrow {
 }
 
 /* --- Header stack -------------------------------------------------- */
+
 .trust-head {
   display: flex;
   flex-direction: column;
@@ -567,6 +570,7 @@ a.hero-eyebrow {
   height: 1px;
   background: #c08a1e;
 }
+
 .trust-rule--wide {
   width: 56px;
 }
@@ -582,7 +586,9 @@ a.hero-eyebrow {
   letter-spacing: -0.015em;
   color: #1e3b2c;
 }
+
 /* Same face and weight as the rest of the line — only the colour changes. */
+
 .trust-title em {
   font-style: normal;
   color: #c08a1e;
@@ -602,6 +608,7 @@ a.hero-eyebrow {
 }
 
 /* --- Feature row ---------------------------------------------------- */
+
 .trust-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -619,6 +626,7 @@ a.hero-eyebrow {
 
 /* Dividers BETWEEN columns only, and ~70% height rather than full — a real
    border-left would run the whole cell and read as a hard table rule. */
+
 .trust-cell + .trust-cell::before {
   content: '';
   position: absolute;
@@ -668,6 +676,7 @@ a.hero-eyebrow {
 }
 
 /* --- Certification bar ---------------------------------------------- */
+
 .trust-certs {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -709,6 +718,7 @@ a.hero-eyebrow {
 }
 
 /* Stand-in for the one mark with no artwork; matches the logos' optical size. */
+
 .trust-cert-icon {
   display: grid;
   place-items: center;
@@ -726,6 +736,7 @@ a.hero-eyebrow {
 }
 
 /* --- Responsive ------------------------------------------------------ */
+
 @media (max-width: 1023px) {
   .trust-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -789,6 +800,7 @@ a.hero-eyebrow {
    column stops there. Nothing is drawn along the foot either — the
    art already has a line, and a second one reads as a mistake.
 ================================================================*/
+
 .why-scene {
   position: relative;
   isolation: isolate;
@@ -821,6 +833,7 @@ a.hero-eyebrow {
 
 /* Cream wash, weighted LEFT — that is where the copy sits. The right stays
    clear so the bottle keeps its own contrast. */
+
 .why-veil {
   position: absolute;
   inset: 0;
@@ -847,6 +860,7 @@ a.hero-eyebrow {
 }
 
 /* --- Header ---------------------------------------------------------- */
+
 .why-head {
   text-align: center;
   max-width: 640px;
@@ -865,6 +879,7 @@ a.hero-eyebrow {
   text-transform: uppercase;
   color: #a8781a;
 }
+
 .why-rule {
   display: block;
   width: 44px;
@@ -882,6 +897,7 @@ a.hero-eyebrow {
   letter-spacing: -0.015em;
   color: #1f3a2b;
 }
+
 .why-title em {
   font-style: normal;
   color: #c08a1e;
@@ -897,6 +913,7 @@ a.hero-eyebrow {
 }
 
 /* --- Carousel stage --------------------------------------------------- */
+
 .why-stage {
   display: flex;
   align-items: center;
@@ -918,12 +935,14 @@ a.hero-eyebrow {
     background-color 0.2s ease,
     border-color 0.2s ease;
 }
+
 .why-arrow:hover {
   background: rgba(255, 253, 248, 0.9);
   border-color: rgba(31, 58, 43, 0.34);
 }
 
 /* The expanded step. */
+
 .why-card {
   flex: 1 1 400px;
   min-width: 0;
@@ -950,6 +969,7 @@ a.hero-eyebrow {
    too (the card creates no stacking context of its own), so the card gets
    `isolation: isolate` — that makes it a stacking context, which keeps -1
    scoped to this card. Without it the panel vanishes behind why-bg.webp. */
+
 .why-card::before {
   content: '';
   position: absolute;
@@ -993,6 +1013,7 @@ a.hero-eyebrow {
     0 0 0 9px #fdf8f0,
     0 0 0 10px rgba(201, 162, 39, 0.55);
 }
+
 .why-card-photo img {
   width: 100%;
   height: 100%;
@@ -1023,6 +1044,7 @@ a.hero-eyebrow {
   animation: why-fade 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: calc(var(--i, 0) * 70ms);
 }
+
 .why-index-rule {
   display: block;
   width: 34px;
@@ -1044,6 +1066,7 @@ a.hero-eyebrow {
   animation: why-fade 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: calc(var(--i, 0) * 70ms);
 }
+
 .why-line {
   display: block;
 }
@@ -1082,17 +1105,20 @@ a.hero-eyebrow {
   animation: why-fade 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: calc(var(--i, 0) * 70ms);
 }
+
 .why-cta:hover {
   background: #d9a422;
 }
 
 /* The three inactive steps. */
+
 .why-thumbs {
   flex: none;
   display: flex;
   align-items: flex-start;
   gap: clamp(0.5rem, 1.6vw, 1.4rem);
 }
+
 .why-thumbs button {
   display: flex;
   flex-direction: column;
@@ -1101,9 +1127,11 @@ a.hero-eyebrow {
   width: clamp(78px, 9vw, 104px);
   text-align: center;
 }
+
 .why-thumb-icon {
   color: #c08a1e;
 }
+
 .why-thumb-photo {
   display: block;
   width: 100%;
@@ -1115,15 +1143,18 @@ a.hero-eyebrow {
     box-shadow 0.25s ease,
     transform 0.25s ease;
 }
+
 .why-thumbs button:hover .why-thumb-photo {
   transform: translateY(-3px);
   box-shadow: 0 0 0 1px rgba(201, 162, 39, 0.75);
 }
+
 .why-thumb-photo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
+
 .why-thumb-index {
   font-family: var(--font-sans);
   font-size: 11.5px;
@@ -1131,6 +1162,7 @@ a.hero-eyebrow {
   letter-spacing: 0.1em;
   color: #c08a1e;
 }
+
 .why-thumb-title {
   font-family: var(--font-serif);
   font-variation-settings: 'opsz' 24;
@@ -1145,6 +1177,7 @@ a.hero-eyebrow {
   gap: 8px;
   margin-top: clamp(1.25rem, 2.5vw, 1.75rem);
 }
+
 .why-dots button {
   display: block;
   width: 7px;
@@ -1155,6 +1188,7 @@ a.hero-eyebrow {
     background-color 0.25s ease,
     width 0.25s ease;
 }
+
 .why-dots button[data-on='true'] {
   width: 20px;
   background: #e8b430;
@@ -1175,6 +1209,7 @@ a.hero-eyebrow {
 }
 
 /* --- Responsive -------------------------------------------------------- */
+
 @media (max-width: 1023px) {
   .why-inner {
     /* The bottle crops further out of frame at this width, so the right gutter
@@ -1244,28 +1279,8 @@ a.hero-eyebrow {
   }
 }
 
-
-/* ===============================================================
-   MOBILE — the three new sections (WhyActipro, TrustSection,
-   PurposeRing).
-
-   Four real problems, measured rather than guessed:
-
-   1. vh vs svh, and a px floor taller than the phone. Both fixed
-      at source on .why-scene / .trust-scene / .pr-sticky rather
-      than overridden here — see the notes on those rules.
-
-   2. Tap targets. The carousel dots were 7x7px and its arrows
-      38x38, against the 44x44 both iOS and Android ask for. The
-      dots stay visually small; the HIT AREA is grown with padding
-      and a negative margin so the layout does not move.
-
-   3. Hover-only affordances. .why-thumbs lifted on :hover, which a
-      touch screen never fires — so on a phone there was no
-      indication the thumbnails were pressable at all.
-================================================================*/
-
 /* --- Touch targets ---------------------------------------------- */
+
 @media (pointer: coarse) {
   .why-arrow {
     width: 44px;
@@ -1285,6 +1300,7 @@ a.hero-eyebrow {
 }
 
 /* --- Press feedback where hover does not exist ------------------- */
+
 @media (hover: none) {
   .why-thumbs button:active .why-thumb-photo {
     transform: scale(0.96);
@@ -1296,6 +1312,7 @@ a.hero-eyebrow {
 }
 
 /* --- Phone layout ---------------------------------------------------- */
+
 @media (max-width: 639px) {
   /* WhyActipro ------------------------------------------------------- */
   .why-inner {
@@ -1383,6 +1400,7 @@ a.hero-eyebrow {
 }
 
 /* Very narrow phones (320-360). */
+
 @media (max-width: 380px) {
   .why-thumb-title {
     font-size: 11.5px;
@@ -1392,6 +1410,795 @@ a.hero-eyebrow {
   }
   .trust-certs p {
     font-size: 9.5px;
+  }
+}
+
+/* ===============================================================
+   CONTACT — the body of /contact
+   Contact.jsx · ContactPage.jsx · IndiaMap.jsx
+
+   Everything sits over public/contact/contact-bg.webp, a portrait
+   plate carrying the ornament (envelope, handset, pins, speech
+   bubbles, leaf sprays, a dotted India). The cards are translucent
+   so that artwork shows through rather than being covered up.
+================================================================*/
+.contact-scene {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  /* The plate at its OWN size, tiled — not stretched.
+
+     It is 1024x1536. Cover-fitting it across a ~1900px-wide, several-thousand-
+     px-tall page scaled it 2-2.6x, which is what made the ornament huge and
+     soft: every line was resampled far past the detail in the file. Sized to
+     the source instead and repeated, so the motifs stay crisp and read at the
+     scale they were drawn for.
+
+     `repeat` rather than `repeat-y`: the plate is narrower than a desktop
+     viewport, so it has to tile on both axes to cover the width. */
+  background:
+    url('/contact/contact-bg.webp') top center / 1024px auto repeat,
+    var(--color-acti-cream);
+}
+
+/* The plate has strong ornament in its corners and a plain middle, so a raw
+   tile shows its seams. This wash sits over it: heaviest where the content is,
+   which both softens the repeat and keeps the type legible. */
+.contact-scene::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse 70% 45% at 50% 22%,
+      rgb(var(--acti-cream-rgb) / 0.92) 0%,
+      rgb(var(--acti-cream-rgb) / 0.55) 55%,
+      rgb(var(--acti-cream-rgb) / 0.3) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgb(var(--acti-cream-rgb) / 0.25) 0%,
+      rgb(var(--acti-cream-rgb) / 0.6) 45%,
+      rgb(var(--acti-cream-rgb) / 0.94) 100%
+    );
+}
+
+/* The plate. `cover` on a portrait source in a tall page keeps it filling the
+   width; it is anchored to the top so the header ornament stays in frame and
+   the plain lower half falls under the long content. */
+.contact-inner {
+  position: relative;
+  z-index: 1;
+  /* 1180 left ~360px of dead margin each side on a 1900px screen, which is
+     what made the three cards read as small. The header block keeps its own
+     narrower measure (.contact-head) so the intro copy does not run to a
+     40-word line just because the cards below are wider. */
+  max-width: 1360px;
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 4vw, 2.5rem);
+}
+
+/* --- Header ---------------------------------------------------------- */
+.contact-head {
+  text-align: center;
+  max-width: 640px;
+  margin-inline: auto;
+}
+
+.contact-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-acti-red);
+}
+
+.contact-title {
+  margin-top: 0.5rem;
+  font-family: var(--font-serif);
+  font-variation-settings: 'opsz' 96;
+  font-weight: 500;
+  font-size: clamp(38px, 7vw, 66px);
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  color: var(--color-acti-ink);
+}
+
+.contact-rule {
+  display: block;
+  width: 64px;
+  height: 2px;
+  margin: 1rem auto 0;
+  border-radius: 2px;
+  background: var(--color-acti-sun);
+}
+
+.contact-sub {
+  margin: 1rem auto 0;
+  max-width: 52ch;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.65;
+  color: #5f5749;
+}
+
+/* --- The three cards --------------------------------------------------- */
+.contact-grid {
+  display: grid;
+  /* The form is the reason the page exists, so it keeps the widest column —
+     but 1.25fr starved the map column, so the ratio is gentler now. */
+  grid-template-columns: 1fr 1.15fr 1fr;
+  gap: clamp(1rem, 2vw, 1.75rem);
+  margin-top: clamp(2.5rem, 5vw, 3.5rem);
+  align-items: start;
+}
+
+.contact-card {
+  display: flex;
+  flex-direction: column;
+  /* Grows with the card, so a wider column reads as a roomier panel rather
+     than the same panel with more empty middle. */
+  padding: clamp(1.5rem, 2.4vw, 2.4rem);
+  border: 1px solid rgba(226, 214, 190, 0.9);
+  border-radius: 1rem;
+  /* Translucent, so the plate's ornament reads through the card instead of
+     being blocked by it. */
+  background: rgb(var(--acti-cream-rgb) / 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 1px 2px rgba(45, 33, 16, 0.04);
+}
+
+/* The two left-hand cards are SOLID WHITE rather than translucent cream: they
+   hold the page's working content (the details and the form), and lifting them
+   off the plate makes them read as panels you act in rather than as decoration.
+   "Our Presence" keeps the translucent treatment, so the map still sits on the
+   artwork. */
+.contact-card--solid {
+  background: #ffffff;
+  border-color: rgba(226, 214, 190, 0.95);
+  box-shadow: 0 2px 10px rgba(45, 33, 16, 0.05);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.contact-card-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-serif);
+  font-variation-settings: 'opsz' 40;
+  font-weight: 500;
+  font-size: clamp(20px, 2.2vw, 25px);
+  line-height: 1.2;
+  color: var(--color-acti-ink);
+}
+
+.contact-title-badge {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 9999px;
+  background: rgba(245, 179, 1, 0.16);
+  color: #a8781a;
+}
+
+.contact-card-rule {
+  display: block;
+  width: 44px;
+  height: 2px;
+  margin-top: 0.75rem;
+  border-radius: 2px;
+  background: var(--color-acti-sun);
+}
+
+.contact-card-lede {
+  margin-top: 0.85rem;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.65;
+  color: #5f5749;
+}
+
+/* --- Get in touch rows -------------------------------------------------- */
+.contact-rows {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-rows > li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  padding: 1rem 0;
+}
+.contact-rows > li + li {
+  border-top: 1px solid rgba(226, 214, 190, 0.85);
+}
+
+.contact-row-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 9999px;
+  background: rgba(245, 179, 1, 0.18);
+  color: #a8781a;
+}
+
+.contact-row-label {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-acti-ink);
+}
+
+.contact-row-value {
+  display: block;
+  margin-top: 0.15rem;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #5f5749;
+  overflow-wrap: anywhere;
+}
+a.contact-row-value:hover {
+  color: var(--color-acti-red);
+}
+
+.contact-follow-title {
+  margin-top: 1.5rem;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-acti-ink);
+}
+
+.contact-socials {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.85rem;
+}
+.contact-socials a {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(200, 170, 110, 0.7);
+  border-radius: 9999px;
+  color: #a8781a;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+.contact-socials a:hover {
+  background: var(--color-acti-sun);
+  border-color: var(--color-acti-sun);
+  color: var(--color-acti-ink);
+}
+.contact-socials--lg {
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+.contact-socials--lg a {
+  width: 48px;
+  height: 48px;
+}
+
+/* --- The form ----------------------------------------------------------- */
+.contact-field {
+  display: block;
+  margin-top: 1rem;
+}
+
+.contact-field-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-acti-ink);
+}
+.contact-field-label span {
+  color: var(--color-acti-red);
+}
+
+.contact-input {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0 0.85rem;
+  border: 1px solid rgba(226, 214, 190, 0.95);
+  border-radius: 0.6rem;
+  /* A faint warm tint, NOT white: the form card is solid white now, and a white
+     field on a white card has no edge but its 1px border — the inputs stopped
+     reading as inputs. */
+  background: #fdfaf4;
+  color: #a8781a;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.contact-input:focus-within {
+  border-color: var(--color-acti-sun);
+  box-shadow: 0 0 0 3px rgba(245, 179, 1, 0.18);
+}
+.contact-input--area {
+  align-items: flex-start;
+  padding-top: 0.7rem;
+}
+
+.contact-input input,
+.contact-input textarea {
+  flex: 1;
+  min-width: 0;
+  padding: 0.7rem 0;
+  border: 0;
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--color-acti-ink);
+  outline: none;
+  resize: vertical;
+}
+.contact-input textarea {
+  padding-top: 0;
+  line-height: 1.6;
+}
+.contact-input input::placeholder,
+.contact-input textarea::placeholder {
+  color: #a49a89;
+}
+
+.contact-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  margin-top: 1.4rem;
+  padding: 0.9rem 1.25rem;
+  border-radius: 0.6rem;
+  background: var(--color-acti-sun);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--color-acti-ink);
+  transition: background-color 0.2s ease;
+}
+.contact-submit:hover {
+  background: #e0a300;
+}
+
+/* --- The map ------------------------------------------------------------ */
+.contact-map {
+  display: block;
+  width: 100%;
+  /* Fills the card. The cap sits just above the column's usable width (~313px
+     at the 1360px layout), so the card decides the size in practice and this
+     only stops the map ballooning if the layout widens further. */
+  max-width: 340px;
+  height: auto;
+  margin: 1.25rem auto 0;
+}
+
+/* Every state, pale, so the served ones carry the contrast. The fill is set
+   here rather than in the file so the SVG stays a plain geometry asset. */
+.im-land path {
+  fill: #f4ead6;
+  stroke: #dcc79a;
+  stroke-width: 1.1;
+  stroke-linejoin: round;
+  transition: fill 0.2s ease;
+}
+
+/* The states Actipro reaches. The id list mirrors SERVED in IndiaMap.jsx —
+   change one and change the other. */
+.im-land :is(#INMP, #INPB, #INDL, #INRJ, #INUP, #INGJ, #INMH, #INTG, #INKA) {
+  fill: #ecd9b4;
+}
+
+.im-pin {
+  fill: var(--color-acti-red);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.im-pin .im-pin-dot {
+  fill: rgb(var(--acti-cream-rgb));
+}
+.im-pin:hover,
+.im-pin[data-on='true'] {
+  transform: scale(1.12);
+}
+.im-pin[data-on='true'],
+/* The head office reads as the origin the others radiate from, not a tenth
+   equal pin. */
+.im-pin[data-home='true'] {
+  fill: #96101a;
+}
+
+.contact-map-note {
+  margin-top: 0.85rem;
+  text-align: center;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: #5f5749;
+  min-height: 1.2em;
+}
+
+.contact-map-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-acti-red);
+  border-radius: 0.6rem;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-acti-red);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+.contact-map-cta:hover {
+  background: var(--color-acti-red);
+  color: #fff;
+}
+
+/* --- Support strip ------------------------------------------------------ */
+.contact-support {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  margin-top: clamp(1.5rem, 3vw, 2.25rem);
+  padding: clamp(1.25rem, 2.5vw, 1.75rem) 0;
+  border: 1px solid rgba(226, 214, 190, 0.9);
+  border-radius: 1rem;
+  background: rgba(253, 243, 226, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.contact-support > li {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0 clamp(0.75rem, 1.6vw, 1.25rem);
+}
+/* Dividers between cells only, and short of full height so they read as
+   hairlines rather than as a table. */
+.contact-support > li + li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8%;
+  height: 84%;
+  width: 1px;
+  background: rgba(216, 200, 168, 0.8);
+}
+
+.contact-support-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  background: rgba(245, 179, 1, 0.2);
+  color: #a8781a;
+}
+
+.contact-support-title {
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-acti-ink);
+}
+.contact-support-body {
+  margin-top: 0.3rem;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #5f5749;
+}
+
+/* --- Stay connected ----------------------------------------------------- */
+.contact-connect {
+  margin-top: clamp(2.5rem, 5vw, 3.5rem);
+  text-align: center;
+}
+.contact-connect-rule {
+  display: block;
+  width: 46px;
+  height: 1px;
+  background: var(--color-acti-sun);
+}
+.contact-connect-title {
+  margin-top: 0.6rem;
+  font-family: var(--font-serif);
+  font-variation-settings: 'opsz' 72;
+  font-weight: 500;
+  font-size: clamp(26px, 4vw, 38px);
+  line-height: 1.15;
+  color: var(--color-acti-ink);
+}
+
+
+
+
+
+
+/* --- Page chrome overrides ----------------------------------------------
+   Scoped to .contact-page so the landing page is untouched.
+
+   The header's colours are driven by --acti-tone, which Hero.jsx writes on
+   every scroll frame: 0 = white chrome over the dark hero footage, 1 = ink
+   chrome over cream. This page has no hero, so nothing ever writes it and it
+   would sit at the :root default of 0 — white nav text on a cream plate, i.e.
+   invisible. Pinning it to 1 here is what keeps the nav readable.
+------------------------------------------------------------------------- */
+/* /about reuses the /contact header treatment: the produce hero is light, so
+   the nav ink must stay dark (tone 1) and the bar loses its cream fill. Same
+   rule, keyed off .about-page so the landing page is untouched. */
+.about-page .acti-header,
+.about-page .acti-header[data-frosted='true'],
+.products-page .acti-header,
+.products-page .acti-header[data-frosted='true'] {
+  --acti-tone: 1;
+  /* FULLY transparent, no cream fill and no blur — the hero produce photo
+     runs up behind the bar and the nav sits directly on it, exactly as on
+     /contact. A cream fill drew the band across the top of the hero that this
+     is fixing; a backdrop blur would smear the shadow-dappled wall behind the
+     bar into a haze under the nav.
+
+     [data-frosted] is repeated on purpose: that rule is (0,2,1) and would
+     otherwise out-specify this one and restore its 12px blur.
+
+     The nav stays legible without a ground because --acti-tone:1 renders it in
+     ink and the top strip of the hero (where the bar sits) is the pale
+     shadowed wall, not the darker produce along the bottom. */
+  background-color: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+/* The open mobile menu still needs a solid bar — its dropdown panel is opaque
+   cream, and a see-through bar above an opaque panel reads as a mistake. */
+.about-page .acti-header[data-solid='true'],
+.products-page .acti-header[data-solid='true'] {
+  background-color: rgb(255 248 238 / 0.96);
+}
+
+/* NO RETRACT ANIMATION on the content pages.
+
+   These pages position the bar `absolute` (see ActiproHeader.jsx), so it sits
+   at the top of the DOCUMENT and scrolls away with the hero rather than
+   riding down the page. Given that, the hide-on-scroll transform must never
+   fire: a bar that is already scrolling out of view does not also need to
+   slide up, and a stray data-hidden flip would jerk it mid-scroll.
+
+   This pins the transform in BOTH data-hidden states and kills the
+   transition. It does NOT set `position` — that is the JSX's job, and
+   overriding it here would silently re-pin the bar to the viewport.
+   !important because the base [data-hidden='true'] rule sets the same
+   property. */
+.about-page .acti-header,
+.about-page .acti-header[data-hidden='true'],
+.about-page .acti-header[data-hidden='false'],
+.products-page .acti-header,
+.products-page .acti-header[data-hidden='true'],
+.products-page .acti-header[data-hidden='false'] {
+  transform: translateY(0) !important;
+  transition: none !important;
+}
+
+.contact-page .acti-header,
+.contact-page .acti-header[data-frosted='true'] {
+  --acti-tone: 1;
+  /* FULLY transparent, and no blur at all.
+
+     The plate's ornament — leaves, envelopes, speech bubbles — runs right up
+     under the bar, and this page has no dark hero for the nav to sit on. Any
+     cream fill here draws a band across that artwork and clips the motifs at
+     the boundary; a backdrop blur is worse, because the ornament is fine 1px
+     line-work and a 10-12px blur smears it into a haze exactly where the
+     nav is.
+
+     The [data-frosted] selector is repeated on purpose: that rule is (0,2,1)
+     and would otherwise out-specify this one and put its 12px blur back.
+
+     The nav stays readable without either because --acti-tone:1 renders it in
+     ink (#17110d) and the plate behind it is pale cream throughout — measured
+     contrast is well past AA, so the bar does not need a ground of its own. */
+  background-color: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+/* The open mobile menu still needs a solid bar — its panel below is opaque
+   cream, and a translucent bar above an opaque panel reads as a mistake. */
+.contact-page .acti-header[data-solid='true'] {
+  background-color: rgb(255 248 238 / 0.96);
+}
+
+/* padding-top is the fixed header's clearance, set on the SECTION so the plate
+   runs up behind the bar rather than starting below it. padding-bottom is the
+   room the footer's curve overlaps into. */
+.contact-page .contact-scene {
+  padding-top: clamp(7rem, 13vw, 9rem);
+  padding-bottom: clamp(5rem, 10vw, 8rem);
+}
+
+.contact-page .af-curve {
+  position: relative;
+  z-index: 1;
+  margin-top: calc(-1 * clamp(2.5rem, 6vw, 5.5rem));
+}
+
+/* --- Responsive ---------------------------------------------------------- */
+@media (max-width: 1023px) {
+  .contact-grid {
+    grid-template-columns: 1fr;
+  }
+  /* The form is the point of the page, so it leads on a narrow screen. */
+  .contact-form {
+    order: -1;
+  }
+  .contact-support {
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: 1.5rem;
+  }
+  .contact-support > li:nth-child(odd)::before {
+    display: none;
+  }
+}
+
+@media (max-width: 639px) {
+  .contact-support {
+    grid-template-columns: 1fr;
+    row-gap: 0;
+    padding: 0.5rem 0;
+  }
+  .contact-support > li {
+    padding: 1rem 1.15rem;
+  }
+  /* One column: the rules become horizontal separators. */
+  .contact-support > li::before {
+    display: none;
+  }
+  .contact-support > li + li {
+    border-top: 1px solid rgba(216, 200, 168, 0.8);
+  }
+  .contact-card {
+    padding: 1.15rem;
+  }
+  /* 16px, NOT the desktop 14px: below 16px iOS Safari zooms the whole page
+     in when a field is focused, and the visitor has to pinch back out after
+     every input. */
+  .contact-input input,
+  .contact-input textarea {
+    font-size: 16px;
+  }
+}
+
+/* Touch targets: the social pills and the map pins are the only things here
+   small enough to matter. */
+@media (pointer: coarse) {
+  .contact-socials a {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+
+/* ===============================================================
+   NAV LABEL — per-letter hover on the header tabs (NavLabel.jsx)
+
+   Each letter's replacement drops in from above while the resting
+   one drops out below, staggered left to right by --i.
+================================================================*/
+.nl {
+  position: relative;
+  display: inline-block;
+}
+
+.nl-stack {
+  display: inline-flex;
+  /* The letters are clipped to this line box, which is what makes the incoming
+     copy appear from nowhere instead of floating over the bar. */
+  overflow: hidden;
+  /* 1em is too tight for uppercase with descenders in the ascent metric; 1.15
+     clears the cap height without opening a visible gap under the row. */
+  line-height: 1.15;
+  vertical-align: bottom;
+}
+
+.nl-letter {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  /* The step between letters. 26ms is short enough that the word still reads as
+     one gesture rather than a queue — at 60ms+ the last letter of "Contact Us"
+     lands almost a fifth of a second after the first, which reads as lag. */
+  --step: 26ms;
+}
+
+.nl-out,
+.nl-in {
+  display: block;
+  transition:
+    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(var(--i) * var(--step));
+}
+
+/* The incoming copy waits ABOVE the clipped box. It is absolutely positioned so
+   it does not add to the letter's width — the box is sized by .nl-out alone and
+   the two copies are identical, so they line up exactly. */
+.nl-in {
+  position: absolute;
+  inset: 0;
+  transform: translateY(-100%);
+  opacity: 0;
+}
+
+/* Hovering or keyboard-focusing the LINK drives both copies. Bound to the
+   anchor rather than to .nl so the whole tab is the trigger, not just the
+   glyphs — a gap between letters would otherwise cancel the effect. */
+a:hover .nl-out,
+a:focus-visible .nl-out {
+  transform: translateY(100%);
+  opacity: 0;
+}
+a:hover .nl-in,
+a:focus-visible .nl-in {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* A space would collapse inside an inline-block, turning "ABOUT US" into
+   "ABOUTUS". It keeps its width and simply does not animate. */
+.nl-space {
+  display: inline-block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Back to the plain fade these links used to have: no travel, and the
+     incoming copy is simply not shown. */
+  .nl-out,
+  .nl-in {
+    transition: opacity 0.2s ease;
+    transition-delay: 0ms;
+  }
+  .nl-in {
+    display: none;
+  }
+  a:hover .nl-out,
+  a:focus-visible .nl-out {
+    transform: none;
+    opacity: 0.6;
   }
 }
 
@@ -1814,14 +2621,30 @@ section[id] {
   color: color-mix(in srgb, #ffffff calc(var(--acti-tone) * 100%), #17110d);
 }
 
-/* The logo is ONE full-colour print at every scene tone (see ActiproHeader).
-   The old pair crossfaded a colour copy against a `brightness-0 invert` copy,
-   which meant the mark was a flat white silhouette for the whole of the hero.
+/* The inverted strap, laid over the original mark.
 
-   Contrast over the footage now comes from a drop-shadow rather than from
-   throwing the artwork away. The shadow is strongest at tone 0 (over the dark
-   video, where the red wordmark needs separating from the grade) and fades out
-   as the cream page arrives beneath it, since ink-on-cream needs no halo. */
+   Only the baseline strap is touched. The full-mark inversion that this
+   replaces turned the whole logo into a white silhouette (see the note in
+   ActiproHeader.jsx) — clipping to the strap's own band keeps the red wordmark
+   and the green figure untouched underneath.
+
+   The band is measured from the artwork: the strap is y=188..205 of a 249px
+   tall PNG, i.e. 75.5%..82.7%. The swoosh at y=174 is deliberately outside it.
+
+   brightness(0) invert(1) is what makes it white: brightness(0) crushes the
+   clipped band to black whatever colour it started, and invert(1) flips that
+   to pure white. Opacity then rides --acti-tone so it is fully present over
+   the hero and completely gone on the cream page, where the original dark
+   strap is the correct rendering. */
+
+.acti-logo-strap {
+  /* Exactly the strap's rows; everything else in this copy is clipped away. */
+  clip-path: inset(75.5% 0 17.3% 0);
+  filter: brightness(0) invert(1)
+    drop-shadow(0 1px 2px rgba(0, 0, 0, calc(0.55 - var(--acti-tone) * 0.55)));
+  /* 1 over the footage, 0 by the time the bar is cream. */
+  opacity: calc(1 - var(--acti-tone));
+}
 
 .acti-logo {
   /* Three passes rather than two. The mark's baseline strap ("REFINED SUNFLOWER
@@ -5377,50 +6200,41 @@ section[id] {
 
 @media (pointer: coarse) {
   .acti-tap {
-    min-width: 44px;
-    min-height: 44px;
-  }
+      min-width: 44px;
+      min-height: 44px;
+    }
+
   /* The hero's primary button is the one exception. 44px is the right default
-     for a bare tap target, but this one is a wide pill (its width is far past
-     44px, so the target area is already generous) sitting in a compact scrim
-     where the height was making it the loudest thing on the screen. 34px keeps
-     a comfortable target on a full-width pill while letting the copy block
-     stay tight. It is scoped to this button, so every other .acti-tap keeps
-     the full 44px. */
+       for a bare tap target, but this one is a wide pill (its width is far past
+       44px, so the target area is already generous) sitting in a compact scrim
+       where the height was making it the loudest thing on the screen. 34px keeps
+       a comfortable target on a full-width pill while letting the copy block
+       stay tight. It is scoped to this button, so every other .acti-tap keeps
+       the full 44px. */
+
   .hero-cta-primary.acti-tap {
-    min-height: 34px;
-  }
+      min-height: 34px;
+    }
+
   /* The carousel indicators are 2px rules inside a flex button; the button
-     grows to a real 44px box so neighbouring targets never overlap.
+       grows to a real 44px box so neighbouring targets never overlap.
+  
+       min-width is NOT set here. At 40px the button was twice the width of the
+       20px rule inside it, and that surplus rendered as a 24px space between
+       the dashes — on top of the flex gap, which is what made them look far
+       apart.
+  
+       Width now comes from the rule plus 6px of padding: a 32x44 target with a
+       12px space between rules. That halves the gap while keeping each dash
+       comfortably tappable and its target clear of its neighbour's. The 44px
+       guideline is about the tap AREA and these stay 44px tall; going tighter
+       still (3px pad, 6px gap) would have taken the buttons down to 26px wide
+       and started crowding adjacent targets. */
 
-     min-width is NOT set here. At 40px the button was twice the width of the
-     20px rule inside it, and that surplus rendered as a 24px space between
-     the dashes — on top of the flex gap, which is what made them look far
-     apart.
-
-     Width now comes from the rule plus 6px of padding: a 32x44 target with a
-     12px space between rules. That halves the gap while keeping each dash
-     comfortably tappable and its target clear of its neighbour's. The 44px
-     guideline is about the tap AREA and these stay 44px tall; going tighter
-     still (3px pad, 6px gap) would have taken the buttons down to 26px wide
-     and started crowding adjacent targets. */
   .acti-dot {
-    min-height: 44px;
-    padding-inline: 6px;
-  }
-  /* Contact's controls measured 38-43px tall — close enough to look right, but
-     under a finger. The inline phone/email links are the worst of them at 20px:
-     they are the section's primary action on a phone, where tapping a number is
-     how people actually make contact. */
-  .contact-submit,
-  .contact-map-cta {
-    min-height: 44px;
-  }
-  .contact-row-value {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-  }
+      min-height: 44px;
+      padding-inline: 6px;
+    }
 }
 
 /* ===============================================================
@@ -5456,23 +6270,22 @@ section[id] {
   --shell-max: 1520px;
 }
 
-/* ===============================================================
-   FOOTER CURVE — the sweep that carries cream into the ink footer
+/* The footer curve's backdrop, per route.
 
-   The footer used to begin on a dead straight line: cream Milestones
-   above, #17110d below, butted together. Every other junction on the
-   page is either feathered (.acti-seam) or cut by an arc (the
-   Mission/Vision cards), so the footer was the one hard edge left.
+   .af-curve is a shape cut out of the ink; the space ABOVE the arc shows the
+   footer element's own background. That has to equal the colour of whatever
+   section ends the page, or the two meet on a hard horizontal line right where
+   the curve is supposed to be the only edge.
 
-   The arc is an inline SVG in ActiproFooter.jsx rather than a CSS
-   shape, for the same reason .mv-stroke is: clip-path: path() takes
-   absolute pixels and cannot track a fluid width, whereas a viewBox
-   with preserveAspectRatio="none" stretches for free.
+   On the landing page the last section is MilestonesWave, whose background is
+   the video clip's own #F5E7D5 — sampled from the footage's bottom edge, see
+   the note on the section element there. It must stay in step with that value.
+   Everywhere else the page cream is correct, which is the fallback baked into
+   the footer's inline style. */
 
-   .af-curve sits ABOVE the footer's own padding, in the flow, so it
-   pushes the content down instead of overlapping it — the copy never
-   ends up underneath the sweep however narrow the viewport gets.
-================================================================*/
+.acti-landing .acti-footer {
+  --af-top: #F5E7D5;
+}
 
 .af-curve {
   display: block;
@@ -5487,469 +6300,6 @@ section[id] {
   /* It is decoration: the cream above and the ink below already tell
      the reader where the footer starts. */
   pointer-events: none;
-}
-
-/* ===============================================================
-   CONTACT — "Contact Us", the closing section
-
-   The ground is a supplied plate (public/contact/contact.webp, master
-   PNG alongside it) that already contains the leaf shadows, the Gold
-   bottle with its splash and sunflowers, and the wave along the foot.
-   Nothing here re-draws any of that; the layout's job is to keep the
-   plate's empty middle clear, because that is where the copy lands.
-
-   The image is the section's BACKGROUND, not a decorative overlay:
-   .contact-bg is absolutely positioned at z-index -1 inside an
-   `isolation: isolate` section, so it can never escape over the header
-   or the footer's arc however tall the cards get.
-================================================================*/
-
-.contact-scene {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  padding: clamp(3rem, 6vw, 5.5rem) 0 clamp(3rem, 5vw, 4.5rem);
-  /* Behind the plate, and what the plate's own corners fade into. Matching
-     the page rather than inventing a paler ground keeps the join with the
-     section above invisible. */
-  background: var(--color-acti-cream);
-}
-
-.contact-bg {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  width: 100%;
-  height: 100%;
-  /* cover, not contain: the plate is 4:3 and the section is taller than
-     that once three cards are in it, so contain would letterbox bare
-     cream above and below the artwork. */
-  object-fit: cover;
-  object-position: center top;
-}
-
-.contact-inner {
-  position: relative;
-}
-
-/* --- Heading ------------------------------------------------------- */
-
-.contact-head {
-  text-align: center;
-  /* The plate puts the bottle top-right and leaves top-left. The heading
-     sits between them, so it is held to a narrow measure and centred
-     rather than running the full shell width into the artwork. */
-  max-width: 46rem;
-  margin-inline: auto;
-}
-
-.contact-title {
-  /* Georgia, as every other display heading on the site (.lp-title,
-     .mv-title and the rest) — the reference's "Contact Us" is a serif too. */
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(2.4rem, 6vw, 4rem);
-  line-height: 1.05;
-  font-weight: 700;
-  color: var(--color-acti-red);
-}
-
-.contact-sub {
-  margin-top: 0.9rem;
-  font-size: clamp(0.95rem, 1.4vw, 1.05rem);
-  line-height: 1.6;
-  color: color-mix(in srgb, var(--color-acti-ink) 62%, transparent);
-}
-
-/* Form / details / map. The form is widest because it holds five inputs
-   and a textarea; the other two are content-sized. On tablet the map
-   drops to a full-width row under the other two, and on phone all three
-   stack in source order. */
-
-.contact-grid {
-  margin-top: clamp(2rem, 4vw, 3.25rem);
-  display: grid;
-  grid-template-columns: 1.15fr 1fr 1fr;
-  gap: clamp(1rem, 2vw, 1.5rem);
-  align-items: start;
-}
-
-.contact-card-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--color-acti-ink);
-}
-
-/* --- Card 1: the form ---------------------------------------------- */
-
-.contact-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-}
-
-.contact-field {
-  display: block;
-}
-
-.contact-field > span {
-  display: block;
-  margin-bottom: 0.3rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: color-mix(in srgb, var(--color-acti-ink) 62%, transparent);
-}
-
-.contact-field input,
-.contact-field textarea,
-.contact-field select {
-  width: 100%;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--color-acti-ink) 14%, transparent);
-  background: #fff;
-  padding: 0.6rem 0.75rem;
-  font: inherit;
-  font-size: 0.85rem;
-  color: var(--color-acti-ink);
-  outline: none;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
-}
-
-.contact-field textarea {
-  resize: vertical;
-  min-height: 5.5rem;
-}
-
-.contact-field input::placeholder,
-.contact-field textarea::placeholder {
-  color: color-mix(in srgb, var(--color-acti-ink) 32%, transparent);
-}
-
-/* A ring as well as a border colour: the 1px border alone was not a
-   visible enough focus target on the cream card for keyboard users. */
-
-.contact-field input:focus,
-.contact-field textarea:focus {
-  border-color: var(--color-acti-orange);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-acti-orange) 18%, transparent);
-}
-
-.contact-submit {
-  margin-top: 0.25rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  width: 100%;
-  border-radius: 10px;
-  padding: 0.7rem 1.25rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #fff;
-  /* The reference's button is a horizontal red-to-gold sweep, which is the
-     same pair the brand uses on the pack. */
-  background: linear-gradient(90deg, var(--color-acti-red), #e8722a);
-  box-shadow: 0 12px 24px -14px rgba(193, 18, 31, 0.7);
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
-}
-
-.contact-submit:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 16px 28px -14px rgba(193, 18, 31, 0.75);
-}
-
-/* --- Card 2: the details ------------------------------------------- */
-
-.contact-rows {
-  margin-top: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.1rem;
-}
-
-.contact-rows > li {
-  display: flex;
-  gap: 0.75rem;
-  align-items: flex-start;
-}
-
-.contact-row-badge {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 2.1rem;
-  height: 2.1rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--color-acti-sun) 22%, transparent);
-  color: var(--color-acti-orange);
-}
-
-.contact-row-copy {
-  min-width: 0;
-}
-
-.contact-row-label {
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: color-mix(in srgb, var(--color-acti-ink) 55%, transparent);
-}
-
-.contact-row-value {
-  display: block;
-  margin-top: 0.15rem;
-  font-size: 0.88rem;
-  font-weight: 700;
-  line-height: 1.45;
-  color: var(--color-acti-red);
-  /* The address is long and unbroken in places; without this it pushed the
-     card wider than its grid track on narrow screens. */
-  overflow-wrap: anywhere;
-}
-
-a.contact-row-value:hover {
-  color: var(--color-acti-orange);
-}
-
-.contact-row-note {
-  margin-top: 0.2rem;
-  /* 0.75rem = 12px, the floor used across the phone layout. 0.72 landed at
-     11.5px, which is under it. */
-  font-size: 0.75rem;
-  line-height: 1.45;
-  color: color-mix(in srgb, var(--color-acti-ink) 48%, transparent);
-}
-
-/* --- Card 3: the map ----------------------------------------------- */
-
-.contact-map {
-  display: flex;
-  flex-direction: column;
-}
-
-.contact-map-figure {
-  display: block;
-  width: 100%;
-  /* Height-capped rather than width-driven: the outline is portrait, so a
-     100%-width map in a wide card would run taller than the two cards
-     beside it and break the row's top alignment. */
-  max-height: 15rem;
-  margin: 0.9rem auto 0;
-  flex: 1;
-}
-
-.contact-map-cta {
-  margin-top: 0.9rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--color-acti-sun) 70%, transparent);
-  padding: 0.55rem 1rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--color-acti-red);
-  background: color-mix(in srgb, var(--color-acti-sun) 14%, transparent);
-  transition: background-color 0.18s ease;
-}
-
-.contact-map-cta:hover {
-  background: color-mix(in srgb, var(--color-acti-sun) 26%, transparent);
-}
-
-/* --- Follow us ------------------------------------------------------ */
-
-.contact-social {
-  margin-top: clamp(1rem, 2vw, 1.5rem);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: clamp(1rem, 3vw, 2.5rem);
-  align-items: center;
-  border-radius: 18px;
-  padding: clamp(1rem, 2vw, 1.4rem) clamp(1.1rem, 2.5vw, 1.8rem);
-  background: rgba(255, 253, 248, 0.94);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 22px 46px -28px rgba(90, 62, 30, 0.42);
-}
-
-.contact-social-copy p {
-  margin-top: 0.3rem;
-  font-size: 0.8rem;
-  color: color-mix(in srgb, var(--color-acti-ink) 55%, transparent);
-}
-
-.contact-social-row {
-  display: flex;
-  gap: clamp(0.75rem, 2vw, 1.75rem);
-}
-
-.contact-social-row a {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: color-mix(in srgb, var(--color-acti-ink) 60%, transparent);
-}
-
-.contact-social-badge {
-  display: grid;
-  place-items: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--color-acti-sun) 20%, transparent);
-  color: var(--color-acti-red);
-  transition: background-color 0.18s ease, transform 0.18s ease;
-}
-
-.contact-social-row a:hover .contact-social-badge {
-  background: color-mix(in srgb, var(--color-acti-sun) 40%, transparent);
-  transform: translateY(-2px);
-}
-
-/* --- Tablet: the map drops to its own full-width row ---------------- */
-
-@media (max-width: 1023px) {
-  .contact-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .contact-map {
-    grid-column: 1 / -1;
-  }
-  /* Centred and capped in a full-width card, rather than stretching to a
-     700px-tall map. */
-  .contact-map-figure {
-    max-height: 13rem;
-  }
-}
-
-/* --- Phone: single column ------------------------------------------ */
-
-@media (max-width: 639px) {
-  .contact-scene {
-    padding: clamp(2.25rem, 8vw, 3rem) 0 clamp(2rem, 6vw, 2.75rem);
-  }
-  /* The plate is a 4:3 landscape. Cover-fitting it into a tall phone
-     section renders it far wider than the viewport and crops to the middle
-     — which is the empty cream field, so the bottle and the leaves both
-     disappear and the section reads as plain cream. Anchoring right-top
-     keeps the bottle, the one part of the artwork worth keeping at this
-     width. */
-  .contact-bg {
-    object-position: 78% top;
-  }
-  .contact-grid {
-    grid-template-columns: 1fr;
-  }
-  .contact-social {
-    /* The label row cannot sit beside the copy at 390px — four badges plus
-       their words need the full width. */
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    text-align: center;
-  }
-  .contact-social-row {
-    justify-content: space-between;
-  }
-}
-
-/* The footer's curve is a shape cut out of the ink, so whatever sits BEHIND
-   it shows through the negative space above the arc. On the landing page
-   that is page cream and the join is invisible. Here the section above ends
-   in the plate's artwork, so the curve's negative space was showing a flat
-   cream band between the plate and the ink — the gap in the screenshot.
-
-   Pulling the curve up by its own height makes it overlap the section
-   instead of following it, so the plate runs behind the arc and the two
-   meet with no band. The section's padding-bottom (below) replaces the
-   space the negative margin removes, so no content is covered. */
-
-.contact-page .af-curve {
-  position: relative;
-  z-index: 1;
-  margin-top: calc(-1 * clamp(2.5rem, 6vw, 5.5rem));
-}
-
-/* Both ends of the section, set together.
-
-   padding-top is the header clearance described above — on the section, so
-   the plate runs up behind the fixed bar rather than starting below it.
-
-   padding-bottom is the room the curve overlaps into. Without it the arc
-   would cut across the social row instead of across empty plate. */
-
-.contact-page .contact-scene {
-  padding-top: clamp(7rem, 13vw, 9rem);
-  padding-bottom: clamp(5rem, 10vw, 8rem);
-}
-
-/* --- The header on /contact -----------------------------------------
-   The bar's colours are all driven by --acti-tone, which Hero.jsx writes
-   on every scroll frame: 0 = white chrome over the dark hero footage,
-   1 = ink chrome over cream. This page has no hero, so nothing ever
-   writes it and it sat at the :root default of 0 — white text on a cream
-   bar, which is why the nav was unreadable in the screenshot.
-
-   Pinning it to 1 fixes the whole set in one line: .acti-tone-ink resolves
-   to #17110d, the phone icon's border darkens to match, and the Enquire
-   pill goes to brand red on white instead of gold on ink.
-
-   The bar's own cream fill and hairline are then removed, so the plate's
-   artwork runs up behind the nav rather than being cut off by a solid
-   band across the top. The frost stays: it is what keeps the nav legible
-   where the bottle passes underneath it.
-   ------------------------------------------------------------------- */
-
-.contact-page .acti-header {
-  --acti-tone: 1;
-  /* No solid cream band and no hairline: the plate's artwork runs up behind
-     the nav instead of being cut off by a bar across the top.
-
-     Not fully transparent, though — a whisper of cream plus the blur is
-     what keeps the ink nav legible where the bottle and the oil splash pass
-     underneath it. At 0.35 it reads as glass rather than as a band. The
-     frost is unconditional here because that ground is always present,
-     unlike on the landing page where it has to wait for the scrub. */
-  background-color: rgb(255 248 238 / 0.35);
-  box-shadow: none;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-/* The open mobile menu still needs a solid bar — its panel below is opaque
-   cream, and a translucent bar above an opaque panel reads as a mistake. */
-
-.contact-page .acti-header[data-solid='true'] {
-  background-color: rgb(255 248 238 / 0.96);
-}
-
-/* ===============================================================
-   HEALTHY TIPS — the body of /healthy-tips
-   HealthyTips.jsx · HealthyTipsPage.jsx
-
-   A page of reading, not a scene: no scrub, no pinned stage, no
-   Lenis. The only motion is a player the reader opens on purpose.
-
-   Layout is a column of cards that alternate sides (:nth-child
-   below) so a long list reads as a series of scenes rather than as
-   a table. On a phone every card collapses to copy-over-video in
-   source order — the alternation is a wide-screen affordance and
-   means nothing in one column.
-================================================================*/
-
-.ht-scene {
-  position: relative;
-  /* padding-top clears the fixed header, the same problem .contact-scene
-     has. Here it is on the section rather than the page wrapper only for
-     consistency with that section; there is no artwork to run up behind
-     the bar, so the ground is flat cream either way. */
-  padding: clamp(7rem, 13vw, 9rem) 0 clamp(4rem, 8vw, 6.5rem);
-  background: var(--color-acti-cream);
 }
 
 /* --- Heading ------------------------------------------------------- */
@@ -5967,17 +6317,6 @@ a.contact-row-value:hover {
   text-transform: uppercase;
   letter-spacing: 0.16em;
   color: var(--color-acti-green);
-}
-
-.ht-title {
-  /* Georgia, as every other display heading on the site — .contact-title,
-     .lp-title, .mv-title all run the same face. */
-  margin-top: 0.9rem;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(2.2rem, 5.2vw, 3.6rem);
-  line-height: 1.06;
-  font-weight: 700;
-  color: var(--color-acti-red);
 }
 
 .ht-sub {
@@ -5998,14 +6337,6 @@ a.contact-row-value:hover {
   gap: clamp(0.75rem, 1.6vw, 1.1rem);
   list-style: none;
   padding: 0;
-}
-
-.ht-quick-item {
-  border-radius: 16px;
-  padding: clamp(1.1rem, 2vw, 1.4rem);
-  background: rgba(255, 253, 248, 0.94);
-  /* Same lift as .contact-card and .lp-panel — shadow, no hairline. */
-  box-shadow: 0 22px 46px -30px rgba(90, 62, 30, 0.42);
 }
 
 .ht-quick-stat {
@@ -6176,3 +6507,970 @@ a.contact-row-value:hover {
    above the arc shows whatever is behind it. Here that is the section's
    flat cream, which matches the page — so unlike /contact the curve needs
    no pull-up, and .af-curve is left alone. */
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PRODUCTS PAGE (/products) — .rp-*
+   Built to the supplied reference. Palette is the site's own: deep green
+   ink (#1f3a2b), gold CTA (#e8b430), cream grounds.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.rp {
+  --rp-ink: #1f3a2b;
+  --rp-body: #5d6355;
+  --rp-gold: #e8b430;
+  --rp-gold-ink: #3a2c08;
+  --rp-line: rgba(31, 58, 43, 0.1);
+  --rp-card: #fffdf9;
+  --rp-cream: #fdf8f0;
+  background: var(--rp-cream);
+  font-family: var(--font-sans);
+  color: var(--rp-body);
+}
+
+.rp-wrap {
+  max-width: 1180px;
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 3vw, 2.5rem);
+}
+
+.rp-h2 {
+  font-family: var(--font-serif);
+  font-variation-settings: 'opsz' 60;
+  font-weight: 500;
+  font-size: clamp(22px, 2.6vw, 30px);
+  color: var(--rp-ink);
+}
+.rp-h2-center {
+  text-align: center;
+}
+
+.rp-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* --- Hero ------------------------------------------------------------- */
+/* The supplied render IS the hero background — used whole, not cut out and not
+   masked. It was composed for exactly this: the bottles sit in the right half
+   and the left ~45% is empty wall, which is where the headline goes. Laying
+   the copy over that empty area is what the artwork is for, and it means the
+   image needs no editing at all.
+
+   product-wide.png is that same render on a wider canvas: its own leftmost
+   COLUMN is stretched out to the left, so the added area is the wall's real
+   colour at every height. The bottles are untouched - only empty wall is
+   added.
+
+   That is what removes the vertical seam. Earlier attempts filled the gap
+   with a flat cream and then a hand-matched gradient; neither could track a
+   photographed gradient down its full height, so a line stayed visible where
+   the image met the fill. Extending the art itself leaves nothing to match.
+
+   With the wider canvas (3254x894, ~3.6:1) `cover` no longer blows the
+   bottles up the way it did on the 1.97:1 original - the group lands at
+   roughly its intended size while the stretched wall fills the left. */
+.rp-hero {
+  position: relative;
+  overflow: hidden;
+  /* Two layers, front to back:
+       1. a left-to-right cream gradient that is OPAQUE on the left and fades to
+          transparent by ~55% — this feathers the seam where the artwork's left
+          edge met the flat fill. The art's own left cream is a soft vertical
+          gradient (#FEF8EE→#F8EEDE), so a single flat fill beside it always
+          left a faint vertical line; fading cream OVER the join hides it
+          whatever the art's tone does.
+       2. the artwork, sized by HEIGHT (auto 100%) and pinned right so the whole
+          bottle group fits top-to-bottom without clipping.
+       3. the flat cream base behind both. */
+  background:
+    linear-gradient(to right, #FBF4E8 0%, #FBF4E8 42%, rgba(251, 244, 232, 0) 58%),
+    url('/page/hero-products.png') right center / auto 100% no-repeat,
+    #FBF4E8;
+}
+.rp-hero-inner {
+  position: relative;
+  max-width: 1180px;
+  margin-inline: auto;
+  /* The header is `fixed`, so it is out of flow and covers whatever sits at
+     the top of the page. 88px is the same clearance section[id] already uses
+     for anchor targets; without it the first headline line sits behind the
+     logo. */
+  padding: calc(88px + clamp(1rem, 3vw, 2rem)) clamp(1rem, 3vw, 2.5rem) 0;
+  /* Tall enough to hold the copy column AND the banner beneath the header;
+     the art is bottom-anchored, so this height is what keeps its caps clear
+     of the bar. */
+  /* The render is 1984x793 (~2.50:1). With `contain` the section must be at
+     least width/2.50 tall or the art letterboxes against the cream fill; at
+     the 1180px content column that is ~470px, and the vw term tracks it on
+     wider viewports. */
+  min-height: clamp(320px, 40vw, 470px);
+}
+.rp-hero-copy {
+  position: relative;
+  /* Above the banner, which is absolutely placed behind it. */
+  z-index: 2;
+  /* Held inside the render's empty left region (~45% of the art) so the text
+     never runs under a bottle. */
+  max-width: min(32rem, 42%);
+  padding-bottom: clamp(1.5rem, 3vw, 2.5rem);
+}
+.rp-hero-title {
+  font-family: var(--font-serif);
+  font-variation-settings: 'opsz' 96;
+  font-weight: 600;
+  font-size: clamp(30px, 4.4vw, 50px);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  color: var(--rp-ink);
+}
+.rp-hero-line {
+  display: block;
+}
+.rp-hero-title em {
+  font-style: normal;
+  color: #e8912a;
+}
+.rp-hero-sub {
+  margin-top: 0.9rem;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--rp-body);
+}
+
+/* The range render. Absolutely placed so the copy keeps the left half and
+   the bottles bleed to the section's right edge, as in the reference. */
+
+/* The narrow-screen counterpart to the background: the same render, shown as
+   an ordinary image under the copy. Hidden by default because on wide screens
+   the art is the section's background instead. */
+.rp-hero-band {
+  display: none;
+  width: 100%;
+  height: auto;
+  margin-top: 1.25rem;
+}
+
+.rp-benefits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(0.75rem, 2.4vw, 2rem);
+  margin-top: clamp(1.25rem, 3vw, 2rem);
+  /* Hold the row inside the copy column. Left to the full width the fourth
+     pill ("Low Cholesterol") slid under the bottle art and its caption was
+     unreadable against the photograph. */
+  max-width: 30rem;
+}
+.rp-benefits li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  width: 88px;
+  text-align: center;
+}
+.rp-benefit-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(31, 58, 43, 0.16);
+  border-radius: 9999px;
+  color: var(--rp-ink);
+  background: rgba(255, 255, 255, 0.5);
+}
+.rp-benefits b {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--rp-ink);
+}
+.rp-benefit-body {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--rp-body);
+}
+
+/* --- Shared buttons --------------------------------------------------- */
+.rp-amazon,
+.rp-verify-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+.rp-amazon {
+  padding: 0.6rem 1.1rem;
+  background: var(--rp-gold);
+  color: var(--rp-gold-ink);
+}
+.rp-amazon:hover {
+  background: #d9a422;
+}
+.rp-amazon-mark {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+}
+.rp-verify-btn {
+  padding: 0.55rem 1.05rem;
+  border: 1px solid rgba(31, 58, 43, 0.2);
+  background: #fff;
+  color: var(--rp-ink);
+}
+.rp-verify-btn:hover {
+  border-color: rgba(31, 58, 43, 0.4);
+}
+
+/* --- Range grid ------------------------------------------------------- */
+.rp-range {
+  padding: clamp(2rem, 4vw, 3rem) 0 clamp(1rem, 2vw, 1.5rem);
+}
+.rp-range-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.rp-sort {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 13px;
+}
+.rp-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.rp-select select {
+  appearance: none;
+  padding: 0.3rem 1.6rem 0.3rem 0.4rem;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  color: var(--rp-ink);
+}
+.rp-select svg {
+  position: absolute;
+  right: 2px;
+  pointer-events: none;
+  color: var(--rp-ink);
+}
+
+.rp-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.1rem;
+}
+.rp-tabs button {
+  padding: 0.5rem 1.15rem;
+  border: 1px solid rgba(31, 58, 43, 0.16);
+  border-radius: 9999px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rp-ink);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+.rp-tabs button[data-on='true'] {
+  background: var(--rp-ink);
+  border-color: var(--rp-ink);
+  color: #fff;
+}
+
+.rp-empty {
+  margin-top: 2rem;
+  font-size: 14px;
+}
+
+.rp-grid {
+  display: grid;
+  /* min(300px, 100%): on screens narrower than ~340px a hard 300px minimum
+     is wider than the container, and the grid overflowed the viewport. */
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+  gap: clamp(0.9rem, 2vw, 1.4rem);
+  margin-top: clamp(1.25rem, 2.5vw, 1.75rem);
+}
+.rp-card {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1rem;
+  border: 1px solid var(--rp-line);
+  border-radius: 1rem;
+  background: var(--rp-card);
+  transition:
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+.rp-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px -14px rgba(90, 68, 22, 0.28);
+}
+/* Fixed box so every bottle lands on the same baseline regardless of how
+   tall its own cutout is. */
+.rp-card-shot {
+  flex: none;
+  display: grid;
+  place-items: center;
+  /* The pack renders are much WIDER than the slim banner cutouts (764px vs
+     373px at the same 1200px height). With object-fit: contain a wide bottle
+     is limited by the box's WIDTH, so at 96px these rendered visibly smaller
+     than the two slim ones beside them. A wider box lets both shapes reach a
+     similar visual height. */
+  width: 118px;
+  /* NO fixed height, and no overflow clip.
+     This box is a flex child in an `align-items: center` row, so a `height`
+     here is only a PREFERRED size - the copy column (name, icons, rating and
+     two stacked buttons) is taller than 150px, so the row stretched this box
+     past it while the <img> inside stayed capped at 100% of the original
+     150px. With `place-items: end` and `overflow: hidden` the result was a
+     bottle sitting low in an over-tall box with its top sliced off.
+
+     `align-self: stretch` takes the card's real content height instead, and
+     the image is sized against that, so the whole bottle always fits. */
+  /* stretch, so the box is exactly the card's content height - the bottle
+     then scales to that and can never be taller than the card. `center` in
+     place-items (above) plus object-fit: contain keeps the whole pack inside
+     the padding box rather than bleeding past the rounded corner. */
+  align-self: stretch;
+  min-height: 168px;
+}
+.rp-card-shot img {
+  width: 100%;
+  height: 100%;
+  /* contain, so the full bottle is always visible: the image scales down to
+     fit the box rather than filling it and cropping. */
+  object-fit: contain;
+  /* CENTER, not bottom. Bottom-seating pushed the art against the card's
+     lower padding edge and the base spilled over the rounded corner; with
+     contain the image is already letterboxed inside the box, so centring it
+     keeps the whole bottle within the card. */
+  object-position: center;
+}
+.rp-card-body {
+  min-width: 0;
+}
+.rp-card-name {
+  font-family: var(--font-serif);
+  font-variation-settings: 'opsz' 30;
+  font-weight: 500;
+  font-size: 17px;
+  line-height: 1.25;
+  color: var(--rp-ink);
+}
+.rp-card-icons {
+  display: flex;
+  gap: 6px;
+  margin-top: 0.55rem;
+}
+.rp-card-icons li {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid rgba(31, 58, 43, 0.14);
+  border-radius: 9999px;
+  color: var(--rp-ink);
+}
+.rp-card-rating {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 0.55rem;
+  font-size: 12.5px;
+}
+.rp-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #e8a33d;
+}
+.rp-stars b {
+  font-weight: 700;
+  color: var(--rp-ink);
+}
+.rp-card-reviews {
+  color: var(--rp-body);
+}
+/* Side by side, as in the reference - stacked they doubled the card height
+   and pushed the grid to twice the depth it needed. */
+.rp-card-ctas {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+}
+.rp-card-amazon,
+.rp-card-verify {
+  /* Two full-width rows, NOT a shared row.
+     "Explore on Amazon" + "Verify Your Batch" need ~230px side by side; the
+     card's copy column is ~200px at the grid's 300px minimum. Sharing the row
+     (flex: 1 1 0) squeezed both below their text width, and because the labels
+     are nowrap the text overflowed the card instead of wrapping. Stacking is
+     what actually fits the column, and it matches the reference - which shows
+     the buttons stacked on every card. */
+  width: 100%;
+  padding-inline: 0.7rem;
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+/* --- ADT process ------------------------------------------------------ */
+.rp-adt {
+  padding: clamp(1.5rem, 3vw, 2.5rem) 0;
+}
+.rp-adt-row {
+  display: grid;
+  /* Three equal columns. The old 4th (0.8fr) held the "Pure. Natural." end
+     card that was removed; leaving it in left a dead gap on the right. */
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(1rem, 2.5vw, 2rem);
+  margin-top: clamp(1rem, 2vw, 1.5rem);
+  /* Bigger card overall — more inner padding so the enlarged content breathes. */
+  padding: clamp(1.75rem, 3.5vw, 3rem);
+  border: 1px solid var(--rp-line);
+  border-radius: 1.25rem;
+  background: var(--rp-card);
+}
+.rp-adt-step {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-right: 1.4rem;
+}
+.rp-adt-copy {
+  min-width: 0;
+}
+.rp-adt-n {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.rp-adt-n span {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: #14532d;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+.rp-adt-n b {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--rp-ink);
+}
+.rp-adt-body {
+  margin-top: 0.5rem;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.rp-adt-art {
+  flex: none;
+  /* The three photos have different aspect ratios (the refinery is wide, the
+     filter is tall), so a fixed box plus object-fit: contain is what keeps
+     them at a consistent visual size instead of one towering over the others.
+     Bigger than the 74x56 the placeholder SVGs used - these carry real detail
+     and were unreadable at that size. */
+  width: 120px;
+  height: 104px;
+  object-fit: contain;
+  object-position: center;
+}
+.rp-adt-arrow {
+  position: absolute;
+  right: 0;
+  color: #9c8b6d;
+}
+.rp-adt-end {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-left: clamp(0.75rem, 1.6vw, 1.25rem);
+  border-left: 1px solid var(--rp-line);
+  color: var(--rp-gold);
+}
+.rp-adt-end b {
+  font-size: 13px;
+  color: var(--rp-ink);
+}
+.rp-adt-end span {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--rp-body);
+}
+
+/* --- What's inside ---------------------------------------------------- */
+.rp-inside {
+  padding: clamp(1.5rem, 3vw, 2.5rem) 0;
+}
+.rp-inside-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  /* Separate CARDS now, not one panel with dividers — a gap between each and a
+     border/round on the card itself (li below), matching the reference. */
+  gap: clamp(0.75rem, 1.5vw, 1.25rem);
+  margin-top: clamp(1rem, 2vw, 1.5rem);
+}
+.rp-inside-row li {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: clamp(1.25rem, 2.2vw, 1.75rem);
+  border: 1px solid var(--rp-line);
+  border-radius: 1rem;
+  background: var(--rp-card);
+}
+.rp-inside-row li:last-child {
+  border-right: 0;
+}
+.rp-inside-icon {
+  flex: none;
+  /* Soft circle behind the icon, like the reference — a pale disc rather than a
+     bare glyph. */
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 9999px;
+  background: rgba(85, 105, 43, 0.08);
+  color: #55692b;
+}
+.rp-inside-row b {
+  display: block;
+  font-size: 16px;
+  line-height: 1.25;
+  color: var(--rp-ink);
+}
+.rp-inside-row p {
+  margin-top: 0.45rem;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+/* --- Four-panel row --------------------------------------------------- */
+.rp-panels {
+  padding: clamp(0.5rem, 1.5vw, 1rem) 0 clamp(2rem, 4vw, 3rem);
+}
+.rp-panel-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  border: 1px solid var(--rp-line);
+  border-radius: 1rem;
+  background: var(--rp-card);
+  overflow: hidden;
+}
+.rp-panel {
+  padding: clamp(0.9rem, 1.8vw, 1.35rem);
+  border-right: 1px solid var(--rp-line);
+}
+.rp-panel:last-child {
+  border-right: 0;
+}
+.rp-panel-h {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--rp-ink);
+}
+.rp-panel-sub {
+  margin-top: 0.5rem;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+.rp-serving {
+  margin-top: 0.4rem;
+  font-size: 12.5px;
+  color: var(--rp-body);
+}
+
+.rp-table {
+  width: 100%;
+  margin-top: 0.7rem;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.rp-table th,
+.rp-table td {
+  padding: 0.4rem 0.25rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(31, 58, 43, 0.07);
+}
+.rp-table thead th {
+  font-weight: 700;
+  color: var(--rp-ink);
+}
+.rp-table tbody th {
+  font-weight: 400;
+}
+.rp-approx {
+  margin-top: 0.6rem;
+  font-size: 12px;
+}
+
+.rp-compliance {
+  margin-top: 0.7rem;
+  display: grid;
+  gap: 0.55rem;
+}
+.rp-compliance li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.rp-compliance svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--rp-ink);
+}
+
+.rp-verify-form {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+}
+.rp-verify-form input {
+  min-width: 0;
+  flex: 1;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid rgba(31, 58, 43, 0.18);
+  border-radius: 0.5rem;
+  font: inherit;
+  font-size: 12px;
+  background: #fff;
+}
+.rp-verify-form button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0.5rem 0.9rem;
+  border-radius: 0.5rem;
+  background: var(--rp-gold);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--rp-gold-ink);
+}
+.rp-verify-form button:hover {
+  background: #d9a422;
+}
+.rp-verify-note:not(:empty) {
+  margin-top: 0.5rem;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #8a6d1f;
+}
+.rp-qr-note {
+  margin-top: 0.6rem;
+  font-size: 10.5px;
+  line-height: 1.5;
+}
+
+.rp-recipes-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 0.7rem;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid rgba(31, 58, 43, 0.18);
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--rp-ink);
+  text-decoration: none;
+}
+.rp-recipes-cta:hover {
+  border-color: rgba(31, 58, 43, 0.4);
+}
+.rp-recipes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+}
+.rp-recipes li {
+  display: grid;
+  gap: 0.25rem;
+}
+.rp-recipes img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 0.5rem;
+  object-fit: cover;
+}
+.rp-recipes span {
+  font-size: 10px;
+  text-align: center;
+}
+
+/* --- Disclaimer + closing CTAs ---------------------------------------- */
+.rp-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: clamp(1rem, 2vw, 1.5rem);
+}
+/* With the disclaimer removed the row holds only the buttons; push them to the
+   right so they do not float alone on the left. */
+.rp-foot--cta-only {
+  justify-content: flex-end;
+}
+.rp-disclaimer {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  max-width: 46ch;
+  font-size: 10.5px;
+  line-height: 1.55;
+}
+.rp-disclaimer svg {
+  flex: none;
+  margin-top: 1px;
+  color: #7d9c6a;
+}
+.rp-disclaimer b {
+  display: block;
+  color: var(--rp-ink);
+}
+.rp-foot-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.rp-foot-amazon,
+.rp-foot-verify {
+  padding: 0.75rem 1.6rem;
+  font-size: 14px;
+}
+
+/* --- Narrow ----------------------------------------------------------- */
+@media (max-width: 1023px) {
+  /* Narrow: there is no room for the copy to sit beside the bottles inside
+     the render, so the art stops being the background and becomes a band
+     BELOW the text (see .rp-hero-band). The section keeps only the flat
+     cream the render's wall uses, so the two meet without a seam. */
+  .rp-hero {
+    background: #fef1de;
+  }
+  .rp-hero-copy {
+    max-width: none;
+  }
+  .rp-hero-band {
+    display: block;
+  }
+  /* The min-height existed to hold the ABSOLUTE art clear of the header; with
+     the art in flow it only padded the hero with empty cream. */
+  .rp-hero-inner {
+    min-height: 0;
+  }
+  .rp-adt-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .rp-adt-arrow {
+    display: none;
+  }
+  /* The arrows are gone, so the room reserved for them is dead space. */
+  .rp-adt-step {
+    padding-right: 0;
+  }
+  /* .rp-inside-row is separate cards now (each with its own full border), so
+     it needs no per-cell divider fix-ups here — only the .rp-panel group,
+     which is still one bordered box, does. */
+  .rp-panel {
+    border-right: 0;
+    border-bottom: 1px solid var(--rp-line);
+  }
+  .rp-panel:last-child {
+    border-bottom: 0;
+  }
+}
+
+@media (max-width: 639px) {
+  .rp-adt-row {
+    grid-template-columns: 1fr;
+  }
+  .rp-benefits li {
+    width: 76px;
+  }
+  .rp-foot {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  /* Full-width stacked CTAs — side by side they crowd below ~400px, and a
+     full-width row is the easier thumb target. */
+  .rp-foot-cta {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  /* 16px so iOS Safari does not zoom the page when the field or the sort
+     select is focused (it zooms on anything below 16px). */
+  .rp-verify-form input,
+  .rp-select select {
+    font-size: 16px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   OUR JOURNEY cards (/about) — .jr-*
+   Notched panels with a dark green number tab in the cut corner.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.jr-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3.2rem 1.4rem 2.2rem;
+  /* A floor, so all five cards share a height even though their copy runs to
+     different lengths — the row reads as one band rather than five ragged
+     panels. */
+  min-height: 340px;
+  text-align: center;
+  /* The card's own fill is on ::after (below), not here. A background on this
+     element would be clipped to the same polygon as the ::before outline and,
+     because ::before uses z-index:-1 to sit behind, the two composite into a
+     tinted panel rather than a cream card with a gold edge — which is why the
+     cards came out tan. Painting the outline and the fill as two stacked
+     pseudo-elements keeps them independent. */
+  background: transparent;
+  isolation: isolate;
+  /* The NOTCH. A diagonal cut across the top-right corner, which is what the
+     reference's cards have and what the number tab sits in.
+
+     clip-path, not a border or an overlay triangle: a border cannot follow a
+     cut corner, and a triangle drawn on top would cover the card rather than
+     remove part of it — the page's cream would not show through the cut. The
+     trade-off is that clip-path also clips box-shadow, so the card's edge is
+     drawn by the ::before outline below instead of a shadow. */
+  clip-path: polygon(0 0, calc(100% - 42px) 0, 100% 42px, 100% 100%, 0 100%);
+}
+
+/* The card's outline. A second, slightly larger clipped layer sitting behind
+   the card: because clip-path removes the shadow, this is what draws a visible
+   edge along every side INCLUDING the diagonal. */
+/* Layer 1 — the gold edge. Slightly larger than the card on every side, so
+   the 1px it sticks out reads as an outline that follows the diagonal too. */
+.jr-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: 0;
+  background: rgba(201, 169, 97, 0.45);
+  clip-path: polygon(0 0, calc(100% - 42px) 0, 100% 42px, 100% 100%, 0 100%);
+}
+
+/* Layer 2 — the cream fill, exactly the card's box, sitting ON the edge layer
+   so only that 1px rim of gold remains visible. */
+.jr-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: #fffdf8;
+  clip-path: polygon(0 0, calc(100% - 42px) 0, 100% 42px, 100% 100%, 0 100%);
+}
+
+/* The number tab. Sits in the notch: top-left of the card, dark green with the
+   step number. In the reference it reads as a folded corner tag. */
+.jr-num {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  min-width: 52px;
+  padding: 0.38rem 0.75rem;
+  background: #3d5220;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #fdfaf3;
+  /* Its own small notch on the bottom-right, echoing the card's cut corner. */
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+}
+
+.jr-badge {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 66px;
+  height: 66px;
+  border: 1px solid rgba(201, 169, 97, 0.6);
+  border-radius: 9999px;
+  background: #fffdf8;
+  color: #55692b;
+}
+
+.jr-year {
+  position: relative;
+  z-index: 2;
+  margin-top: 1.25rem;
+  font-family: var(--font-serif);
+  font-size: 29px;
+  line-height: 1;
+  color: #e0a42b;
+}
+
+.jr-title {
+  position: relative;
+  z-index: 2;
+  margin-top: 0.7rem;
+  font-family: var(--font-sans);
+  font-size: 16.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #2c3e1c;
+}
+/* When there is no year the title takes its place, so it needs the year's
+   larger top gap to keep every card's badge-to-title rhythm the same. */
+.jr-year + .jr-title {
+  margin-top: 0.35rem;
+}
+
+.jr-body {
+  position: relative;
+  z-index: 2;
+  margin-top: 0.6rem;
+  max-width: 26ch;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.65;
+  color: #5c5347;
+}
+
+@media (max-width: 1023px) {
+  /* Stacked, the cards are much wider, so the notch and tab scale up with
+     them or they look like a nick in the corner. */
+  .jr-card,
+  .jr-card::before {
+    clip-path: polygon(0 0, calc(100% - 52px) 0, 100% 52px, 100% 100%, 0 100%);
+  }
+}

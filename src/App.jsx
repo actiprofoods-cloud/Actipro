@@ -6,6 +6,8 @@ import Footer from './components/Footer'
 import ActiproSite from './pages/ActiproSite'
 import ContactPage from './pages/ContactPage'
 import HealthyTipsPage from './pages/HealthyTipsPage'
+import AboutPage from './pages/AboutPage'
+import ProductsPage from './pages/ProductsPage'
 
 function MadhuriLayout() {
   return (
@@ -33,6 +35,12 @@ function App() {
       {/* Healthy Tips — a content page, same chrome as /contact and outside
           MadhuriLayout for the same reason. */}
       <Route path="/healthy-tips" element={<HealthyTipsPage />} />
+
+      {/* About Us — its own page, same chrome/pattern as /contact. */}
+      <Route path="/about" element={<AboutPage />} />
+
+      {/* Products — the six-oil range page, same chrome/pattern as /about. */}
+      <Route path="/products" element={<ProductsPage />} />
 
       {/* Older pages, kept together under /post-work */}
       <Route path="/our-plant" element={<MadhuriLayout />}>
